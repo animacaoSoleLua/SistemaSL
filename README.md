@@ -3,7 +3,6 @@
 > Framework completo para criar projetos com documentação profissional e desenvolvimento guiado por IA
 
 **Versão:** 1.0.0
-**Baseado em:** Agente de Prospecção Multicanal
 
 ---
 
