@@ -1,21 +1,41 @@
 services:
   postgres:
-    image: postgres:15
+    image: postgres:16
     container_name: sol-e-lua-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: sol_e_lua
-      POSTGRES_USER: sol_e_lua
-      POSTGRES_PASSWORD: sol_e_lua
+      POSTGRES_DB: slr
+      POSTGRES_USER: slr
+      POSTGRES_PASSWORD: admin
     ports:
-      - "5432:5432"
+      - "5453:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U slr -d slr"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   redis:
     image: redis:7
     container_name: sol-e-lua-redis
     ports:
       - "6379:6379"
+
+  migrate:
+    image: node:20
+    container_name: sol-e-lua-migrate
+    working_dir: /app/apps/backend
+    environment:
+      DATABASE_URL: postgres://slr:admin@postgres:5432/slr
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npm ci && npx prisma db push"
+    restart: "no"
 
 volumes:
   postgres_data:

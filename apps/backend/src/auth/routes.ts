@@ -5,6 +5,7 @@ import {
   getUserByEmail,
   updateUserPassword,
 } from "./store.js";
+import { verifyPassword } from "./password.js";
 import { createAccessToken } from "./token.js";
 
 interface LoginBody {
@@ -33,11 +34,23 @@ export async function authRoutes(app: FastifyInstance) {
     }
 
     const user = await getUserByEmail(email);
-    if (!user || user.password !== password) {
+    if (!user) {
       return reply.status(401).send({
         error: "invalid_credentials",
         message: "Email ou senha invalidos",
       });
+    }
+
+    const passwordCheck = verifyPassword(password, user.passwordHash);
+    if (!passwordCheck.valid) {
+      return reply.status(401).send({
+        error: "invalid_credentials",
+        message: "Email ou senha invalidos",
+      });
+    }
+
+    if (passwordCheck.needsRehash) {
+      await updateUserPassword(user.id, password);
     }
 
     const accessToken = createAccessToken(user);

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "../db/prisma.js";
+import { hashPassword } from "./password.js";
 
 export type Role = "admin" | "animador" | "recreador";
 
@@ -7,7 +8,7 @@ export interface UserRecord {
   id: string;
   name: string;
   email: string;
-  password: string;
+  passwordHash: string;
   role: Role;
   phone?: string;
   photoUrl?: string;
@@ -32,7 +33,7 @@ function toUserRecord(user: {
     id: user.id,
     name: user.name,
     email: user.email,
-    password: user.passwordHash,
+    passwordHash: user.passwordHash,
     role: user.role,
     phone: user.phone ?? undefined,
     photoUrl: user.photoUrl ?? undefined,
@@ -58,9 +59,10 @@ export async function updateUserPassword(
   id: string,
   password: string
 ): Promise<void> {
+  const passwordHash = hashPassword(password);
   await prisma.user.update({
     where: { id },
-    data: { passwordHash: password },
+    data: { passwordHash },
   });
 }
 
@@ -83,12 +85,13 @@ export async function createUser(input: {
     return undefined;
   }
 
+  const passwordHash = hashPassword(input.password ?? "membro123");
   const user = await prisma.user.create({
     data: {
       id: randomUUID(),
       name: input.name,
       email,
-      passwordHash: input.password ?? "membro123",
+      passwordHash,
       role: input.role,
       phone: input.phone,
       photoUrl: input.photoUrl,
@@ -100,7 +103,7 @@ export async function createUser(input: {
 
 export async function updateUser(
   id: string,
-  updates: Partial<Omit<UserRecord, "id" | "password">> & {
+  updates: Partial<Omit<UserRecord, "id" | "passwordHash">> & {
     password?: string;
   }
 ): Promise<UserRecord | undefined> {
@@ -134,7 +137,7 @@ export async function updateUser(
     data.photoUrl = updates.photoUrl ?? null;
   }
   if (updates.password !== undefined) {
-    data.passwordHash = updates.password;
+    data.passwordHash = hashPassword(updates.password);
   }
 
   const user = await prisma.user.update({

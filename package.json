@@ -6,11 +6,14 @@
     "apps/*"
   ],
   "scripts": {
-    "dev:api": "npm --workspace apps/api run dev",
-    "dev:web": "npm --workspace apps/web run dev",
-    "build:api": "npm --workspace apps/api run build",
-    "build:web": "npm --workspace apps/web run build",
-    "test": "npm --workspace apps/api run test",
-    "test:integration": "npm --workspace apps/api run test:integration"
+    "dev:api": "npm --workspace apps/backend run dev",
+    "dev:web": "npm --workspace apps/frontend run dev",
+    "build:api": "npm --workspace apps/backend run build",
+    "build:web": "npm --workspace apps/frontend run build",
+    "test": "npm --workspace apps/backend run test",
+    "test:integration": "npm --workspace apps/backend run test:integration"
+  },
+  "prisma": {
+    "schema": "apps/backend/prisma/schema.prisma"
   }
 }

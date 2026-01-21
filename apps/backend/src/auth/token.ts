@@ -33,10 +33,15 @@ function sign(input: string, secret: string): string {
 }
 
 function getSecret(): string {
-  return process.env.JWT_SECRET ?? "dev-secret";
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("JWT_SECRET precisa ter pelo menos 32 caracteres.");
+  }
+  return secret;
 }
 
 export function createAccessToken(user: UserRecord): string {
+  const secret = getSecret();
   const now = Math.floor(Date.now() / 1000);
   const payload: AccessTokenPayload = {
     sub: user.id,
@@ -48,19 +53,26 @@ export function createAccessToken(user: UserRecord): string {
 
   const header = base64UrlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const body = base64UrlEncode(JSON.stringify(payload));
-  const signature = sign(`${header}.${body}`, getSecret());
+  const signature = sign(`${header}.${body}`, secret);
 
   return `${header}.${body}.${signature}`;
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload | null {
+  let secret: string;
+  try {
+    secret = getSecret();
+  } catch {
+    return null;
+  }
+
   const parts = token.split(".");
   if (parts.length !== 3) {
     return null;
   }
 
   const [header, body, signature] = parts;
-  const expected = sign(`${header}.${body}`, getSecret());
+  const expected = sign(`${header}.${body}`, secret);
   if (signature !== expected) {
     return null;
   }

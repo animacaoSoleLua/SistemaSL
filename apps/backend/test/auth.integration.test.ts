@@ -71,6 +71,9 @@ describe("Auth (integration)", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ data: { message: "Senha atualizada" } });
+
+    const updated = await getUserByEmail("recreador@sol-e-lua.com");
+    expect(updated?.passwordHash).toMatch(/^scrypt\$/);
   });
 
   it("protects routes without token", async () => {
