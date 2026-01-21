@@ -6,3 +6,139 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum UserRole {
+  admin
+  animador
+  recreador
+}
+
+enum MediaType {
+  image
+  video
+}
+
+enum EnrollmentStatus {
+  enrolled
+  attended
+  missed
+}
+
+model User {
+  id           String             @id @default(uuid()) @db.Uuid
+  name         String             @db.VarChar(100)
+  email        String             @unique(map: "idx_users_email") @db.VarChar(255)
+  passwordHash String             @map("password_hash") @db.VarChar(255)
+  phone        String?            @db.VarChar(30)
+  role         UserRole
+  photoUrl     String?            @map("photo_url") @db.Text
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+  reports      Report[]           @relation("ReportsByAuthor")
+  reportNotes  ReportFeedback[]   @relation("FeedbacksForMember")
+  courses      Course[]           @relation("CoursesByCreator")
+  enrollments  CourseEnrollment[] @relation("EnrollmentsByMember")
+  warnings     Warning[]          @relation("WarningsForMember")
+  warningsMade Warning[]          @relation("WarningsByCreator")
+  suspensions  Suspension[]
+
+  @@map("users")
+}
+
+model Report {
+  id               String           @id @default(uuid()) @db.Uuid
+  authorId         String           @map("author_id") @db.Uuid
+  eventDate        DateTime         @map("event_date") @db.Date
+  contractorName   String           @map("contractor_name") @db.VarChar(150)
+  location         String           @db.VarChar(150)
+  teamSummary      String?          @map("team_summary") @db.VarChar(200)
+  qualitySound     Int?             @map("quality_sound")
+  qualityMicrophone Int?            @map("quality_microphone")
+  notes            String?          @db.Text
+  createdAt        DateTime         @default(now()) @map("created_at")
+  author           User             @relation("ReportsByAuthor", fields: [authorId], references: [id])
+  media            ReportMedia[]
+  feedbacks        ReportFeedback[]
+
+  @@index([authorId], map: "idx_reports_author")
+  @@map("reports")
+}
+
+model ReportMedia {
+  id        String    @id @default(uuid()) @db.Uuid
+  reportId  String    @map("report_id") @db.Uuid
+  mediaType MediaType @map("media_type")
+  url       String    @db.Text
+  sizeBytes Int       @map("size_bytes")
+  createdAt DateTime  @default(now()) @map("created_at")
+  report    Report    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_media")
+}
+
+model ReportFeedback {
+  id        String   @id @default(uuid()) @db.Uuid
+  reportId  String   @map("report_id") @db.Uuid
+  memberId  String   @map("member_id") @db.Uuid
+  feedback  String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  member    User     @relation("FeedbacksForMember", fields: [memberId], references: [id])
+
+  @@map("report_feedbacks")
+}
+
+model Course {
+  id          String             @id @default(uuid()) @db.Uuid
+  createdBy   String             @map("created_by") @db.Uuid
+  title       String             @db.VarChar(150)
+  description String?            @db.Text
+  courseDate  DateTime           @map("course_date") @db.Date
+  location    String?            @db.VarChar(150)
+  capacity    Int?
+  createdAt   DateTime           @default(now()) @map("created_at")
+  creator     User               @relation("CoursesByCreator", fields: [createdBy], references: [id])
+  enrollments CourseEnrollment[]
+
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  id        String           @id @default(uuid()) @db.Uuid
+  courseId  String           @map("course_id") @db.Uuid
+  memberId  String           @map("member_id") @db.Uuid
+  status    EnrollmentStatus
+  createdAt DateTime         @default(now()) @map("created_at")
+  course    Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  member    User             @relation("EnrollmentsByMember", fields: [memberId], references: [id])
+
+  @@index([memberId], map: "idx_course_member")
+  @@map("course_enrollments")
+}
+
+model Warning {
+  id          String   @id @default(uuid()) @db.Uuid
+  memberId    String   @map("member_id") @db.Uuid
+  createdBy   String   @map("created_by") @db.Uuid
+  reason      String   @db.Text
+  warningDate DateTime @map("warning_date") @db.Date
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  member      User     @relation("WarningsForMember", fields: [memberId], references: [id])
+  creator     User     @relation("WarningsByCreator", fields: [createdBy], references: [id])
+
+  @@index([memberId], map: "idx_warnings_member")
+  @@map("warnings")
+}
+
+model Suspension {
+  id        String   @id @default(uuid()) @db.Uuid
+  memberId  String   @map("member_id") @db.Uuid
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  reason    String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  member    User     @relation(fields: [memberId], references: [id])
+
+  @@map("suspensions")
+}

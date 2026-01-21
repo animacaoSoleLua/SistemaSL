@@ -81,6 +81,25 @@
 
 ---
 
+## GET /api/v1/relatorios/:id/pdf
+
+**Descricao:** Exporta relatorio em PDF.
+
+**Response 200 OK:** `application/pdf` (arquivo)
+
+**Headers:**
+
+```
+Content-Disposition: attachment; filename="relatorio-{id}.pdf"
+```
+
+**Erros:**
+- 401 Token ausente
+- 403 Acesso negado
+- 404 Relatorio nao encontrado
+
+---
+
 ## POST /api/v1/relatorios/:id/media
 
 **Descricao:** Anexa midia ao relatorio.
@@ -90,9 +109,16 @@
 ```json
 {
   "media_type": "image|video",
-  "url": "string"
+  "url": "string",
+  "size_bytes": 123456
 }
 ```
+
+**Validacoes:**
+- `media_type` deve ser `image` ou `video`
+- `size_bytes` deve ser maior que zero
+- `url` deve terminar com extensao valida (ex: .jpg, .png, .mp4)
+- Limites: image ate 10MB, video ate 50MB
 
 **Response 201 Created:**
 
@@ -100,7 +126,9 @@
 {
   "data": {
     "id": "uuid",
-    "url": "string"
+    "url": "string",
+    "media_type": "image",
+    "size_bytes": 123456
   }
 }
 ```

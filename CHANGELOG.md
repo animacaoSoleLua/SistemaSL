@@ -15,9 +15,11 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - App web Next.js inicial com layout basico
 - Configuracao inicial de banco e cache via Docker Compose
 - Prisma configurado para PostgreSQL
+- Seeds base de usuarios e helper de reset do banco para testes
 
 ### Modificado
-- Nenhuma
+- Stores da API agora usam Prisma/PostgreSQL em vez de memoria
+- Testes de integracao atualizados para preparar dados no banco
 
 ### Corrigido
 - Nenhuma

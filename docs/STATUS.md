@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-01-20
+**Ultima Atualizacao:** 2026-01-21
 **Atualizado por:** Codex
 
 ---
@@ -8,33 +8,34 @@
 ## Progresso Geral
 
 ```
-██░░░░░░░░░░░░░░░░░░ 11%
+█████████████░░░░░░░ 67%
 ```
 
 | Metrica | Valor |
 |---------|-------|
-| Progresso Total | 11% |
-| Fase Atual | Fase 1 - Fundacao |
-| Tarefas Completas | 2/18 |
-| Ultima Tarefa | FASE-1-TASK-002 |
+| Progresso Total | 67% |
+| Fase Atual | Fase 4 - Estabilidade e Produto |
+| Tarefas Completas | 12/18 |
+| Ultima Tarefa | FASE-4-TASK-001 |
 
 ---
 
 ## Tarefa Atual
 
-### FASE-1-TASK-003: Upload de midia
+### FASE-4-TASK-002: Melhorar seguranca do login
 
-**Epic:** Fundacao
-**User Story:** N/A
-**API:** N/A
+**Epic:** Estabilidade e Produto
+**User Story:** Login mais seguro
+**API:** Auth
 
-**Descricao:** Permitir upload de fotos e videos nos relatorios.
+**Descricao:** Melhorar seguranca do login com senha protegida e chave segura.
+
+**Status:** Pendente
 
 **Criterios de Conclusao:**
-- [ ] Upload de fotos e videos funcionando
-- [ ] Validacao de tamanho e tipo de arquivo
-- [ ] Vinculo ao relatorio correto
-- [ ] Testes de upload
+- [ ] Senhas protegidas no banco
+- [ ] Chave segura configurada
+- [ ] Testes de login atualizados
 
 ---
 
@@ -46,25 +47,35 @@
 |------|-----------|--------|
 | FASE-1-TASK-001 | Setup base do projeto | Concluida |
 | FASE-1-TASK-002 | Autenticacao e roles | Concluida |
-| FASE-1-TASK-003 | Upload de midia | Pendente |
-| FASE-1-TASK-004 | Modelo de dados | Pendente |
+| FASE-1-TASK-003 | Upload de midia | Concluida |
+| FASE-1-TASK-004 | Modelo de dados | Concluida |
 
 ### Fase 2: Core do Produto
 
 | Task | Descricao | Status | Dependencia |
 |------|-----------|--------|-------------|
-| FASE-2-TASK-001 | Relatorios de eventos | Pendente | Fase 1 |
-| FASE-2-TASK-002 | Gestao de membros | Pendente | FASE-2-TASK-001 |
-| FASE-2-TASK-003 | Cursos e inscricoes | Pendente | FASE-2-TASK-002 |
-| FASE-2-TASK-004 | Advertencias e suspensao | Pendente | FASE-2-TASK-002 |
+| FASE-2-TASK-001 | Relatorios de eventos | Concluida | Fase 1 |
+| FASE-2-TASK-002 | Gestao de membros | Concluida | FASE-2-TASK-001 |
+| FASE-2-TASK-003 | Cursos e inscricoes | Concluida | FASE-2-TASK-002 |
+| FASE-2-TASK-004 | Advertencias e suspensao | Concluida | FASE-2-TASK-002 |
 
 ### Fase 3: Analiticos e Melhorias
 
 | Task | Descricao | Status | Dependencia |
 |------|-----------|--------|-------------|
-| FASE-3-TASK-001 | Dashboard analitica | Pendente | Fase 2 |
-| FASE-3-TASK-002 | Filtros avancados | Pendente | FASE-3-TASK-001 |
-| FASE-3-TASK-003 | Exportacao PDF | Pendente | FASE-3-TASK-001 |
+| FASE-3-TASK-001 | Dashboard analitica | Concluida | Fase 2 |
+| FASE-3-TASK-002 | Filtros avancados | Concluida | FASE-3-TASK-001 |
+| FASE-3-TASK-003 | Exportacao PDF | Concluida | FASE-3-TASK-001 |
+
+### Fase 4: Estabilidade e Produto
+
+| Task | Descricao | Status | Dependencia |
+|------|-----------|--------|-------------|
+| FASE-4-TASK-001 | Migrar dados para banco real | Concluida | Fase 3 |
+| FASE-4-TASK-002 | Melhorar seguranca do login | Pendente | FASE-4-TASK-001 |
+| FASE-4-TASK-003 | Telas principais no web | Pendente | FASE-4-TASK-001 |
+| FASE-4-TASK-004 | Upload real de midia | Pendente | FASE-4-TASK-001 |
+| FASE-4-TASK-005 | Cobertura automatica de testes | Pendente | FASE-4-TASK-001 |
 
 ---
 
@@ -78,9 +89,13 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
-| 2026-01-20 | FASE-1-TASK-001 | Setup base do projeto concluido |
-| 2026-01-20 | FASE-1-TASK-002 | Autenticacao e roles concluido |
-| 2026-01-20 | - | Projeto iniciado |
+| 2026-01-21 | FASE-4-TASK-001 | Migracao para banco real concluida |
+| 2026-01-21 | FASE-3-TASK-003 | Exportacao PDF concluida |
+| 2026-01-20 | FASE-3-TASK-002 | Filtros avancados concluido |
+| 2026-01-20 | FASE-2-TASK-004 | Advertencias e suspensao concluido |
+| 2026-01-20 | FASE-2-TASK-002 | Gestao de membros concluido |
+| 2026-01-20 | FASE-2-TASK-001 | Relatorios de eventos concluido |
+| 2026-01-20 | FASE-1-TASK-004 | Modelo de dados concluido |
 
 ---
 
@@ -88,8 +103,19 @@ Nenhum bloqueador no momento.
 
 | Prioridade | Task | Descricao | Estimativa |
 |------------|------|-----------|-----------|
-| 1 | FASE-1-TASK-003 | Upload de midia | 2 dias |
-| 2 | FASE-1-TASK-004 | Modelo de dados | 2-3 dias |
+| 1 | MELHORIA-002 | Seguranca do login (senhas criptografadas + chave segura) | Media |
+| 2 | MELHORIA-003 | Criar telas principais do sistema (web) | Alta |
+| 3 | MELHORIA-004 | Upload real de midia (arquivo) | Media |
+| 4 | MELHORIA-005 | Medir cobertura de testes automaticamente | Baixa |
+
+---
+
+## Melhorias Sugeridas
+
+- Seguranca do login (senhas e chave de acesso mais seguras)
+- Criar as telas principais do sistema (web)
+- Upload real de midia (enviar arquivos)
+- Medir cobertura de testes automaticamente
 
 ---
 
@@ -98,12 +124,29 @@ Nenhum bloqueador no momento.
 | Metrica | Valor | Meta |
 |---------|-------|------|
 | Cobertura de Testes | 0% | >= 80% |
-| Testes Passando | 8/8 | 100% |
+| Testes Passando | 0/30 (falha - Prisma client) | 100% |
 | Build Status | - | - |
 
 ---
 
 ## Log de Atividades
+
+### 2026-01-21
+
+**Sessao:** exportacao-pdf
+
+```
+00:45 - Endpoint de exportacao PDF com permissao
+00:50 - Testes de exportacao adicionados e executados (30/30)
+```
+
+**Sessao:** migracao-banco
+
+```
+01:05 - Stores migrados para Prisma com PostgreSQL
+01:20 - Testes atualizados para reset do banco e dados base
+01:30 - Testes executados (falha: Prisma client nao gerado)
+```
 
 ### 2026-01-20
 
@@ -112,4 +155,39 @@ Nenhum bloqueador no momento.
 ```
 09:00 - Briefing completo
 09:20 - Documentacao gerada (PRD e SPEC)
+10:30 - Upload de midia com validacoes e testes (vitest ausente)
+10:40 - Dependencias instaladas e testes executados (12/12)
+11:10 - Modelo de dados definido no schema do banco
+```
+
+**Sessao:** relatorios
+
+```
+23:10 - Relatorios criados, listados e detalhados com validacoes
+23:12 - Testes de relatorios adicionados e executados (15/15)
+```
+
+**Sessao:** membros
+
+```
+23:20 - Gestao de membros implementada com rotas, validacoes e testes (17/17)
+```
+
+**Sessao:** cursos
+
+```
+23:30 - Cursos e inscricoes implementados com testes (19/19)
+```
+
+**Sessao:** advertencias
+
+```
+23:55 - Advertencias e suspensao implementadas com testes (22/22)
+```
+
+**Sessao:** dashboard
+
+```
+00:30 - Dashboard analitica com endpoints e testes (26/26)
+01:05 - Filtros avancados da dashboard com validacoes e testes (29/29)
 ```

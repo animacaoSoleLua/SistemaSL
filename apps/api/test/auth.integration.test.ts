@@ -1,6 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildServer } from "../src/app.js";
 import { createResetToken, getUserByEmail } from "../src/auth/store.js";
+import { disconnectDatabase, resetDatabase } from "./helpers/db.js";
 
 describe("Auth (integration)", () => {
   const app = buildServer();
@@ -9,8 +10,13 @@ describe("Auth (integration)", () => {
     await app.ready();
   });
 
+  beforeEach(async () => {
+    await resetDatabase();
+  });
+
   afterAll(async () => {
     await app.close();
+    await disconnectDatabase();
   });
 
   it("logs in and returns token", async () => {
@@ -54,7 +60,7 @@ describe("Auth (integration)", () => {
   });
 
   it("resets password with valid token", async () => {
-    const user = getUserByEmail("recreador@sol-e-lua.com");
+    const user = await getUserByEmail("recreador@sol-e-lua.com");
     const token = createResetToken(user!.id);
 
     const response = await app.inject({

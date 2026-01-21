@@ -20,6 +20,8 @@
 | US-020 | POST /advertencias | test_advertencias_create |
 | US-024 | GET /membros/:id | test_suspension_status |
 | US-025 | GET /dashboard/resumo | test_dashboard_resumo |
+| US-026 | GET /dashboard/animadores | test_dashboard_animadores |
+| US-027 | GET /dashboard/qualidade | test_dashboard_qualidade |
 
 ---
 

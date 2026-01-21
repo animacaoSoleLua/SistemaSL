@@ -11,7 +11,9 @@
 
 **Descricao:** Lista advertencias (admin ve todas, membro ve as suas).
 
-**Query:** `member_id`, `page`, `limit`
+**Query:** `member_id`, `created_by`, `page`, `limit`
+
+`created_by` aceita `me` para listar advertencias criadas pelo usuario logado.
 
 **Response 200 OK:**
 

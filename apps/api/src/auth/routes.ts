@@ -32,7 +32,7 @@ export async function authRoutes(app: FastifyInstance) {
       });
     }
 
-    const user = getUserByEmail(email);
+    const user = await getUserByEmail(email);
     if (!user || user.password !== password) {
       return reply.status(401).send({
         error: "invalid_credentials",
@@ -63,7 +63,7 @@ export async function authRoutes(app: FastifyInstance) {
       });
     }
 
-    const user = getUserByEmail(email);
+    const user = await getUserByEmail(email);
     if (user) {
       createResetToken(user.id);
     }
@@ -93,7 +93,7 @@ export async function authRoutes(app: FastifyInstance) {
       });
     }
 
-    updateUserPassword(userId, password);
+    await updateUserPassword(userId, password);
 
     return reply.status(200).send({
       data: {

@@ -74,7 +74,20 @@
     "email": "string",
     "role": "animador",
     "courses": [],
-    "warnings": []
+    "warnings": [
+      {
+        "id": "uuid",
+        "reason": "string",
+        "warning_date": "2026-01-10",
+        "created_by": "uuid"
+      }
+    ],
+    "warnings_total": 1,
+    "suspension": {
+      "status": "active",
+      "start_date": null,
+      "end_date": null
+    }
   }
 }
 ```

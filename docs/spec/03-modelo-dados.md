@@ -52,6 +52,7 @@ erDiagram
         uuid report_id FK
         string media_type
         string url
+        int size_bytes
         timestamp created_at
     }
 
@@ -89,6 +90,7 @@ erDiagram
         text reason
         date warning_date
         timestamp deleted_at
+        timestamp created_at
     }
 
     SUSPENSIONS {
@@ -97,6 +99,7 @@ erDiagram
         date start_date
         date end_date
         text reason
+        timestamp created_at
     }
 ```
 
@@ -145,6 +148,7 @@ CREATE TABLE report_media (
     report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
     media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image', 'video')),
     url TEXT NOT NULL,
+    size_bytes INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 ```
@@ -197,7 +201,8 @@ CREATE TABLE warnings (
     created_by UUID NOT NULL REFERENCES users(id),
     reason TEXT NOT NULL,
     warning_date DATE NOT NULL,
-    deleted_at TIMESTAMP
+    deleted_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 ```
 
@@ -209,7 +214,8 @@ CREATE TABLE suspensions (
     member_id UUID NOT NULL REFERENCES users(id),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    reason TEXT
+    reason TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 ```
 
