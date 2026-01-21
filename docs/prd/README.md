@@ -1,116 +1,61 @@
 # PRD - Product Requirements Document
 
-**Versão:** 1.0.0
-**Status:** Template
-**Última Atualização:** {{DATA}}
-**Owner:** Product Team
+**Versao:** 1.0.0
+**Status:** Em construcao
+**Ultima Atualizacao:** 2026-01-20
+**Owner:** Produto
 
 ---
 
-## Índice de Navegação
+## Indice de Navegacao
 
-### 1. [Sumário Executivo](01-visao-objetivos.md)
-Visão do produto, objetivos de negócio, critérios de sucesso e roadmap.
-
-**Conteúdo:**
-- Declaração de Visão
-- Objetivos de Negócio
-- Critérios de Sucesso
-- Timeline e Roadmap
-
----
+### 1. [Sumario Executivo](01-visao-objetivos.md)
+Visao do produto, objetivos de negocio, criterios de sucesso e roadmap.
 
 ### 2. [Contexto do Produto](02-contexto-personas.md)
-Problema sendo resolvido, personas detalhadas e necessidades dos usuários.
-
-**Conteúdo:**
-- Declaração do Problema
-- Personas Detalhadas
-- Necessidades e Dores
-- Análise Competitiva (opcional)
-
----
+Problema, personas e necessidades dos usuarios.
 
 ### 3. [Escopo do Produto](03-escopo.md)
-Definição do que está incluído no MVP e fora do escopo.
-
-**Conteúdo:**
-- No Escopo (MVP)
-- Fora do Escopo
-- Roadmap Futuro
-- Premissas e Restrições
-
----
+O que esta dentro e fora do MVP e o roadmap futuro.
 
 ### 4. [User Stories e Requisitos](04-user-stories/README.md)
-User stories detalhadas organizadas em epics.
+User stories organizadas por epics.
 
 **Epics:**
-- [Epic 1: {{EPIC_1}}](04-user-stories/epic-01-{{slug}}.md)
-- [Epic 2: {{EPIC_2}}](04-user-stories/epic-02-{{slug}}.md)
-- ... (adicionar conforme necessário)
+- [Epic 1: Relatorios de eventos](04-user-stories/epic-01-relatorios-eventos.md)
+- [Epic 2: Gestao de membros e perfis](04-user-stories/epic-02-membros-perfis.md)
+- [Epic 3: Cursos](04-user-stories/epic-03-cursos.md)
+- [Epic 4: Advertencias](04-user-stories/epic-04-advertencias.md)
+- [Epic 5: Dashboard analitica](04-user-stories/epic-05-dashboard-analitica.md)
 
----
+### 5. [Requisitos Nao Funcionais](05-rnf.md)
+Performance, seguranca, disponibilidade e usabilidade.
 
-### 5. [Requisitos Não Funcionais](05-rnf.md)
-Performance, escalabilidade, segurança e compliance.
+### 6. [Priorizacao de Features (MoSCoW)](06-priorizacao.md)
+Classificacao das funcionalidades.
 
-**Conteúdo:**
-- Performance e Latência
-- Escalabilidade
-- Disponibilidade
-- Segurança
-- Compliance
-- Observabilidade
+### 7. [Dependencias e Integracoes](07-dependencias.md)
+APIs externas e servicos de terceiros.
 
----
+### 8. [Compliance e Politicas](08-compliance.md)
+Requisitos legais e politicas de dados.
 
-### 6. [Priorização de Features (MoSCoW)](06-priorizacao.md)
-Classificação das funcionalidades.
+### 9. [Metricas de Sucesso](09-metricas.md)
+KPIs do produto.
 
-**Conteúdo:**
-- Must Have (obrigatório para MVP)
-- Should Have (importante)
-- Could Have (desejável)
-- Won't Have (fora do escopo)
+### 10. [Riscos e Mitigacoes](10-riscos.md)
+Riscos identificados e estrategias.
 
----
-
-### 7. [Dependências e Integrações](07-dependencias.md)
-APIs externas e serviços de terceiros.
-
----
-
-### 8. [Compliance e Políticas](08-compliance.md)
-Requisitos legais e regulatórios.
-
----
-
-### 9. [Métricas de Sucesso](09-metricas.md)
-KPIs do produto e negócio.
-
----
-
-### 10. [Riscos e Mitigações](10-riscos.md)
-Riscos identificados e estratégias.
-
----
-
-### 11. [Glossário](11-glossario.md)
-Termos e definições.
+### 11. [Glossario](11-glossario.md)
+Termos e definicoes.
 
 ---
 
 ## Como Usar Este PRD
 
-1. **Leitura Sequencial:** Comece pelo Sumário Executivo
-2. **Consulta Específica:** Use o índice acima
-3. **Desenvolvimento:** Foque em User Stories e RNFs
-4. **Stakeholders:** Leia Contexto, Escopo e Métricas
-
-## Versionamento
-
-- **V1.0.0** ({{DATA}}): Versão inicial
+1. Leia o Sumario Executivo para entender o objetivo do projeto.
+2. Consulte Contexto e Escopo para limites claros.
+3. Use as User Stories para implementacao.
 
 ---
 

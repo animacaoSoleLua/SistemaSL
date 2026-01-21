@@ -1,179 +1,115 @@
-# 📊 Status do Projeto - {{NOME_PROJETO}}
+# Status do Projeto - Sol e Lua
 
-**Última Atualização:** {{DATA_HORA}}
-**Atualizado por:** {{AGENTE}}
+**Ultima Atualizacao:** 2026-01-20
+**Atualizado por:** Codex
 
 ---
 
-## 📈 Progresso Geral
+## Progresso Geral
 
 ```
-██████░░░░░░░░░░░░░░ 30%
+██░░░░░░░░░░░░░░░░░░ 11%
 ```
 
-| Métrica | Valor |
+| Metrica | Valor |
 |---------|-------|
-| **Progresso Total** | 30% |
-| **Fase Atual** | Fase 2 - {{Nome da Fase}} |
-| **Tarefas Completas** | 12/40 |
-| **Última Tarefa** | FASE-2-TASK-003 |
+| Progresso Total | 11% |
+| Fase Atual | Fase 1 - Fundacao |
+| Tarefas Completas | 2/18 |
+| Ultima Tarefa | FASE-1-TASK-002 |
 
 ---
 
-## 🎯 Tarefa Atual
+## Tarefa Atual
 
-### FASE-2-TASK-004: {{Nome da Tarefa}}
+### FASE-1-TASK-003: Upload de midia
 
-**Epic:** [Epic 02](prd/04-user-stories/epic-02-{{nome}}.md)
-**User Story:** US-007
-**API:** [{{dominio}}](spec/04-contratos-api/{{dominio}}.md)
+**Epic:** Fundacao
+**User Story:** N/A
+**API:** N/A
 
-**Descrição:**
-{{Descrição detalhada da tarefa}}
+**Descricao:** Permitir upload de fotos e videos nos relatorios.
 
-**Critérios de Conclusão:**
-- [ ] Código implementado
-- [ ] Testes unitários
-- [ ] Testes de integração
-- [ ] Documentação atualizada
+**Criterios de Conclusao:**
+- [ ] Upload de fotos e videos funcionando
+- [ ] Validacao de tamanho e tipo de arquivo
+- [ ] Vinculo ao relatorio correto
+- [ ] Testes de upload
 
 ---
 
-## 📋 Fases do Projeto
+## Fases do Projeto
 
-### Fase 1: Fundação ✅
-*Infraestrutura base e configuração*
+### Fase 1: Fundacao
 
-| Task | Descrição | Status |
+| Task | Descricao | Status |
 |------|-----------|--------|
-| FASE-1-TASK-001 | Setup do projeto | ✅ Completo |
-| FASE-1-TASK-002 | Configuração do banco | ✅ Completo |
-| FASE-1-TASK-003 | Setup de testes | ✅ Completo |
-| FASE-1-TASK-004 | CI/CD básico | ✅ Completo |
+| FASE-1-TASK-001 | Setup base do projeto | Concluida |
+| FASE-1-TASK-002 | Autenticacao e roles | Concluida |
+| FASE-1-TASK-003 | Upload de midia | Pendente |
+| FASE-1-TASK-004 | Modelo de dados | Pendente |
 
-**Progresso da Fase:** 100% (4/4)
+### Fase 2: Core do Produto
 
----
-
-### Fase 2: {{Nome da Fase}} 🔄
-*{{Descrição da fase}}*
-
-| Task | Descrição | Status | Dependência |
+| Task | Descricao | Status | Dependencia |
 |------|-----------|--------|-------------|
-| FASE-2-TASK-001 | {{Tarefa 1}} | ✅ Completo | - |
-| FASE-2-TASK-002 | {{Tarefa 2}} | ✅ Completo | TASK-001 |
-| FASE-2-TASK-003 | {{Tarefa 3}} | ✅ Completo | TASK-002 |
-| FASE-2-TASK-004 | {{Tarefa 4}} | 🔄 Em progresso | TASK-003 |
-| FASE-2-TASK-005 | {{Tarefa 5}} | ⏳ Pendente | TASK-004 |
-| FASE-2-TASK-006 | {{Tarefa 6}} | ⏳ Pendente | TASK-005 |
+| FASE-2-TASK-001 | Relatorios de eventos | Pendente | Fase 1 |
+| FASE-2-TASK-002 | Gestao de membros | Pendente | FASE-2-TASK-001 |
+| FASE-2-TASK-003 | Cursos e inscricoes | Pendente | FASE-2-TASK-002 |
+| FASE-2-TASK-004 | Advertencias e suspensao | Pendente | FASE-2-TASK-002 |
 
-**Progresso da Fase:** 50% (3/6)
+### Fase 3: Analiticos e Melhorias
 
----
-
-### Fase 3: {{Nome da Fase}} ⏳
-*{{Descrição da fase}}*
-
-| Task | Descrição | Status | Dependência |
+| Task | Descricao | Status | Dependencia |
 |------|-----------|--------|-------------|
-| FASE-3-TASK-001 | {{Tarefa 1}} | ⏳ Pendente | FASE-2 |
-| FASE-3-TASK-002 | {{Tarefa 2}} | ⏳ Pendente | TASK-001 |
-| ... | ... | ... | ... |
-
-**Progresso da Fase:** 0% (0/X)
+| FASE-3-TASK-001 | Dashboard analitica | Pendente | Fase 2 |
+| FASE-3-TASK-002 | Filtros avancados | Pendente | FASE-3-TASK-001 |
+| FASE-3-TASK-003 | Exportacao PDF | Pendente | FASE-3-TASK-001 |
 
 ---
 
-## 🚧 Bloqueadores
+## Bloqueadores
 
-| ID | Descrição | Impacto | Status |
-|----|-----------|---------|--------|
-| BLOCK-001 | {{Descrição do bloqueador}} | Fase 3 | 🔴 Ativo |
-
-**Ações:**
-- {{Ação para resolver}}
+Nenhum bloqueador no momento.
 
 ---
 
-## ✅ Tarefas Recentes (Últimas 5)
+## Tarefas Recentes (Ultimas 5)
 
-| Data | Task | Descrição |
+| Data | Task | Descricao |
 |------|------|-----------|
-| {{DATA}} | FASE-2-TASK-003 | {{Descrição}} |
-| {{DATA}} | FASE-2-TASK-002 | {{Descrição}} |
-| {{DATA}} | FASE-2-TASK-001 | {{Descrição}} |
-| {{DATA}} | FASE-1-TASK-004 | {{Descrição}} |
-| {{DATA}} | FASE-1-TASK-003 | {{Descrição}} |
+| 2026-01-20 | FASE-1-TASK-001 | Setup base do projeto concluido |
+| 2026-01-20 | FASE-1-TASK-002 | Autenticacao e roles concluido |
+| 2026-01-20 | - | Projeto iniciado |
 
 ---
 
-## 📅 Próximas Tarefas
+## Proximas Tarefas
 
-| Prioridade | Task | Descrição | Estimativa |
-|------------|------|-----------|------------|
-| 1 | FASE-2-TASK-004 | {{Descrição}} | {{Tempo}} |
-| 2 | FASE-2-TASK-005 | {{Descrição}} | {{Tempo}} |
-| 3 | FASE-2-TASK-006 | {{Descrição}} | {{Tempo}} |
+| Prioridade | Task | Descricao | Estimativa |
+|------------|------|-----------|-----------|
+| 1 | FASE-1-TASK-003 | Upload de midia | 2 dias |
+| 2 | FASE-1-TASK-004 | Modelo de dados | 2-3 dias |
 
 ---
 
-## 📊 Métricas de Qualidade
+## Metricas de Qualidade
 
-| Métrica | Valor | Meta |
+| Metrica | Valor | Meta |
 |---------|-------|------|
-| Cobertura de Testes | {{X}}% | ≥80% |
-| Testes Passando | {{Y}}/{{Z}} | 100% |
-| Lint Errors | {{N}} | 0 |
-| Build Status | ✅ | ✅ |
+| Cobertura de Testes | 0% | >= 80% |
+| Testes Passando | 8/8 | 100% |
+| Build Status | - | - |
 
 ---
 
-## 📝 Log de Atividades
+## Log de Atividades
 
-### {{DATA}}
+### 2026-01-20
 
-**Sessão:** {{ID_SESSAO}}
+**Sessao:** briefing
 
 ```
-10:30 - Início da sessão
-10:32 - Lido STATUS.md, identificada FASE-2-TASK-003
-10:35 - Lido epic-02 e API de {{dominio}}
-10:45 - Implementado {{funcionalidade}}
-11:00 - Escritos 5 testes unitários
-11:10 - Executados testes: 5/5 passed
-11:15 - Atualizado STATUS.md
-11:16 - Tarefa FASE-2-TASK-003 marcada como completa
+09:00 - Briefing completo
+09:20 - Documentacao gerada (PRD e SPEC)
 ```
-
----
-
-## 🔗 Links Úteis
-
-- [PRD Completo](prd/README.md)
-- [SPEC Técnica](spec/README.md)
-- [Epic Atual](prd/04-user-stories/epic-02-{{nome}}.md)
-- [API Atual](spec/04-contratos-api/{{dominio}}.md)
-
----
-
-## ⚡ Comandos Rápidos
-
-```bash
-# Rodar testes
-npm test
-
-# Build
-npm run build
-
-# Lint
-npm run lint
-```
-
----
-
-**Legenda de Status:**
-- ✅ Completo
-- 🔄 Em progresso
-- ⏳ Pendente
-- 🚧 Bloqueado
-- ❌ Cancelado

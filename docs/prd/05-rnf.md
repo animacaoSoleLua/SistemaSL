@@ -1,184 +1,120 @@
-# 5. Requisitos Não Funcionais
+# 5. Requisitos Nao Funcionais
 
-**Versão:** 1.0.0
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Ultima Atualizacao:** 2026-01-20
 
-[← Voltar para Índice PRD](README.md)
+[← Voltar para Indice PRD](README.md)
 
 ---
 
-## RNF-01: Performance e Latência
+## RNF-01: Performance e Latencia
 
-**Requisito:** O sistema deve responder rapidamente às solicitações dos usuários.
+**Requisito:** O sistema deve responder rapidamente.
 
-**Critérios:**
-- Tempo de resposta da API: **p95 < 200ms**
-- Tempo de carregamento de página: **< 3 segundos**
-- Operações em lote: **< 30 segundos**
-
-**Medição:**
-- Monitoramento via APM (ex: DataDog, New Relic)
-- Alertas para degradação de performance
+**Criterios:**
+- Tempo de resposta da API: p95 < 300ms
+- Tempo de carregamento de pagina: < 3 segundos
+- Operacoes em lote: < 30 segundos
 
 ---
 
 ## RNF-02: Escalabilidade
 
-**Requisito:** O sistema deve suportar crescimento de usuários e dados.
+**Requisito:** Suportar crescimento sem reescrita.
 
-**Critérios:**
-- Suportar **{{USUARIOS_SIMULTANEOS}}** usuários simultâneos
-- Suportar **{{REGISTROS}}** registros no banco de dados
-- Horizontal scaling quando necessário
-
-**Estratégia:**
-- Arquitetura stateless
-- Banco de dados com índices otimizados
-- Cache para dados frequentes
+**Criterios:**
+- Suportar 20 usuarios simultaneos no pico
+- Suportar 100.000 registros no banco
+- Escalar horizontalmente quando necessario
 
 ---
 
 ## RNF-03: Disponibilidade
 
-**Requisito:** O sistema deve estar disponível para uso.
+**Requisito:** Sistema disponivel para uso diario.
 
-**Critérios:**
-- Uptime: **{{UPTIME}}** (ex: 99.9%)
-- Tempo máximo de downtime: **{{MAX_DOWNTIME}}** por mês
-- Recuperação de falhas: **< 15 minutos**
-
-**Estratégia:**
-- Monitoramento contínuo
-- Health checks automatizados
-- Procedimentos de DR documentados
+**Criterios:**
+- Uptime: 99.5%
+- Downtime maximo: 3 horas/mes
+- Recuperacao de falhas: < 30 minutos
 
 ---
 
-## RNF-04: Segurança
+## RNF-04: Seguranca
 
-**Requisito:** O sistema deve proteger dados e prevenir acessos não autorizados.
+**Requisito:** Proteger dados e acessos.
 
-**Critérios:**
-- Autenticação via **JWT** ou similar
-- Dados sensíveis criptografados em repouso e trânsito
-- Proteção contra OWASP Top 10
-- Rate limiting para prevenir abuse
-
-**Implementação:**
-- HTTPS obrigatório
-- Senhas com hash bcrypt (min 12 rounds)
-- Tokens com expiração curta
-- Logs de auditoria
+**Criterios:**
+- Autenticacao via JWT
+- HTTPS obrigatorio
+- Senhas com hash bcrypt
+- Rate limiting basico
 
 ---
 
 ## RNF-05: Compliance
 
-**Requisito:** O sistema deve estar em conformidade com regulamentações aplicáveis.
+**Requisito:** Adequacao basica a LGPD.
 
-**Critérios:**
-{{#se aplicável}}
-- **LGPD:** Consentimento, direito ao esquecimento, portabilidade
-- **GDPR:** (se aplicável internacionalmente)
-- **PCI-DSS:** (se processar pagamentos)
-{{/se}}
-
-**Implementação:**
-- Política de privacidade clara
-- Mecanismo de opt-out
-- Retenção de dados definida
-- Processo de exclusão de dados
+**Criterios:**
+- Consentimento para dados pessoais
+- Exportacao e exclusao sob solicitacao
+- Politica de privacidade publicada
 
 ---
 
 ## RNF-06: Observabilidade
 
-**Requisito:** O sistema deve ser monitorável e debuggável.
+**Requisito:** Monitoramento basico de erros e performance.
 
-**Critérios:**
-- Logs estruturados em JSON
-- Métricas de negócio e técnicas
-- Tracing distribuído
-- Alertas para anomalias
-
-**Ferramentas Sugeridas:**
-- Logs: ELK Stack, CloudWatch, ou Loki
-- Métricas: Prometheus + Grafana
-- APM: DataDog, New Relic, ou Jaeger
+**Criterios:**
+- Logs estruturados
+- Alertas para erros 5xx
+- Metricas basicas de latencia
 
 ---
 
 ## RNF-07: Usabilidade
 
-**Requisito:** O sistema deve ser fácil de usar.
+**Requisito:** Interface simples e responsiva.
 
-**Critérios:**
-- Interface intuitiva (sem manual)
-- Responsivo (mobile-first)
-- Acessibilidade WCAG 2.1 nível AA
-- Feedback claro para ações do usuário
-
-**Validação:**
-- Testes de usabilidade com usuários reais
-- Análise de métricas de uso
+**Criterios:**
+- Funciona no celular
+- Fluxos claros sem manual
+- Feedback visual em acoes
 
 ---
 
 ## RNF-08: Manutenibilidade
 
-**Requisito:** O código deve ser fácil de manter e evoluir.
+**Requisito:** Codigo facil de manter.
 
-**Critérios:**
-- Cobertura de testes: **≥ 80%** (unitários)
-- Código documentado
-- Arquitetura modular
-- CI/CD automatizado
-
-**Práticas:**
-- Code review obrigatório
-- Padrões de código (ESLint, Prettier)
-- Documentação de APIs (OpenAPI/Swagger)
+**Criterios:**
+- Testes unitarios principais
+- Documentacao de API
+- Padroes de codigo
 
 ---
 
 ## RNF-09: Rate Limiting
 
-**Requisito:** Proteger APIs contra abuse e garantir fair use.
+**Requisito:** Proteger APIs contra abuso.
 
-**Critérios:**
-- Rate limit por usuário: **{{LIMITE_USUARIO}}** requests/minuto
-- Rate limit global: **{{LIMITE_GLOBAL}}** requests/segundo
-- Mensagens de erro claras quando excedido
-
----
-
-## RNF-10: Backup e Recuperação
-
-**Requisito:** Dados devem ser recuperáveis em caso de falha.
-
-**Critérios:**
-- Backup diário do banco de dados
-- Retenção de backups: **{{RETENCAO}}** dias
-- RTO (Recovery Time Objective): **{{RTO}}**
-- RPO (Recovery Point Objective): **{{RPO}}**
+**Criterios:**
+- 100 req/min por usuario
+- 30 req/seg global
 
 ---
 
-## Matriz de RNFs
+## RNF-10: Backup e Recuperacao
 
-| ID | Categoria | Prioridade | Status |
-|----|-----------|------------|--------|
-| RNF-01 | Performance | Must Have | 📋 |
-| RNF-02 | Escalabilidade | Should Have | 📋 |
-| RNF-03 | Disponibilidade | Must Have | 📋 |
-| RNF-04 | Segurança | Must Have | 📋 |
-| RNF-05 | Compliance | Must Have | 📋 |
-| RNF-06 | Observabilidade | Should Have | 📋 |
-| RNF-07 | Usabilidade | Should Have | 📋 |
-| RNF-08 | Manutenibilidade | Should Have | 📋 |
-| RNF-09 | Rate Limiting | Should Have | 📋 |
-| RNF-10 | Backup | Must Have | 📋 |
+**Requisito:** Dados recuperaveis em falhas.
+
+**Criterios:**
+- Backup diario do banco
+- Retencao de 7 dias
+- RTO 2 horas, RPO 24 horas
 
 ---
 
-[← Voltar para Índice PRD](README.md)
+[← Voltar para Indice PRD](README.md)

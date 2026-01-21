@@ -1,89 +1,38 @@
-# SPEC - Especificação Técnica
+# SPEC - Especificacao Tecnica
 
-**Versão:** 1.0.0
-**Status:** Template
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Status:** Em construcao
+**Ultima Atualizacao:** 2026-01-20
 **Owner:** Tech Lead
 
 ---
 
-## Índice da Especificação
+## Indice da Especificacao
 
-### 1. [Visão Geral](01-visao-geral.md)
-Objetivo do sistema, escopo do MVP e premissas técnicas.
-
-### 2. [Arquitetura do Sistema](02-arquitetura.md)
-Visão arquitetural, componentes e fluxo de dados.
-
-### 3. [Modelo de Dados](03-modelo-dados.md)
-Diagrama ER, schemas completos e relacionamentos.
-
-### 4. [Contratos de API](04-contratos-api/)
-Endpoints REST organizados por domínio:
-- [Índice de Endpoints](04-contratos-api/README.md)
-- [{{DOMINIO_1}}](04-contratos-api/{{dominio_1}}.md)
-- [{{DOMINIO_2}}](04-contratos-api/{{dominio_2}}.md)
-
-### 5. [Diagramas de Sequência](05-diagramas-sequencia.md)
-Fluxos principais em Mermaid.
-
-### 6. [Máquina de Estados](06-maquina-estados.md)
-Estados, transições e regras.
-
-### 7. [Tratamento de Erros](07-tratamento-erros.md)
-Categorização, retry e circuit breaker.
-
-### 8. [Estratégia de Testes](08-estrategia-testes.md)
-Pirâmide de testes e exemplos.
-
-### 9. [Deployment e Infraestrutura](09-deployment.md)
-Arquitetura de deployment e variáveis de ambiente.
-
-### 10. [Observabilidade](10-observabilidade.md)
-Logs, métricas e alertas.
-
-### 11. [Segurança](11-seguranca.md)
-Autenticação, autorização e proteção de dados.
-
-### 12. [Performance](12-performance.md)
-Otimizações, caching e scaling.
-
-### 13. [Rastreabilidade](13-rastreabilidade.md)
-Matriz US → RF → Endpoint → Tests.
+1. [Visao Geral](01-visao-geral.md)
+2. [Arquitetura do Sistema](02-arquitetura.md)
+3. [Modelo de Dados](03-modelo-dados.md)
+4. [Contratos de API](04-contratos-api/README.md)
+5. [Diagramas de Sequencia](05-diagramas-sequencia.md)
+6. [Maquina de Estados](06-maquina-estados.md)
+7. [Tratamento de Erros](07-tratamento-erros.md)
+8. [Estrategia de Testes](08-estrategia-testes.md)
+9. [Deployment e Infraestrutura](09-deployment.md)
+10. [Observabilidade](10-observabilidade.md)
+11. [Seguranca](11-seguranca.md)
+12. [Performance](12-performance.md)
+13. [Rastreabilidade](13-rastreabilidade.md)
 
 ---
 
-## Como Usar Este Documento
+## Dominios de API
 
-**Para Desenvolvedores:**
-- Comece com Visão Geral e Arquitetura
-- Consulte Modelo de Dados para schemas
-- Use Contratos de API como referência
-
-**Para Arquitetos:**
-- Arquitetura do Sistema - Visão macro
-- Diagramas de Sequência - Fluxos
-- Performance - Otimizações
-
-**Para DevOps:**
-- Deployment e Infraestrutura
-- Observabilidade
-- Segurança
-
-**Para QA:**
-- Estratégia de Testes
-- Rastreabilidade
-- Contratos de API
-
----
-
-## Convenções
-
-- ✅ Implementado
-- 🚧 Em desenvolvimento
-- 📋 Planejado
-- ⚠️ Atenção
-- 💡 Dica
+- [Auth](04-contratos-api/auth.md)
+- [Membros](04-contratos-api/membros.md)
+- [Relatorios](04-contratos-api/relatorios.md)
+- [Cursos](04-contratos-api/cursos.md)
+- [Advertencias](04-contratos-api/advertencias.md)
+- [Dashboard](04-contratos-api/dashboard.md)
 
 ---
 

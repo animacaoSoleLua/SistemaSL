@@ -1,119 +1,92 @@
-# 8. Compliance e Políticas
+# 8. Compliance e Politicas
 
-**Versão:** 1.0.0
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Ultima Atualizacao:** 2026-01-20
 
-[← Voltar para Índice PRD](README.md)
+[← Voltar para Indice PRD](README.md)
 
 ---
 
-## 8.1 LGPD (Lei Geral de Proteção de Dados)
+## 8.1 LGPD (Lei Geral de Protecao de Dados)
 
-### Princípios Aplicáveis
+### Principios Aplicaveis
 
-| Princípio | Implementação |
+| Principio | Implementacao |
 |-----------|---------------|
-| **Finalidade** | Dados coletados apenas para fins específicos e declarados |
-| **Adequação** | Tratamento compatível com finalidades informadas |
-| **Necessidade** | Coleta limitada ao mínimo necessário |
-| **Transparência** | Informações claras sobre tratamento de dados |
-| **Segurança** | Medidas técnicas para proteger dados |
+| Finalidade | Dados usados para gestao de equipe e relatorios |
+| Adequacao | Coleta alinhada ao trabalho dos membros |
+| Necessidade | Apenas dados essenciais |
+| Transparencia | Politica clara e acessivel |
+| Seguranca | Controle de acesso e logs |
 
-### Requisitos de Implementação
+### Requisitos de Implementacao
 
 1. **Consentimento**
-   - Opt-in explícito para coleta de dados
-   - Granularidade por tipo de dado/finalidade
-   - Registro de consentimento com timestamp
+   - Opt-in no primeiro acesso
+   - Registro de consentimento
 
 2. **Direito ao Acesso**
-   - Endpoint para exportar dados do usuário
-   - Formato legível (JSON ou CSV)
-   - Prazo: 15 dias úteis
+   - Exportacao de dados do membro
+   - Prazo: ate 15 dias
 
-3. **Direito à Exclusão**
-   - Mecanismo de solicitação de exclusão
-   - Exclusão em cascata de dados relacionados
-   - Prazo: 15 dias úteis
+3. **Direito a Exclusao**
+   - Exclusao mediante solicitacao
+   - Remocao de dados pessoais
 
 4. **Portabilidade**
-   - Exportação em formato interoperável
-   - Estrutura documentada
+   - Exportacao em JSON/CSV
 
 ### Dados Coletados
 
-| Dado | Finalidade | Base Legal | Retenção |
+| Dado | Finalidade | Base Legal | Retencao |
 |------|------------|------------|----------|
-| {{DADO_1}} | {{FINALIDADE_1}} | {{BASE_1}} | {{RETENCAO_1}} |
-| {{DADO_2}} | {{FINALIDADE_2}} | {{BASE_2}} | {{RETENCAO_2}} |
-| {{DADO_3}} | {{FINALIDADE_3}} | {{BASE_3}} | {{RETENCAO_3}} |
+| Nome e email | Login e identificacao | Execucao de contrato | Enquanto ativo |
+| Perfil e papel | Controle de acesso | Legitimo interesse | Enquanto ativo |
+| Relatorios e midia | Registro de eventos | Legitimo interesse | 24 meses |
 
 ---
 
-## 8.2 Políticas por Canal (Se Aplicável)
+## 8.2 Politicas por Canal
 
 ### Email
 
-- Compliance com CAN-SPAM / LGPD
 - Opt-out em todas as mensagens
-- Identificação clara do remetente
-- Assunto não enganoso
-
-### WhatsApp
-
-- Compliance com Meta Business Policies
-- Uso de templates aprovados
-- Janela de 24h para respostas
-- Opt-in explícito obrigatório
-
-### SMS (Se Aplicável)
-
-- Compliance com ANATEL
-- Horário de envio respeitado
-- Opt-out via PARE
+- Envio apenas para recuperacao e notificacoes internas
 
 ---
 
-## 8.3 Segurança de Dados
+## 8.3 Seguranca de Dados
 
-### Dados Sensíveis
+### Dados Sensiveis
 
-| Dado | Classificação | Proteção |
+| Dado | Classificacao | Protecao |
 |------|---------------|----------|
-| Senhas | Crítico | Hash bcrypt, nunca armazenado em texto |
-| Tokens | Crítico | Criptografado, expiração curta |
-| Dados pessoais | Alto | Criptografia em repouso |
-| Logs | Médio | Retenção limitada, sem PII |
+| Senhas | Critico | Hash bcrypt |
+| Tokens | Critico | Expiracao curta |
+| Dados pessoais | Alto | Criptografia em transito |
 
 ### Controles de Acesso
 
-- Autenticação obrigatória
-- Autorização por roles
-- Audit trail de acessos
-- Sessões com timeout
+- Autenticacao obrigatoria
+- Autorizacao por papel
+- Logs de auditoria basicos
 
 ---
 
-## 8.4 Termos e Políticas
+## 8.4 Termos e Politicas
 
-### Documentos Necessários
+### Documentos Necessarios
 
-- [ ] Termos de Uso
-- [ ] Política de Privacidade
-- [ ] Política de Cookies (se aplicável)
-- [ ] SLA (se aplicável)
+- [ ] Termos de uso
+- [ ] Politica de privacidade
 
 ### Checklist de Compliance
 
 - [ ] Consentimento implementado
-- [ ] Mecanismo de opt-out funcional
-- [ ] Exportação de dados disponível
-- [ ] Exclusão de dados implementada
-- [ ] Política de privacidade publicada
-- [ ] Logs de auditoria ativos
-- [ ] Criptografia configurada
-- [ ] Backup de dados ativo
+- [ ] Exportacao de dados disponivel
+- [ ] Exclusao de dados implementada
+- [ ] Politica de privacidade publicada
 
 ---
 
-[← Voltar para Índice PRD](README.md)
+[← Voltar para Indice PRD](README.md)

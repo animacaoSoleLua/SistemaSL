@@ -1,7 +1,7 @@
 # 3. Modelo de Dados
 
-**Versão:** 1.0.0
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Ultima Atualizacao:** 2026-01-20
 
 ← [Voltar para SPEC](README.md)
 
@@ -11,37 +11,92 @@
 
 ```mermaid
 erDiagram
-    USERS ||--o{ {{ENTIDADE_1}} : creates
-    {{ENTIDADE_1}} ||--o{ {{ENTIDADE_2}} : contains
-    {{ENTIDADE_2}} ||--o{ {{ENTIDADE_3}} : has
+    USERS ||--o{ REPORTS : cria
+    REPORTS ||--o{ REPORT_MEDIA : possui
+    REPORTS ||--o{ REPORT_FEEDBACKS : inclui
+    USERS ||--o{ REPORT_FEEDBACKS : recebe
+    USERS ||--o{ COURSES : cria
+    COURSES ||--o{ COURSE_ENROLLMENTS : tem
+    USERS ||--o{ COURSE_ENROLLMENTS : participa
+    USERS ||--o{ WARNINGS : recebe
+    USERS ||--o{ WARNINGS : aplica
+    USERS ||--o{ SUSPENSIONS : possui
 
     USERS {
         uuid id PK
-        string email UK
+        string name
+        string email
         string password_hash
-        string name
-        enum role
+        string phone
+        string role
+        string photo_url
         timestamp created_at
         timestamp updated_at
     }
 
-    {{ENTIDADE_1}} {
+    REPORTS {
         uuid id PK
-        uuid user_id FK
-        string name
-        jsonb config
-        enum status
+        uuid author_id FK
+        date event_date
+        string contractor_name
+        string location
+        string team_summary
+        int quality_sound
+        int quality_microphone
+        text notes
         timestamp created_at
-        timestamp updated_at
     }
 
-    {{ENTIDADE_2}} {
+    REPORT_MEDIA {
         uuid id PK
-        uuid {{entidade_1}}_id FK
-        string field1
-        string field2
-        enum status
+        uuid report_id FK
+        string media_type
+        string url
         timestamp created_at
+    }
+
+    REPORT_FEEDBACKS {
+        uuid id PK
+        uuid report_id FK
+        uuid member_id FK
+        text feedback
+        timestamp created_at
+    }
+
+    COURSES {
+        uuid id PK
+        uuid created_by FK
+        string title
+        text description
+        date course_date
+        string location
+        int capacity
+        timestamp created_at
+    }
+
+    COURSE_ENROLLMENTS {
+        uuid id PK
+        uuid course_id FK
+        uuid member_id FK
+        string status
+        timestamp created_at
+    }
+
+    WARNINGS {
+        uuid id PK
+        uuid member_id FK
+        uuid created_by FK
+        text reason
+        date warning_date
+        timestamp deleted_at
+    }
+
+    SUSPENSIONS {
+        uuid id PK
+        uuid member_id FK
+        date start_date
+        date end_date
+        text reason
     }
 ```
 
@@ -54,201 +109,121 @@ erDiagram
 ```sql
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'user'
-        CHECK (role IN ('admin', 'user', 'viewer')),
-    email_verified_at TIMESTAMP,
+    phone VARCHAR(30),
+    role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'animador', 'recreador')),
+    photo_url TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
-
--- Índices
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
 ```
 
-### Tabela: {{TABELA_1}}
+### Tabela: reports
 
 ```sql
-CREATE TABLE {{tabela_1}} (
+CREATE TABLE reports (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
+    author_id UUID NOT NULL REFERENCES users(id),
+    event_date DATE NOT NULL,
+    contractor_name VARCHAR(150) NOT NULL,
+    location VARCHAR(150) NOT NULL,
+    team_summary VARCHAR(200),
+    quality_sound INT,
+    quality_microphone INT,
+    notes TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+```
+
+### Tabela: report_media
+
+```sql
+CREATE TABLE report_media (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+    media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image', 'video')),
+    url TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+```
+
+### Tabela: report_feedbacks
+
+```sql
+CREATE TABLE report_feedbacks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+    member_id UUID NOT NULL REFERENCES users(id),
+    feedback TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+```
+
+### Tabela: courses
+
+```sql
+CREATE TABLE courses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_by UUID NOT NULL REFERENCES users(id),
+    title VARCHAR(150) NOT NULL,
     description TEXT,
-    config JSONB NOT NULL DEFAULT '{}',
-    status VARCHAR(20) NOT NULL DEFAULT 'draft'
-        CHECK (status IN ('draft', 'active', 'paused', 'completed')),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    course_date DATE NOT NULL,
+    location VARCHAR(150),
+    capacity INT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
-
--- Índices
-CREATE INDEX idx_{{tabela_1}}_user_id ON {{tabela_1}}(user_id);
-CREATE INDEX idx_{{tabela_1}}_status ON {{tabela_1}}(status);
-CREATE INDEX idx_{{tabela_1}}_created_at ON {{tabela_1}}(created_at DESC);
 ```
 
-### Tabela: {{TABELA_2}}
+### Tabela: course_enrollments
 
 ```sql
-CREATE TABLE {{tabela_2}} (
+CREATE TABLE course_enrollments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    {{tabela_1}}_id UUID NOT NULL REFERENCES {{tabela_1}}(id) ON DELETE CASCADE,
-    -- Adicione campos específicos
-    field1 VARCHAR(255),
-    field2 TEXT,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending',
-    metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    member_id UUID NOT NULL REFERENCES users(id),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('enrolled', 'attended', 'missed')),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
-
--- Índices
-CREATE INDEX idx_{{tabela_2}}_{{tabela_1}}_id ON {{tabela_2}}({{tabela_1}}_id);
-CREATE INDEX idx_{{tabela_2}}_status ON {{tabela_2}}(status);
 ```
 
----
-
-## 3.3 Tipos Enumerados
+### Tabela: warnings
 
 ```sql
--- Status genérico
-CREATE TYPE status_enum AS ENUM (
-    'draft',
-    'active',
-    'paused',
-    'completed',
-    'failed',
-    'cancelled'
+CREATE TABLE warnings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    member_id UUID NOT NULL REFERENCES users(id),
+    created_by UUID NOT NULL REFERENCES users(id),
+    reason TEXT NOT NULL,
+    warning_date DATE NOT NULL,
+    deleted_at TIMESTAMP
 );
-
--- Roles de usuário
-CREATE TYPE user_role AS ENUM (
-    'admin',
-    'user',
-    'viewer'
-);
-
--- Adicione outros enums conforme necessidade
 ```
 
----
-
-## 3.4 Relacionamentos
-
-| Tabela Origem | Tabela Destino | Tipo | Descrição |
-|---------------|----------------|------|-----------|
-| users | {{tabela_1}} | 1:N | Usuário cria múltiplos {{tabela_1}} |
-| {{tabela_1}} | {{tabela_2}} | 1:N | {{tabela_1}} contém múltiplos {{tabela_2}} |
-
----
-
-## 3.5 Constraints e Validações
-
-### users
-- `email`: Único, formato válido
-- `password_hash`: Mínimo 60 caracteres (bcrypt)
-- `role`: Valores permitidos: admin, user, viewer
-
-### {{tabela_1}}
-- `name`: 3-100 caracteres
-- `status`: Valores permitidos conforme enum
-- `user_id`: Deve existir em users
-
----
-
-## 3.6 Índices para Performance
-
-| Tabela | Índice | Tipo | Justificativa |
-|--------|--------|------|---------------|
-| users | idx_users_email | B-tree | Busca por login |
-| {{tabela_1}} | idx_{{tabela_1}}_user_id | B-tree | Filtro por usuário |
-| {{tabela_1}} | idx_{{tabela_1}}_status | B-tree | Filtro por status |
-
----
-
-## 3.7 Campos JSONB
-
-### Estrutura de config ({{tabela_1}})
-
-```json
-{
-  "setting1": "value1",
-  "setting2": {
-    "nested": true
-  },
-  "options": ["opt1", "opt2"]
-}
-```
-
-### Estrutura de metadata ({{tabela_2}})
-
-```json
-{
-  "source": "string",
-  "extra_data": {},
-  "timestamps": {
-    "processed_at": "ISO8601"
-  }
-}
-```
-
----
-
-## 3.8 Migrations
-
-### Ordem de Execução
-
-1. `001_create_users.sql`
-2. `002_create_{{tabela_1}}.sql`
-3. `003_create_{{tabela_2}}.sql`
-4. `004_add_indexes.sql`
-
-### Exemplo de Migration (Prisma)
-
-```prisma
-model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  passwordHash  String   @map("password_hash")
-  name          String
-  role          Role     @default(user)
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  {{tabela_1}}s {{Tabela_1}}[]
-
-  @@map("users")
-}
-
-enum Role {
-  admin
-  user
-  viewer
-}
-```
-
----
-
-## 3.9 Soft Delete (Opcional)
-
-Se usar soft delete, adicionar em cada tabela:
+### Tabela: suspensions
 
 ```sql
-deleted_at TIMESTAMP DEFAULT NULL
-```
-
-E índice parcial:
-
-```sql
-CREATE INDEX idx_{{tabela}}_active ON {{tabela}}(id)
-WHERE deleted_at IS NULL;
+CREATE TABLE suspensions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    member_id UUID NOT NULL REFERENCES users(id),
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason TEXT
+);
 ```
 
 ---
 
-← [Voltar para SPEC](README.md) | [Próximo: Contratos de API →](04-contratos-api/README.md)
+## 3.3 Indices Principais
+
+| Tabela | Indice | Justificativa |
+|--------|--------|---------------|
+| users | idx_users_email | Login |
+| reports | idx_reports_author | Lista por animador |
+| course_enrollments | idx_course_member | Cursos do membro |
+| warnings | idx_warnings_member | Advertencias do membro |
+
+---
+
+← [Voltar para SPEC](README.md)

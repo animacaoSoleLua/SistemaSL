@@ -1,131 +1,94 @@
-# 6. Priorização de Features (MoSCoW)
+# 6. Priorizacao de Features (MoSCoW)
 
-**Versão:** 1.0.0
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Ultima Atualizacao:** 2026-01-20
 
-[← Voltar para Índice PRD](README.md)
-
----
-
-## Visão Geral
-
-Este documento classifica todas as funcionalidades usando o framework **MoSCoW**:
-
-- **M**ust Have - Obrigatório para MVP
-- **S**hould Have - Importante, mas não bloqueante
-- **C**ould Have - Desejável se houver tempo
-- **W**on't Have - Fora do escopo atual
+[← Voltar para Indice PRD](README.md)
 
 ---
 
-## 🔴 Must Have (MVP)
+## Visao Geral
 
-Funcionalidades **obrigatórias** para o lançamento. Sem elas, o produto não funciona.
+Classificacao das funcionalidades usando MoSCoW.
+
+---
+
+## Must Have (MVP)
 
 | ID | Funcionalidade | Epic | Justificativa |
 |----|----------------|------|---------------|
-| US-001 | {{MUST_1}} | {{EPIC}} | {{JUSTIFICATIVA}} |
-| US-002 | {{MUST_2}} | {{EPIC}} | {{JUSTIFICATIVA}} |
-| US-003 | {{MUST_3}} | {{EPIC}} | {{JUSTIFICATIVA}} |
-| US-004 | {{MUST_4}} | {{EPIC}} | {{JUSTIFICATIVA}} |
-| US-005 | {{MUST_5}} | {{EPIC}} | {{JUSTIFICATIVA}} |
+| US-001 | Criar relatorio de evento | Relatorios | Base do produto |
+| US-002 | Anexar fotos e videos | Relatorios | Comprovar evento |
+| US-007 | Cadastrar membro e papel | Membros | Controle de acesso |
+| US-014 | Criar curso | Cursos | Evolucao da equipe |
+| US-020 | Criar advertencia | Advertencias | Controle disciplinar |
 
-**Total Must Have:** {{TOTAL_MUST}}
+**Total Must Have:** 20
 
 ---
 
-## 🟡 Should Have
-
-Funcionalidades **importantes** que agregam valor significativo, mas o sistema funciona sem elas.
+## Should Have
 
 | ID | Funcionalidade | Epic | Justificativa |
 |----|----------------|------|---------------|
-| US-006 | {{SHOULD_1}} | {{EPIC}} | {{JUSTIFICATIVA}} |
-| US-007 | {{SHOULD_2}} | {{EPIC}} | {{JUSTIFICATIVA}} |
-| US-008 | {{SHOULD_3}} | {{EPIC}} | {{JUSTIFICATIVA}} |
+| US-003 | Ver meus relatorios | Relatorios | Acompanhamento pessoal |
+| US-005 | Filtrar relatorios | Relatorios | Acesso rapido a dados |
+| US-025 | Resumo por periodo | Dashboard | Visao rapida |
 
-**Total Should Have:** {{TOTAL_SHOULD}}
+**Total Should Have:** 7
 
 ---
 
-## 🟢 Could Have
-
-Funcionalidades **desejáveis** que melhoram a experiência, implementadas se sobrar tempo.
+## Could Have
 
 | ID | Funcionalidade | Epic | Justificativa |
 |----|----------------|------|---------------|
-| US-009 | {{COULD_1}} | {{EPIC}} | {{JUSTIFICATIVA}} |
-| US-010 | {{COULD_2}} | {{EPIC}} | {{JUSTIFICATIVA}} |
+| US-027 | Indicadores de qualidade | Dashboard | Melhora analise |
 
-**Total Could Have:** {{TOTAL_COULD}}
+**Total Could Have:** 1
 
 ---
 
-## ⚪ Won't Have (This Release)
+## Won't Have (This Release)
 
-Funcionalidades **fora do escopo** atual, mas podem ser consideradas no futuro.
-
-| Funcionalidade | Motivo | Versão Futura |
+| Funcionalidade | Motivo | Versao Futura |
 |----------------|--------|---------------|
-| {{WONT_1}} | {{MOTIVO_1}} | V1.1 |
-| {{WONT_2}} | {{MOTIVO_2}} | V2.0 |
-| {{WONT_3}} | {{MOTIVO_3}} | V2.0 |
+| Integracao WhatsApp | Nao essencial no MVP | V2.0 |
+| Modulo de RH | Depende de maturidade | V2.0 |
+| Relatorios avancados | Exige historico maior | V2.0 |
 
-**Total Won't Have:** {{TOTAL_WONT}}
+**Total Won't Have:** 3
 
 ---
 
-## Resumo da Priorização
+## Resumo da Priorizacao
 
 | Categoria | Quantidade | Percentual |
 |-----------|------------|------------|
-| 🔴 Must Have | {{TOTAL_MUST}} | {{PERCENT_MUST}}% |
-| 🟡 Should Have | {{TOTAL_SHOULD}} | {{PERCENT_SHOULD}}% |
-| 🟢 Could Have | {{TOTAL_COULD}} | {{PERCENT_COULD}}% |
-| ⚪ Won't Have | {{TOTAL_WONT}} | - |
-| **Total MVP** | **{{TOTAL_MVP}}** | **100%** |
+| Must Have | 20 | 71% |
+| Should Have | 7 | 25% |
+| Could Have | 1 | 4% |
+| Won't Have | 3 | - |
+| **Total MVP** | **28** | **100%** |
 
 ---
 
-## Critérios de Priorização
+## Sequencia de Implementacao
 
-As funcionalidades foram priorizadas considerando:
+### Fase 1: Core (Semana 1)
+1. US-010: Login e recuperacao de senha
+2. US-007: Cadastrar membro e papel
+3. US-001: Criar relatorio
 
-1. **Valor para o Usuário** - Quanto resolve o problema da persona principal
-2. **Viabilidade Técnica** - Complexidade de implementação
-3. **Dependências** - Se bloqueia outras funcionalidades
-4. **Risco** - Impacto se não for implementada
-5. **Esforço** - Tempo e recursos necessários
+### Fase 2: Essencial (Semana 1)
+4. US-002: Anexar midia
+5. US-014: Criar curso
+6. US-020: Criar advertencia
 
-### Matriz de Priorização
-
-```
-Alto Valor + Baixo Esforço  = Must Have (Fazer primeiro)
-Alto Valor + Alto Esforço   = Should Have (Planejar bem)
-Baixo Valor + Baixo Esforço = Could Have (Se der tempo)
-Baixo Valor + Alto Esforço  = Won't Have (Não fazer agora)
-```
+### Fase 3: Complemento (Semana 2)
+7. US-004: Admin ver relatorios
+8. US-018: Inscrever em curso
 
 ---
 
-## Sequência de Implementação
-
-### Fase 1: Core (Semana 1-2)
-1. US-001: {{DESCRICAO}}
-2. US-002: {{DESCRICAO}}
-
-### Fase 2: Essencial (Semana 3-4)
-3. US-003: {{DESCRICAO}}
-4. US-004: {{DESCRICAO}}
-
-### Fase 3: Importante (Semana 5-6)
-5. US-005: {{DESCRICAO}}
-6. US-006: {{DESCRICAO}}
-
-### Fase 4: Melhorias (Semana 7+)
-7. US-007: {{DESCRICAO}}
-8. US-008: {{DESCRICAO}}
-
----
-
-[← Voltar para Índice PRD](README.md)
+[← Voltar para Indice PRD](README.md)

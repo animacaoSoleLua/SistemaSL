@@ -1,26 +1,26 @@
 # 4. Contratos de API
 
-**Versão:** 1.0.0
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Ultima Atualizacao:** 2026-01-20
 
 ← [Voltar para SPEC](../README.md)
 
 ---
 
-## Visão Geral
+## Visao Geral
 
-API REST com autenticação via JWT Bearer token.
+API REST com autenticacao via JWT Bearer token.
 
 ### Base URL
 
 ```
 Development: http://localhost:3000/api/v1
-Production:  https://api.{{domain}}.com/v1
+Production:  https://api.sol-e-lua.com/v1
 ```
 
-### Autenticação
+### Autenticacao
 
-Todas as rotas (exceto auth) requerem header:
+Rotas (exceto auth) exigem header:
 
 ```
 Authorization: Bearer {jwt_token}
@@ -28,46 +28,69 @@ Authorization: Bearer {jwt_token}
 
 ---
 
-## Índice de Endpoints
+## Indice de Endpoints
 
-### Autenticação
-| Método | Endpoint | Descrição |
+### Autenticacao
+| Metodo | Endpoint | Descricao |
 |--------|----------|-----------|
-| POST | `/auth/register` | Criar conta |
 | POST | `/auth/login` | Fazer login |
-| POST | `/auth/logout` | Fazer logout |
-| POST | `/auth/refresh` | Renovar token |
 | POST | `/auth/forgot-password` | Solicitar reset |
 | POST | `/auth/reset-password` | Resetar senha |
 
-### {{DOMINIO_1}}
-| Método | Endpoint | Descrição |
+### Membros
+| Metodo | Endpoint | Descricao |
 |--------|----------|-----------|
-| GET | `/{{dominio_1}}` | Listar todos |
-| POST | `/{{dominio_1}}` | Criar novo |
-| GET | `/{{dominio_1}}/:id` | Obter por ID |
-| PATCH | `/{{dominio_1}}/:id` | Atualizar |
-| DELETE | `/{{dominio_1}}/:id` | Excluir |
+| GET | `/membros` | Listar membros |
+| POST | `/membros` | Criar membro |
+| GET | `/membros/:id` | Obter membro |
+| PATCH | `/membros/:id` | Atualizar membro |
+| DELETE | `/membros/:id` | Excluir membro |
 
-### {{DOMINIO_2}}
-| Método | Endpoint | Descrição |
+### Relatorios
+| Metodo | Endpoint | Descricao |
 |--------|----------|-----------|
-| GET | `/{{dominio_1}}/:id/{{dominio_2}}` | Listar relacionados |
-| POST | `/{{dominio_1}}/:id/{{dominio_2}}` | Criar relacionado |
-| PATCH | `/{{dominio_2}}/:id` | Atualizar |
-| DELETE | `/{{dominio_2}}/:id` | Excluir |
+| GET | `/relatorios` | Listar relatorios |
+| POST | `/relatorios` | Criar relatorio |
+| GET | `/relatorios/:id` | Detalhe do relatorio |
+| POST | `/relatorios/:id/media` | Anexar midia |
+
+### Cursos
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| GET | `/cursos` | Listar cursos |
+| POST | `/cursos` | Criar curso |
+| GET | `/cursos/:id` | Detalhe do curso |
+| POST | `/cursos/:id/inscricoes` | Inscrever membro |
+| PATCH | `/cursos/:id/inscricoes/:inscricaoId` | Atualizar presenca |
+
+### Advertencias
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| GET | `/advertencias` | Listar advertencias |
+| POST | `/advertencias` | Criar advertencia |
+| DELETE | `/advertencias/:id` | Apagar advertencia |
+
+### Dashboard
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| GET | `/dashboard/resumo` | Resumo por periodo |
+| GET | `/dashboard/animadores` | Eventos por animador |
+| GET | `/dashboard/qualidade` | Indicadores de qualidade |
 
 ---
 
-## Documentação Detalhada
+## Documentacao Detalhada
 
-- [{{DOMINIO_1}}]({{dominio_1}}.md) - {{QTD_1}} endpoints
-- [{{DOMINIO_2}}]({{dominio_2}}.md) - {{QTD_2}} endpoints
-- (Adicione mais conforme necessário)
+- [Auth](auth.md)
+- [Membros](membros.md)
+- [Relatorios](relatorios.md)
+- [Cursos](cursos.md)
+- [Advertencias](advertencias.md)
+- [Dashboard](dashboard.md)
 
 ---
 
-## Padrões de Resposta
+## Padroes de Resposta
 
 ### Sucesso (2xx)
 
@@ -95,73 +118,6 @@ Authorization: Bearer {jwt_token}
     }
   ]
 }
-```
-
----
-
-## Códigos de Status
-
-| Código | Significado | Uso |
-|--------|-------------|-----|
-| 200 | OK | Sucesso em GET/PATCH |
-| 201 | Created | Sucesso em POST |
-| 204 | No Content | Sucesso em DELETE |
-| 400 | Bad Request | Validação falhou |
-| 401 | Unauthorized | Token inválido/ausente |
-| 403 | Forbidden | Sem permissão |
-| 404 | Not Found | Recurso não existe |
-| 409 | Conflict | Duplicação |
-| 422 | Unprocessable | Regra de negócio |
-| 429 | Too Many Requests | Rate limit |
-| 500 | Internal Error | Erro no servidor |
-
----
-
-## Paginação
-
-### Request
-
-```
-GET /{{dominio_1}}?page=2&limit=20&sort=-created_at
-```
-
-### Response
-
-```json
-{
-  "data": [...],
-  "pagination": {
-    "page": 2,
-    "limit": 20,
-    "total": 150,
-    "pages": 8
-  }
-}
-```
-
----
-
-## Filtros
-
-```
-GET /{{dominio_1}}?status=active&created_after=2024-01-01
-```
-
----
-
-## Rate Limiting
-
-| Tier | Limite | Janela |
-|------|--------|--------|
-| Default | 100 | 1 minuto |
-| Auth | 10 | 1 minuto |
-| Heavy | 30 | 1 minuto |
-
-Headers de resposta:
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1640000000
 ```
 
 ---

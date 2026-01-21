@@ -1,110 +1,98 @@
 # 2. Contexto e Personas
 
-**Versão:** 1.0.0
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Ultima Atualizacao:** 2026-01-20
 
-[← Voltar para Índice PRD](README.md) | [Próximo: Escopo →](03-escopo.md)
+[← Voltar para Indice PRD](README.md) | [Proximo: Escopo →](03-escopo.md)
 
 ---
 
-## 2.1 Declaração do Problema
+## 2.1 Declaracao do Problema
 
-{{PROBLEMA_DESCRICAO}}
-
-<!--
-Instruções: Descreva em detalhes:
-- Qual é o problema atual
-- Quem é afetado
-- Quais são as consequências
-- Por que as soluções atuais não funcionam
-
-Exemplo:
-"Pequenos negócios de serviços (barbearias, salões, consultórios)
-perdem em média 3 horas por dia atendendo telefone para agendamentos.
-Isso resulta em:
-- Perda de clientes por linha ocupada
-- Erros de agendamento manual
-- Impossibilidade de atender durante horários de pico
-- Stress do proprietário com multitarefas"
--->
+Hoje a equipe registra informacoes em papel e planilhas. Isso gera perda de dados, falta de historico e dificuldade para acompanhar cursos e advertencias. Os animadores gastam tempo em relatorios manuais e a administracao nao tem visao consolidada do desempenho da equipe.
 
 ## 2.2 Personas
 
-### Persona 1: {{PERSONA_1_NOME}} (Principal)
+### Persona 1: Administrador (Principal)
 
 **Perfil:**
-- **Descrição:** {{PERSONA_1_DESCRICAO}}
-- **Papel:** {{PERSONA_1_PAPEL}}
-- **Experiência com Tecnologia:** {{PERSONA_1_TECH}}
+- **Descricao:** Chefe ou gerente que acompanha a equipe e toma decisoes
+- **Papel:** Administrador
+- **Experiencia com Tecnologia:** Familiaridade basica; usa mais celular e, as vezes, computador
 
 **Dores:**
-- {{PERSONA_1_DOR_1}}
-- {{PERSONA_1_DOR_2}}
-- {{PERSONA_1_DOR_3}}
+- Relatorios espalhados em planilhas
+- Falta de historico de advertencias e cursos
+- Dificuldade para acompanhar desempenho
 
 **Necessidades:**
-- {{PERSONA_1_NECESSIDADE_1}}
-- {{PERSONA_1_NECESSIDADE_2}}
-- {{PERSONA_1_NECESSIDADE_3}}
+- Ver todos os relatorios e dashboards
+- Gerir membros, cursos e advertencias
+- Encontrar informacoes rapidamente
 
 **Comportamentos:**
-- {{PERSONA_1_COMPORTAMENTO_1}}
-- {{PERSONA_1_COMPORTAMENTO_2}}
+- Prefere algo simples e direto
+- Usa celular no dia a dia
 
-**Citação:**
-> "{{PERSONA_1_CITACAO}}"
+**Citacao:**
+> "Quero gerir os membros da minha empresa de forma facil e ver os relatorios."
 
 ---
 
-### Persona 2: {{PERSONA_2_NOME}}
+### Persona 2: Animador
 
 **Perfil:**
-- **Descrição:** {{PERSONA_2_DESCRICAO}}
-- **Papel:** {{PERSONA_2_PAPEL}}
-- **Experiência com Tecnologia:** {{PERSONA_2_TECH}}
+- **Descricao:** Coordenador de eventos, lidera atividades e produz relatorios
+- **Papel:** Animador
+- **Experiencia com Tecnologia:** Familiaridade com tecnologia
 
 **Dores:**
-- {{PERSONA_2_DOR_1}}
-- {{PERSONA_2_DOR_2}}
+- Relatorios no Google Forms sao cansativos
+- Falta de fluxo simples para advertencias
 
 **Necessidades:**
-- {{PERSONA_2_NECESSIDADE_1}}
-- {{PERSONA_2_NECESSIDADE_2}}
+- Criar relatorios de forma rapida
+- Dar advertencias quando necessario
 
-**Citação:**
-> "{{PERSONA_2_CITACAO}}"
+**Citacao:**
+> "Quero fazer relatorios de forma facil."
 
 ---
 
-### Persona 3: {{PERSONA_3_NOME}} (Opcional)
+### Persona 3: Recreador
 
 **Perfil:**
-- **Descrição:** {{PERSONA_3_DESCRICAO}}
-- **Papel:** {{PERSONA_3_PAPEL}}
+- **Descricao:** Apoio ao animador nos eventos, cuida de som e auxilia nas atividades
+- **Papel:** Recreador
 
 **Dores:**
-- {{PERSONA_3_DOR_1}}
+- Nao ve cursos e advertencias
+- Nao acompanha o proprio progresso
 
 **Necessidades:**
-- {{PERSONA_3_NECESSIDADE_1}}
+- Ver perfil, cursos e advertencias
+- Se inscrever em novos cursos
+
+**Citacao:**
+> "Quero ver meu progresso e advertencias."
 
 ---
 
-## 2.3 Análise Competitiva (Opcional)
+## 2.3 Analise Competitiva (Opcional)
 
 | Concorrente | Pontos Fortes | Pontos Fracos | Diferencial Nosso |
 |-------------|---------------|---------------|-------------------|
-| {{CONCORRENTE_1}} | {{FORTE_1}} | {{FRACO_1}} | {{DIFERENCIAL_1}} |
-| {{CONCORRENTE_2}} | {{FORTE_2}} | {{FRACO_2}} | {{DIFERENCIAL_2}} |
+| Planilhas internas | Baixo custo | Desorganizado, sem historico | Centralizacao e acesso rapido |
+| Papel | Simples | Perda de informacao | Registro seguro e pesquisavel |
 
 ---
 
 ## 2.4 Oportunidade de Mercado (Opcional)
 
-- **TAM (Total Addressable Market):** {{TAM}}
-- **SAM (Serviceable Addressable Market):** {{SAM}}
-- **SOM (Serviceable Obtainable Market):** {{SOM}}
+- **TAM (Total Addressable Market):** N/A (sistema interno)
+- **SAM (Serviceable Addressable Market):** N/A
+- **SOM (Serviceable Obtainable Market):** N/A
 
 ---
 
-[← Voltar para Índice PRD](README.md) | [Próximo: Escopo →](03-escopo.md)
+[← Voltar para Indice PRD](README.md) | [Proximo: Escopo →](03-escopo.md)

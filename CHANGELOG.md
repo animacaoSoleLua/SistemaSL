@@ -10,16 +10,20 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Adicionado
-- {{Novas funcionalidades}}
+- Estrutura base de monorepo com workspaces
+- API Fastify com rota de saude e testes de integracao
+- App web Next.js inicial com layout basico
+- Configuracao inicial de banco e cache via Docker Compose
+- Prisma configurado para PostgreSQL
 
 ### Modificado
-- {{Mudanças em funcionalidades existentes}}
+- Nenhuma
 
 ### Corrigido
-- {{Correções de bugs}}
+- Nenhuma
 
 ### Removido
-- {{Funcionalidades removidas}}
+- Nenhuma
 
 ---
 

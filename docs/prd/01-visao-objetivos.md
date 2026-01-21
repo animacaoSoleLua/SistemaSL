@@ -1,91 +1,53 @@
-# 1. Sumário Executivo
+# 1. Sumario Executivo
 
-**Versão:** 1.0.0
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Ultima Atualizacao:** 2026-01-20
 
-[← Voltar para Índice PRD](README.md)
+[← Voltar para Indice PRD](README.md)
 
 ---
 
-## 1.1 Declaração de Visão
+## 1.1 Declaracao de Visao
 
-{{VISAO_DESCRICAO}}
+O Sol e Lua e um sistema interno para equipes de recreacao e animacao de eventos. Ele centraliza informacoes de membros, cursos, advertencias e relatorios de eventos, hoje espalhadas em papel e planilhas.
 
-<!--
-Instruções: Descreva em 1-2 parágrafos:
-- O que o sistema faz
-- Para quem é destinado
-- Qual valor entrega
-- Qual diferencial oferece
+O objetivo e tornar os relatorios simples e rapidos, dar visibilidade para a gestao e permitir acompanhar a evolucao dos membros de forma organizada.
 
-Exemplo:
-"Construir uma plataforma de agendamento inteligente que permite
-clientes agendarem serviços de forma autônoma, reduzindo carga
-operacional de pequenos negócios e melhorando experiência do cliente."
--->
+## 1.2 Objetivos de Negocio
 
-## 1.2 Objetivos de Negócio
+**Objetivo Primario:**
+Reduzir o tempo de criacao de relatorios de eventos de 30 para 15 minutos em 2 semanas.
 
-**Objetivo Primário:**
-{{OBJETIVO_PRINCIPAL}}
+**Objetivos Secundarios:**
+- Manter listagem de membros e seus perfis atualizados
+- Criar e acompanhar cursos para evolucao da equipe
+- Registrar advertencias com historico acessivel
 
-<!--
-Instruções: O objetivo mais importante do projeto.
-Deve ser mensurável e ter prazo definido.
+## 1.3 Criterios de Sucesso
 
-Exemplo:
-"Reduzir em 60% o tempo gasto em atendimento telefônico
-para agendamentos em 3 meses."
--->
-
-**Objetivos Secundários:**
-- {{OBJETIVO_SECUNDARIO_1}}
-- {{OBJETIVO_SECUNDARIO_2}}
-- {{OBJETIVO_SECUNDARIO_3}}
-
-<!--
-Instruções: 2-4 objetivos adicionais que complementam o principal.
--->
-
-## 1.3 Critérios de Sucesso
-
-| Métrica | Baseline Atual | Meta MVP | Prazo |
+| Metrica | Baseline Atual | Meta MVP | Prazo |
 |---------|----------------|----------|-------|
-| {{METRICA_1}} | {{BASELINE_1}} | {{META_1}} | {{PRAZO_1}} |
-| {{METRICA_2}} | {{BASELINE_2}} | {{META_2}} | {{PRAZO_2}} |
-| {{METRICA_3}} | {{BASELINE_3}} | {{META_3}} | {{PRAZO_3}} |
+| Tempo medio de relatorio | 30 min | 15 min | 2 semanas |
+| Cursos registrados | Nao existe | 100% registrados | 2 semanas |
+| Relatorios no prazo | Sem controle | 100% no mesmo dia | 2 semanas |
 
-<!--
-Instruções: Defina 3-5 métricas mensuráveis.
-Cada métrica deve ter:
-- Valor atual (baseline)
-- Valor desejado (meta)
-- Prazo para atingir
--->
+## 1.4 Timeline e Roadmap de Alto Nivel
 
-## 1.4 Timeline e Roadmap de Alto Nível
+**MVP (V1.0) - 1 semana:**
+- Relatorios de eventos com fotos e videos
+- Gestao de membros com login e perfis
+- Advertencias com historico e suspensao
+- Cursos com inscricao e controle de vagas
 
-**MVP (V1.0) - {{PRAZO_MVP}}:**
-- {{FEATURE_MVP_1}}
-- {{FEATURE_MVP_2}}
-- {{FEATURE_MVP_3}}
-- {{FEATURE_MVP_4}}
+**V1.1 - 2 semanas:**
+- Exportacao de relatorios em PDF
+- Filtros e busca por periodo e membro
 
-**V1.1 - {{PRAZO_V1_1}}:**
-- {{FEATURE_V1_1_1}}
-- {{FEATURE_V1_1_2}}
-
-**V2.0 - {{PRAZO_V2}}:**
-- {{FEATURE_V2_1}}
-- {{FEATURE_V2_2}}
-
-<!--
-Instruções: Divida o projeto em fases.
-MVP: Funcionalidades essenciais para lançamento
-V1.1: Melhorias importantes
-V2.0: Expansão e funcionalidades avançadas
--->
+**V2.0 - 1 mes:**
+- Integracao com WhatsApp
+- Modulo de RH
+- Relatorios avancados e comparativos
 
 ---
 
-[← Voltar para Índice PRD](README.md)
+[← Voltar para Indice PRD](README.md)

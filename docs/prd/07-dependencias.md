@@ -1,99 +1,99 @@
-# 7. Dependências e Integrações
+# 7. Dependencias e Integracoes
 
-**Versão:** 1.0.0
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Ultima Atualizacao:** 2026-01-20
 
-[← Voltar para Índice PRD](README.md)
+[← Voltar para Indice PRD](README.md)
 
 ---
 
-## 7.1 Dependências Externas Críticas
+## 7.1 Dependencias Externas Criticas
 
 ### APIs de Terceiros
 
-| Serviço | Finalidade | Custo Estimado | Status |
+| Servico | Finalidade | Custo Estimado | Status |
 |---------|------------|----------------|--------|
-| {{SERVICO_1}} | {{FINALIDADE_1}} | {{CUSTO_1}} | {{STATUS_1}} |
-| {{SERVICO_2}} | {{FINALIDADE_2}} | {{CUSTO_2}} | {{STATUS_2}} |
-| {{SERVICO_3}} | {{FINALIDADE_3}} | {{CUSTO_3}} | {{STATUS_3}} |
+| Resend | Envio de email e recuperacao de senha | R$ 0-50/mes | Planejado |
+| Object Storage (S3/R2) | Armazenar fotos e videos | R$ 0-100/mes | Planejado |
+| VPS | Hospedagem do sistema | R$ 150-250/mes | Planejado |
 
-### Detalhamento de Integrações
+### Detalhamento de Integracoes
 
-#### {{INTEGRACAO_1}}
+#### Resend
 
-- **Finalidade:** {{FINALIDADE}}
-- **Tipo:** API REST / Webhook / SDK
-- **Autenticação:** API Key / OAuth2 / Bearer Token
-- **Rate Limits:** {{RATE_LIMIT}}
-- **Custo:** {{CUSTO}}
-- **Documentação:** [Link]
+- **Finalidade:** Email transacional
+- **Tipo:** API REST
+- **Autenticacao:** API Key
+- **Rate Limits:** Conforme plano
+- **Custo:** Plano inicial (estimado baixo)
+- **Documentacao:** https://resend.com/docs
 
-#### {{INTEGRACAO_2}}
+#### Object Storage
 
-- **Finalidade:** {{FINALIDADE}}
-- **Tipo:** {{TIPO}}
-- **Autenticação:** {{AUTH}}
-- **Rate Limits:** {{RATE_LIMIT}}
-- **Custo:** {{CUSTO}}
-- **Documentação:** [Link]
+- **Finalidade:** Armazenar midias dos relatorios
+- **Tipo:** API S3 compativel
+- **Autenticacao:** Access key/secret
+- **Rate Limits:** Conforme provedor
+- **Custo:** Variavel por uso
+- **Documentacao:** Provedor escolhido
 
 ---
 
-## 7.2 Stack Tecnológico
+## 7.2 Stack Tecnologico
 
 ### Backend
 
-| Tecnologia | Versão | Finalidade |
+| Tecnologia | Versao | Finalidade |
 |------------|--------|------------|
-| {{BACKEND_LANG}} | {{VERSAO}} | Linguagem principal |
-| {{BACKEND_FRAMEWORK}} | {{VERSAO}} | Framework web |
-| {{BACKEND_ORM}} | {{VERSAO}} | ORM/Query builder |
+| Node.js | 18+ | Runtime |
+| Fastify | 4+ | Framework web |
+| Prisma | latest | ORM |
 
 ### Frontend
 
-| Tecnologia | Versão | Finalidade |
+| Tecnologia | Versao | Finalidade |
 |------------|--------|------------|
-| {{FRONTEND_FRAMEWORK}} | {{VERSAO}} | Framework UI |
-| {{FRONTEND_CSS}} | {{VERSAO}} | Estilização |
-| {{FRONTEND_STATE}} | {{VERSAO}} | Gerenciamento de estado |
+| Next.js | 14+ | Framework UI |
+| React | 18+ | UI |
+| TailwindCSS | 3+ | Estilizacao |
 
 ### Banco de Dados
 
-| Tecnologia | Versão | Finalidade |
+| Tecnologia | Versao | Finalidade |
 |------------|--------|------------|
-| {{DATABASE}} | {{VERSAO}} | Banco principal |
-| {{CACHE}} | {{VERSAO}} | Cache / Sessions |
+| PostgreSQL | 15+ | Banco principal |
+| Redis | 7+ | Cache/filas |
 
 ### Infraestrutura
 
-| Serviço | Provider | Finalidade |
+| Servico | Provider | Finalidade |
 |---------|----------|------------|
-| {{HOSTING}} | {{PROVIDER}} | Hospedagem |
-| {{CI_CD}} | {{PROVIDER}} | CI/CD |
-| {{MONITORING}} | {{PROVIDER}} | Monitoramento |
+| VPS | Digital Ocean/Hetzner (exemplo) | Hospedagem |
+| GitHub Actions | GitHub | CI/CD |
+| UptimeRobot | UptimeRobot | Monitoramento basico |
 
 ---
 
 ## 7.3 Custo Estimado Mensal
 
-| Categoria | Serviço | Custo |
+| Categoria | Servico | Custo |
 |-----------|---------|-------|
-| Hospedagem | {{SERVICO}} | R$ {{VALOR}} |
-| Banco de Dados | {{SERVICO}} | R$ {{VALOR}} |
-| Integrações | {{SERVICO}} | R$ {{VALOR}} |
-| Monitoramento | {{SERVICO}} | R$ {{VALOR}} |
-| **Total** | | **R$ {{TOTAL}}** |
+| Hospedagem | VPS | R$ 200 |
+| Banco de Dados | PostgreSQL (na VPS) | R$ 0 |
+| Integracoes | Resend + Storage | R$ 0-100 |
+| Monitoramento | UptimeRobot | R$ 0 |
+| **Total** | | **R$ 200-300** |
 
 ---
 
-## 7.4 Matriz de Risco de Dependências
+## 7.4 Matriz de Risco de Dependencias
 
-| Dependência | Criticidade | Risco | Mitigação |
+| Dependencia | Criticidade | Risco | Mitigacao |
 |-------------|-------------|-------|-----------|
-| {{DEP_1}} | Alta | {{RISCO}} | {{MITIGACAO}} |
-| {{DEP_2}} | Média | {{RISCO}} | {{MITIGACAO}} |
-| {{DEP_3}} | Baixa | {{RISCO}} | {{MITIGACAO}} |
+| Resend | Media | Indisponibilidade | Trocar por outro provedor de email |
+| Object Storage | Alta | Falha no upload | Reprocessar e salvar localmente temporario |
+| VPS | Alta | Downtime | Backup e plano de contingencia |
 
 ---
 
-[← Voltar para Índice PRD](README.md)
+[← Voltar para Indice PRD](README.md)

@@ -1,7 +1,7 @@
-# 1. Visão Geral Técnica
+# 1. Visao Geral Tecnica
 
-**Versão:** 1.0.0
-**Última Atualização:** {{DATA}}
+**Versao:** 1.0.0
+**Ultima Atualizacao:** 2026-01-20
 
 ← [Voltar para SPEC](README.md)
 
@@ -9,111 +9,76 @@
 
 ## 1.1 Objetivo do Sistema
 
-{{OBJETIVO_TECNICO}}
-
-<!--
-Instruções: Descreva o objetivo do sistema do ponto de vista técnico.
-O que o sistema faz? Qual problema técnico resolve?
--->
+Centralizar relatorios de eventos, cursos e advertencias em uma aplicacao web com controle de acesso por papel, permitindo consultas rapidas e historico confiavel.
 
 ---
 
 ## 1.2 Escopo do MVP
 
-### Incluído no MVP
+### Incluido no MVP
 
-| Funcionalidade | Descrição | Complexidade |
+| Funcionalidade | Descricao | Complexidade |
 |----------------|-----------|--------------|
-| {{FUNC_1}} | {{DESC_1}} | {{COMPLEX_1}} |
-| {{FUNC_2}} | {{DESC_2}} | {{COMPLEX_2}} |
-| {{FUNC_3}} | {{DESC_3}} | {{COMPLEX_3}} |
-| {{FUNC_4}} | {{DESC_4}} | {{COMPLEX_4}} |
+| Relatorios | Criar relatorios com midia | Media |
+| Membros | Cadastro, login e perfis | Media |
+| Cursos | Criar cursos e controlar vagas | Media |
+| Advertencias | Registrar e suspender por regra | Media |
 
-### Excluído do MVP
+### Excluido do MVP
 
-- ❌ {{EXCLUIDO_1}}
-- ❌ {{EXCLUIDO_2}}
-- ❌ {{EXCLUIDO_3}}
-
----
-
-## 1.3 Personas Técnicas
-
-### Desenvolvedor Backend
-
-**Responsabilidades:**
-- Implementar APIs REST
-- Gerenciar banco de dados
-- Configurar integrações
-
-**Ferramentas:**
-- IDE: VS Code / IntelliJ
-- Terminal: zsh/bash
-- Git: GitHub/GitLab
-
-### Desenvolvedor Frontend
-
-**Responsabilidades:**
-- Implementar interfaces
-- Consumir APIs
-- Garantir UX/acessibilidade
-
-### DevOps/SRE
-
-**Responsabilidades:**
-- CI/CD pipeline
-- Monitoramento
-- Infraestrutura
+- Sistema de pagamento
+- Chat nativo
+- App mobile
 
 ---
 
-## 1.4 Premissas Técnicas
+## 1.3 Premissas Tecnicas
 
 | Premissa | Impacto se Falsa |
 |----------|------------------|
-| {{PREMISSA_1}} | {{IMPACTO_1}} |
-| {{PREMISSA_2}} | {{IMPACTO_2}} |
-| {{PREMISSA_3}} | {{IMPACTO_3}} |
+| Internet disponivel no uso | Sistema nao funciona offline |
+| Uso de VPS com Docker | Ajustar arquitetura caso nao seja possivel |
+| Email transacional via Resend | Trocar provedor se indisponivel |
 
 ---
 
-## 1.5 Restrições Técnicas
+## 1.4 Restricoes Tecnicas
 
-| Restrição | Motivo | Alternativa |
+| Restricao | Motivo | Alternativa |
 |-----------|--------|-------------|
-| {{RESTRICAO_1}} | {{MOTIVO_1}} | {{ALT_1}} |
-| {{RESTRICAO_2}} | {{MOTIVO_2}} | {{ALT_2}} |
+| Orcamento ate R$ 300/mes | Limite de custo | Otimizar recursos |
+| Armazenamento de midia externo | Evitar sobrecarga da VPS | S3 compativel |
 
 ---
 
-## 1.6 Decisões Arquiteturais (ADRs)
+## 1.5 Decisoes Arquiteturais (ADRs)
 
-### ADR-001: {{TITULO}}
-
-- **Status:** Aceito
-- **Contexto:** {{CONTEXTO}}
-- **Decisão:** {{DECISAO}}
-- **Consequências:** {{CONSEQUENCIAS}}
-
-### ADR-002: {{TITULO}}
+### ADR-001: Aplicacao web com Next.js
 
 - **Status:** Aceito
-- **Contexto:** {{CONTEXTO}}
-- **Decisão:** {{DECISAO}}
-- **Consequências:** {{CONSEQUENCIAS}}
+- **Contexto:** Interface simples e responsiva
+- **Decisao:** Usar Next.js para frontend e server-side rendering quando necessario
+- **Consequencias:** Menos tempo para entregar UI consistente
+
+### ADR-002: API Node.js com Fastify
+
+- **Status:** Aceito
+- **Contexto:** Precisamos de API rapida e simples
+- **Decisao:** Usar Fastify com Prisma
+- **Consequencias:** Curva de aprendizado baixa e boa performance
 
 ---
 
-## 1.7 Stack Tecnológico Resumido
+## 1.6 Stack Tecnologico Resumido
 
-| Camada | Tecnologia | Versão |
+| Camada | Tecnologia | Versao |
 |--------|------------|--------|
-| Backend | {{BACKEND}} | {{VERSAO}} |
-| Frontend | {{FRONTEND}} | {{VERSAO}} |
-| Banco de Dados | {{DATABASE}} | {{VERSAO}} |
-| Cache | {{CACHE}} | {{VERSAO}} |
-| Queue | {{QUEUE}} | {{VERSAO}} |
+| Backend | Node.js + Fastify | 18+ / 4+ |
+| Frontend | Next.js + React | 14+ / 18+ |
+| Banco de Dados | PostgreSQL | 15+ |
+| Cache/Queue | Redis | 7+ |
+| Email | Resend | - |
 
 ---
 
-← [Voltar para SPEC](README.md) | [Próximo: Arquitetura →](02-arquitetura.md)
+← [Voltar para SPEC](README.md) | [Proximo: Arquitetura →](02-arquitetura.md)
