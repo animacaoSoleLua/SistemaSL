@@ -1,4 +1,4 @@
-import type { AuthUser } from "../auth/guard.js";
+import type { AuthUser } from "../auth/guard.ts";
 
 declare module "fastify" {
   interface FastifyRequest {
