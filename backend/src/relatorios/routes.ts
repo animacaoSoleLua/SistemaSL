@@ -1,5 +1,10 @@
 import { FastifyInstance } from "fastify";
-import { extname } from "node:path";
+import { randomUUID } from "node:crypto";
+import { createWriteStream } from "node:fs";
+import { mkdir, unlink } from "node:fs/promises";
+import { dirname, extname, join, resolve, sep } from "node:path";
+import { Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import {
   addMediaToReport,
   createReport,
@@ -10,17 +15,27 @@ import {
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
+const uploadsRoot = process.env.UPLOADS_DIR
+  ? resolve(process.env.UPLOADS_DIR)
+  : join(process.cwd(), "uploads");
 
 const mediaExtensions: Record<MediaType, string[]> = {
   image: [".jpg", ".jpeg", ".png", ".webp"],
   video: [".mp4", ".mov", ".webm"],
 };
 
-interface MediaBody {
-  media_type?: MediaType;
-  url?: string;
-  size_bytes?: number;
-}
+const mediaMimeExtensions: Record<MediaType, Record<string, string>> = {
+  image: {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+  },
+  video: {
+    "video/mp4": ".mp4",
+    "video/quicktime": ".mov",
+    "video/webm": ".webm",
+  },
+};
 
 interface ReportBody {
   event_date?: string;
@@ -45,16 +60,81 @@ interface ReportQuery {
   limit?: string;
 }
 
-function isAllowedExtension(url: string, type: MediaType): boolean {
-  const extension = extname(url.split("?")[0]).toLowerCase();
-  if (!extension) {
-    return false;
-  }
-  return mediaExtensions[type].includes(extension);
-}
-
 function maxSizeForType(type: MediaType): number {
   return type === "image" ? MAX_IMAGE_SIZE_BYTES : MAX_VIDEO_SIZE_BYTES;
+}
+
+function parseMediaType(
+  value?: string,
+  mimetype?: string
+): MediaType | undefined {
+  if (value === "image" || value === "video") {
+    return value;
+  }
+  if (!value && mimetype) {
+    if (mimetype.startsWith("image/")) {
+      return "image";
+    }
+    if (mimetype.startsWith("video/")) {
+      return "video";
+    }
+  }
+  return undefined;
+}
+
+function resolveExtension(
+  filename: string,
+  mediaType: MediaType,
+  mimetype?: string
+): string | undefined {
+  const extension = extname(filename).toLowerCase();
+  if (extension && mediaExtensions[mediaType].includes(extension)) {
+    return extension;
+  }
+  const mimeExtension = mimetype
+    ? mediaMimeExtensions[mediaType][mimetype]
+    : undefined;
+  if (mimeExtension) {
+    return mimeExtension;
+  }
+  return undefined;
+}
+
+async function safeUnlink(path: string): Promise<void> {
+  try {
+    await unlink(path);
+  } catch {
+    // ignore errors while cleaning up temporary files
+  }
+}
+
+async function saveUploadToDisk(options: {
+  stream: NodeJS.ReadableStream;
+  targetPath: string;
+  maxSize: number;
+}): Promise<number> {
+  let size = 0;
+  const counter = new Transform({
+    transform(chunk, _encoding, callback) {
+      size += chunk.length;
+      if (size > options.maxSize) {
+        callback(new Error("file_too_large"));
+        return;
+      }
+      callback(null, chunk);
+    },
+  });
+
+  await mkdir(dirname(options.targetPath), { recursive: true });
+
+  try {
+    await pipeline(options.stream, counter, createWriteStream(options.targetPath));
+  } catch (error) {
+    await safeUnlink(options.targetPath);
+    throw error;
+  }
+
+  return size;
 }
 
 function parseDate(value?: string): Date | undefined {
@@ -473,48 +553,85 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
-    const { media_type, url, size_bytes } = request.body as MediaBody;
-
-    if (!media_type || !url || size_bytes === undefined) {
+    if (!request.isMultipart()) {
       return reply.status(400).send({
         error: "invalid_request",
-        message: "Tipo, url e tamanho sao obrigatorios",
+        message: "Envie o arquivo usando multipart/form-data",
       });
     }
 
-    if (media_type !== "image" && media_type !== "video") {
+    const fileData = await request.file();
+    if (!fileData) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Arquivo ausente",
+      });
+    }
+
+    const mediaTypeValue =
+      typeof fileData.fields?.media_type?.value === "string"
+        ? fileData.fields.media_type.value
+        : undefined;
+    const mediaType = parseMediaType(mediaTypeValue, fileData.mimetype);
+    if (!mediaType) {
       return reply.status(400).send({
         error: "invalid_media_type",
         message: "Tipo de midia invalido",
       });
     }
 
-    if (!Number.isFinite(size_bytes) || size_bytes <= 0) {
-      return reply.status(400).send({
-        error: "invalid_file_size",
-        message: "Tamanho do arquivo invalido",
-      });
-    }
-
-    if (!isAllowedExtension(url, media_type)) {
+    const extension = resolveExtension(
+      fileData.filename ?? "",
+      mediaType,
+      fileData.mimetype
+    );
+    if (!extension) {
       return reply.status(400).send({
         error: "invalid_media_url",
         message: "Extensao de arquivo invalida",
       });
     }
 
-    const maxSize = maxSizeForType(media_type);
-    if (size_bytes > maxSize) {
+    const maxSize = maxSizeForType(mediaType);
+    const filename = `${randomUUID()}${extension}`;
+    const relativePath = join("relatorios", report.id, filename);
+    const storagePath = join(uploadsRoot, relativePath);
+
+    const fileStream = fileData.file as NodeJS.ReadableStream & {
+      truncated?: boolean;
+    };
+    let sizeBytes = 0;
+    try {
+      sizeBytes = await saveUploadToDisk({
+        stream: fileStream,
+        targetPath: storagePath,
+        maxSize,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "file_too_large") {
+        return reply.status(400).send({
+          error: "file_too_large",
+          message: "Arquivo excede o tamanho permitido",
+        });
+      }
+      throw error;
+    }
+
+    if (fileStream.truncated) {
+      await safeUnlink(storagePath);
       return reply.status(400).send({
         error: "file_too_large",
         message: "Arquivo excede o tamanho permitido",
       });
     }
 
+    const publicPath = relativePath.split(sep).join("/");
+    const url = `/uploads/${publicPath}`;
+
     const media = await addMediaToReport(report.id, {
-      type: media_type,
+      type: mediaType,
       url,
-      sizeBytes: size_bytes,
+      sizeBytes,
     });
 
     if (!media) {

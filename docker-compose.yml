@@ -26,7 +26,7 @@ services:
   migrate:
     image: node:20
     container_name: sol-e-lua-migrate
-    working_dir: /app/apps/backend
+    working_dir: /app/backend
     environment:
       DATABASE_URL: postgres://slr:admin@postgres:5432/slr
     volumes:

@@ -1,8 +1,47 @@
+import { rm } from "node:fs/promises";
+import { join } from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildServer } from "../src/app.js";
 import { getUserByEmail } from "../src/auth/store.js";
 import { createReport, getReportById } from "../src/relatorios/store.js";
 import { disconnectDatabase, resetDatabase } from "./helpers/db.js";
+
+function buildMultipartPayload(options: {
+  fields?: Record<string, string>;
+  file: {
+    fieldName: string;
+    filename: string;
+    contentType: string;
+    data: Buffer;
+  };
+}) {
+  const boundary = `----sol-e-lua-${Date.now()}`;
+  const chunks: Buffer[] = [];
+
+  const push = (value: string | Buffer) => {
+    chunks.push(Buffer.isBuffer(value) ? value : Buffer.from(value));
+  };
+
+  for (const [name, value] of Object.entries(options.fields ?? {})) {
+    push(`--${boundary}\r\n`);
+    push(`Content-Disposition: form-data; name="${name}"\r\n\r\n`);
+    push(`${value}\r\n`);
+  }
+
+  push(`--${boundary}\r\n`);
+  push(
+    `Content-Disposition: form-data; name="${options.file.fieldName}"; filename="${options.file.filename}"\r\n`
+  );
+  push(`Content-Type: ${options.file.contentType}\r\n\r\n`);
+  push(options.file.data);
+  push("\r\n");
+  push(`--${boundary}--\r\n`);
+
+  return {
+    payload: Buffer.concat(chunks),
+    contentType: `multipart/form-data; boundary=${boundary}`,
+  };
+}
 
 describe("Relatorios media (integration)", () => {
   const app = buildServer();
@@ -18,6 +57,7 @@ describe("Relatorios media (integration)", () => {
 
   beforeEach(async () => {
     await resetDatabase();
+    await rm(join(process.cwd(), "uploads"), { recursive: true, force: true });
   });
 
   it("uploads media for own report", async () => {
@@ -34,21 +74,33 @@ describe("Relatorios media (integration)", () => {
     });
     const token = login.json().data.access_token;
 
+    const { payload, contentType } = buildMultipartPayload({
+      fields: { media_type: "image" },
+      file: {
+        fieldName: "file",
+        filename: "foto.jpg",
+        contentType: "image/jpeg",
+        data: Buffer.from("imagem de teste"),
+      },
+    });
     const response = await app.inject({
       method: "POST",
       url: `/api/v1/relatorios/${report.id}/media`,
-      headers: { authorization: `Bearer ${token}` },
-      payload: {
-        media_type: "image",
-        url: "https://cdn.sol-e-lua.com/foto.jpg",
-        size_bytes: 1024,
-      },
+      headers: { authorization: `Bearer ${token}`, "content-type": contentType },
+      payload,
     });
 
     expect(response.statusCode).toBe(201);
     const body = response.json();
-    expect(body.data.url).toBe("https://cdn.sol-e-lua.com/foto.jpg");
+    expect(body.data.url).toContain(`/uploads/relatorios/${report.id}/`);
     expect(body.data.media_type).toBe("image");
+
+    const fetched = await app.inject({
+      method: "GET",
+      url: body.data.url,
+    });
+    expect(fetched.statusCode).toBe(200);
+    expect(fetched.body).toBe("imagem de teste");
 
     const stored = await getReportById(report.id);
     expect(stored?.media).toHaveLength(1);
@@ -68,15 +120,20 @@ describe("Relatorios media (integration)", () => {
     });
     const token = login.json().data.access_token;
 
+    const { payload, contentType } = buildMultipartPayload({
+      fields: { media_type: "audio" },
+      file: {
+        fieldName: "file",
+        filename: "som.mp3",
+        contentType: "audio/mpeg",
+        data: Buffer.from("som de teste"),
+      },
+    });
     const response = await app.inject({
       method: "POST",
       url: `/api/v1/relatorios/${report.id}/media`,
-      headers: { authorization: `Bearer ${token}` },
-      payload: {
-        media_type: "audio",
-        url: "https://cdn.sol-e-lua.com/som.mp3",
-        size_bytes: 1024,
-      },
+      headers: { authorization: `Bearer ${token}`, "content-type": contentType },
+      payload,
     });
 
     expect(response.statusCode).toBe(400);
@@ -97,15 +154,20 @@ describe("Relatorios media (integration)", () => {
     });
     const token = login.json().data.access_token;
 
+    const { payload, contentType } = buildMultipartPayload({
+      fields: { media_type: "video" },
+      file: {
+        fieldName: "file",
+        filename: "video.mp4",
+        contentType: "video/mp4",
+        data: Buffer.alloc(51 * 1024 * 1024, 0),
+      },
+    });
     const response = await app.inject({
       method: "POST",
       url: `/api/v1/relatorios/${report.id}/media`,
-      headers: { authorization: `Bearer ${token}` },
-      payload: {
-        media_type: "video",
-        url: "https://cdn.sol-e-lua.com/video.mp4",
-        size_bytes: 60 * 1024 * 1024,
-      },
+      headers: { authorization: `Bearer ${token}`, "content-type": contentType },
+      payload,
     });
 
     expect(response.statusCode).toBe(400);
@@ -126,15 +188,20 @@ describe("Relatorios media (integration)", () => {
     });
     const token = login.json().data.access_token;
 
+    const { payload, contentType } = buildMultipartPayload({
+      fields: { media_type: "image" },
+      file: {
+        fieldName: "file",
+        filename: "foto.jpg",
+        contentType: "image/jpeg",
+        data: Buffer.from("imagem de teste"),
+      },
+    });
     const response = await app.inject({
       method: "POST",
       url: `/api/v1/relatorios/${report.id}/media`,
-      headers: { authorization: `Bearer ${token}` },
-      payload: {
-        media_type: "image",
-        url: "https://cdn.sol-e-lua.com/foto.jpg",
-        size_bytes: 1024,
-      },
+      headers: { authorization: `Bearer ${token}`, "content-type": contentType },
+      payload,
     });
 
     expect(response.statusCode).toBe(403);

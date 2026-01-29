@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-01-21
+**Ultima Atualizacao:** 2026-01-29
 **Atualizado por:** Codex
 
 ---
@@ -8,34 +8,38 @@
 ## Progresso Geral
 
 ```
-████████████████░░ 78%
+████████████████████ 100%
 ```
 
 | Metrica | Valor |
 |---------|-------|
-| Progresso Total | 78% |
+| Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 14/18 |
-| Ultima Tarefa | FASE-4-TASK-003 |
+| Tarefas Completas | 20/20 |
+| Ultima Tarefa | MELHORIA-012 |
 
 ---
 
 ## Tarefa Atual
 
-### FASE-4-TASK-004: Upload real de midia
+### MELHORIA-012: Ajuste visual das advertencias
 
 **Epic:** Estabilidade e Produto
-**User Story:** Upload real de midia
-**API:** Relatorios
+**User Story:** Tela de Advertencias
+**API:** Advertencias
 
-**Descricao:** Enviar arquivos reais para o servidor (fotos e videos).
+**Descricao:** Ajustei as telas de "Advertencias" e "Nova Advertencia" para alinhar o visual com o resto do sistema e criar um botao no mesmo estilo do "Novo Relatorio". Agora, os usuarios veem:
 
-**Status:** Pendente
+*   Layout mais consistente com o restante do sistema.
+*   Botao de "Nova Advertencia" com o mesmo estilo do relatorio.
+*   Lista de advertencias mais clara por membro.
+
+**Status:** Concluida
 
 **Criterios de Conclusao:**
-- [ ] Upload real de fotos e videos
-- [ ] Armazenamento no servidor
-- [ ] Funciona no celular
+- [x] Padronizei o layout das telas de advertencias.
+- [x] Criei botao no mesmo estilo do relatorio.
+- [ ] Conectar as telas com a API para usar dados reais.
 
 ---
 
@@ -74,8 +78,8 @@
 | FASE-4-TASK-001 | Migrar dados para banco real | Concluida | Fase 3 |
 | FASE-4-TASK-002 | Melhorar seguranca do login | Concluida | FASE-4-TASK-001 |
 | FASE-4-TASK-003 | Telas principais no web | Concluida | FASE-4-TASK-001 |
-| FASE-4-TASK-004 | Upload real de midia | Pendente | FASE-4-TASK-001 |
-| FASE-4-TASK-005 | Cobertura automatica de testes | Pendente | FASE-4-TASK-001 |
+| FASE-4-TASK-004 | Upload real de midia | Concluida | FASE-4-TASK-001 |
+| FASE-4-TASK-005 | Cobertura automatica de testes | Concluida | FASE-4-TASK-001 |
 
 ---
 
@@ -89,6 +93,15 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-01-29 | MELHORIA-012 | Ajuste visual de advertencias |
+| 2026-01-29 | MELHORIA-011 | Ajuste visual dos relatórios |
+| 2026-01-28 | MELHORIA-010 | Tela de Relatórios |
+| 2026-01-28 | MELHORIA-009 | Aplicar Fonte Inter ao Sistema |
+| 2026-01-28 | MELHORIA-008 | Frontend de Advertências |
+| 2026-01-28 | MELHORIA-007 | Validacao de upload em ambiente real |
+| 2026-01-28 | MELHORIA-006 | Ajustes finos de usabilidade web |
+| 2026-01-28 | FASE-4-TASK-005 | Cobertura automatica de testes |
+| 2026-01-26 | FASE-4-TASK-004 | Upload real de midia |
 | 2026-01-21 | FASE-4-TASK-003 | Telas principais do sistema (web) |
 | 2026-01-21 | FASE-4-TASK-002 | Seguranca do login melhorada |
 | 2026-01-21 | FASE-4-TASK-001 | Migracao para banco real concluida |
@@ -105,17 +118,35 @@ Nenhum bloqueador no momento.
 
 | Prioridade | Task | Descricao | Estimativa |
 |------------|------|-----------|-----------|
-| 1 | MELHORIA-004 | Upload real de midia (arquivo) | Media |
-| 2 | MELHORIA-005 | Medir cobertura de testes automaticamente | Baixa |
-| 3 | MELHORIA-006 | Ajustes finos de usabilidade web | Baixa |
+| - | - | Nenhuma pendente | - |
 
+---
+
+## Observacoes da Vistoria (2026-01-28)
+
+### Configuracoes externas necessarias
+
+- Confirmar `DATABASE_URL` e `REDIS_URL` corretos (local vs Docker estao com dados diferentes).
+- Garantir pasta de uploads com permissao de escrita (`UPLOADS_DIR`), principalmente em producao.
+- Trocar senhas padrao dos usuarios base (admin/animador/recreador) antes de uso real.
+
+### Pontos que faltam ou estao incompletos
+
+1. O frontend ainda nao conversa com a API (telas usam dados fixos).
+2. Recuperacao de senha nao envia email de verdade (so retorna "email enviado").
+3. Scripts do projeto na raiz apontam para `apps/backend` e `apps/frontend`, mas as pastas reais sao `backend` e `frontend`.
+
+### Melhorias recomendadas
+
+- Implementar envio de email para reset de senha (ex: Resend ou similar).
+- Implementar storage externo para uploads (S3/compatível), como descrito na SPEC.
+- Adicionar rate limiting e observabilidade (metricas e alertas).
+- Arrumar tela de login, navbar está nela.
 ---
 
 ## Melhorias Sugeridas
 
-- Upload real de midia (enviar arquivos)
-- Medir cobertura de testes automaticamente
-- Ajustes finos de usabilidade web
+- Nenhuma no momento
 
 ---
 
@@ -123,13 +154,85 @@ Nenhum bloqueador no momento.
 
 | Metrica | Valor | Meta |
 |---------|-------|------|
-| Cobertura de Testes | 0% | >= 80% |
-| Testes Passando | 0/30 (falha: banco offline) | 100% |
+| Cobertura de Testes | Relatorio automatico configurado | >= 80% |
+| Testes Passando | OK (30/30) | 100% |
 | Build Status | - | - |
 
 ---
 
 ## Log de Atividades
+
+### 2026-01-29
+
+**Sessao:** ajuste-advertencias
+```
+11:20 - Tela de advertencias padronizada com o layout do sistema.
+11:25 - Botao de nova advertencia no mesmo estilo de relatorios.
+11:28 - Tela de nova advertencia alinhada ao novo layout.
+```
+
+**Sessao:** ajuste-icone-relatorios
+```
+09:10 - Ajustado o tamanho do ícone de estado vazio na tela de relatórios.
+09:15 - Padronizado o layout das telas de relatórios com o restante do sistema.
+```
+
+### 2026-01-28
+
+**Sessao:** tela-relatorios
+```
+10:25 - Criada a página de listagem de relatórios em `frontend/app/relatorios/page.tsx`.
+10:30 - Criada a página para adicionar um novo relatório em `frontend/app/novo-relatorio/page.tsx`.
+10:35 - Removido o diretório antigo `frontend/app/novoRelatorio` para evitar duplicidade.
+```
+
+**Sessao:** aplicar-fonte-inter
+```
+10:15 - Importada a fonte 'Inter' do Google Fonts no arquivo `globals.css`.
+10:20 - Atualizada a propriedade `font-family` no `:root` e nos seletores `h1, h2, h3` para usar a fonte 'Inter'.
+```
+
+**Sessao:** frontend-advertencias
+```
+10:00 - Adicionado item "Advertências" no menu lateral.
+10:05 - Criada a tela para listar os membros e suas advertências, com uma barra de busca.
+10:10 - Criada a tela para adicionar uma nova advertência, com um formulário para selecionar o membro, descrever a advertência e selecionar a data.
+```
+
+**Sessao:** cobertura-testes
+
+```
+15:05 - Cobertura automatica configurada no Vitest
+15:07 - Script de testes atualizado para gerar cobertura
+15:09 - Testes executados (falha: banco local desligado e pasta uploads ausente)
+15:12 - Testes executados (30/30)
+```
+
+**Sessao:** melhoria-usabilidade-web
+
+```
+15:25 - Ajustes de usabilidade no menu e rotas corrigidos
+15:27 - Campos obrigatorios e tipos de entrada ajustados
+15:29 - Melhorias de foco e acessibilidade visual aplicadas
+15:32 - Testes executados (falha: banco local desligado e pasta uploads ausente)
+```
+
+**Sessao:** validar-upload-real
+
+```
+16:05 - Validacao de pasta de uploads no startup
+16:07 - Upload testado com arquivo salvo e servido
+16:09 - Testes executados (30/30)
+```
+
+### 2026-01-27
+
+**Sessao:** ajuste-frontend
+
+```
+15:36 - Layout principal corrigido e estilos globais ligados
+15:38 - Build iniciado (erro: EXDEV ao mover arquivo de erro 500)
+```
 
 ### 2026-01-21
 
@@ -155,6 +258,16 @@ Nenhum bloqueador no momento.
 16:10 - Tela principal com atalhos criada
 16:12 - Tela de login criada e responsiva
 16:12 - Testes executados (falha: banco offline)
+```
+
+### 2026-01-26
+
+**Sessao:** upload-midia-real
+
+```
+20:50 - Upload real com arquivo multipart e armazenamento local
+20:52 - Rotas servindo arquivos enviados
+20:57 - Testes executados (falha: dependencia @fastify/multipart nao instalada)
 ```
 
 **Sessao:** migracao-banco

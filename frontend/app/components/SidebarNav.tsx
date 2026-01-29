@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import logo from "../../assets/logo.png";
 
 const navItems = [
@@ -30,7 +31,7 @@ const navItems = [
   },
   {
     label: "Novo Relatorio",
-    href: "/relatorios/novo",
+    href: "/novo-relatorio",
     icon: (
       <svg viewBox="0 0 20 20" aria-hidden="true">
         <circle cx="10" cy="10" r="7" />
@@ -39,13 +40,11 @@ const navItems = [
     )
   },
   {
-    label: "Novo Curso",
-    href: "/cursos/novo",
+    label: "Advertências",
+    href: "/advertencias",
     icon: (
       <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="M4 6.5l6-3 6 3-6 3-6-3z" />
-        <path d="M6 10.2v3.3c0 .7 1.8 2 4 2s4-1.3 4-2v-3.3" />
-        <path d="M16 9.5v3" />
+        <path d="M10 3L3 17h14L10 3zm-1 8h2v5h-2v-5zm0-4h2v2h-2V7z" />
       </svg>
     )
   },
@@ -61,24 +60,40 @@ const navItems = [
   }
 ];
 
+interface User {
+  id: string;
+  name: string;
+  role: string;
+}
+
 function isActive(pathname: string, href: string) {
   if (href === "/") {
     return pathname === "/";
   }
-
   if (href === "/relatorios") {
-    return pathname === "/relatorios" || pathname.startsWith("/relatorios/");
+    return pathname.startsWith("/relatorios");
   }
-
-  if (href === "/cursos/novo") {
-    return pathname.startsWith("/cursos");
-  }
-
-  return pathname === href;
+  return pathname.startsWith(href);
 }
 
 export default function SidebarNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [showLogout, setShowLogout] = useState(false);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
 
   return (
     <aside className="app-sidebar">
@@ -105,24 +120,26 @@ export default function SidebarNav() {
           );
         })}
       </nav>
-      <div className="sidebar-section">
-        <span className="sidebar-label">Tema</span>
-        <button className="theme-toggle" type="button" aria-label="Alternar tema">
-          <span className="theme-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20">
-              <circle cx="10" cy="10" r="3.5" />
-              <path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.3 4.3l1.6 1.6M14.1 14.1l1.6 1.6M15.7 4.3l-1.6 1.6M4.3 15.7l1.6-1.6" />
-            </svg>
-          </span>
-        </button>
-      </div>
-      <div className="sidebar-footer">
-        <span className="user-avatar">A</span>
-        <div className="user-meta">
-          <strong>Arthur</strong>
-          <span>Admin</span>
+      
+      {/* User profile section */}
+      {user && (
+        <div className="sidebar-footer-wrapper">
+          {showLogout && (
+            <div className="logout-popup">
+              <button onClick={handleLogout} className="logout-button">
+                Sair
+              </button>
+            </div>
+          )}
+          <button className="sidebar-footer" onClick={() => setShowLogout(!showLogout)}>
+            <span className="user-avatar">{user.name.charAt(0).toUpperCase()}</span>
+            <div className="user-meta">
+              <strong>{user.name}</strong>
+              <span>{user.role}</span>
+            </div>
+          </button>
         </div>
-      </div>
+      )}
     </aside>
   );
 }

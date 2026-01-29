@@ -36,8 +36,15 @@ JWT_SECRET=change-me
 RESEND_API_KEY=xxx
 STORAGE_ENDPOINT=xxx
 STORAGE_BUCKET=sol-e-lua
+UPLOADS_DIR=/var/lib/sol-e-lua/uploads
 ```
 
 ---
+
+## 9.4 Uploads locais
+
+- A API grava uploads em disco quando o storage externo nao esta configurado.
+- A pasta precisa ser persistente e com permissao de escrita.
+- A aplicacao valida a escrita da pasta no startup.
 
 ← [Voltar para SPEC](README.md)

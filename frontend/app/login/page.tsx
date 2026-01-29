@@ -1,7 +1,35 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { login } from "../../lib/api";
 import logo from "../../assets/logo.png";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await login(email, password);
+      localStorage.setItem("authToken", response.data.access_token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      router.push("/relatorios");
+    } catch (err: any) {
+      setError(err.message || "Erro ao fazer login. Verifique suas credenciais.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="page login-page">
       <div className="login-card reveal">
@@ -17,7 +45,7 @@ export default function LoginPage() {
         <p className="login-subtitle">
           Entre com suas credenciais para acessar o sistema
         </p>
-        <form className="login-form">
+        <form className="login-form" onSubmit={handleSubmit}>
           <label className="login-field">
             Email
             <input
@@ -26,6 +54,9 @@ export default function LoginPage() {
               required={true}
               placeholder="seu@email.com"
               autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
             />
           </label>
           <label className="login-field">
@@ -36,10 +67,14 @@ export default function LoginPage() {
               required={true}
               placeholder="********"
               autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
             />
           </label>
-          <button className="login-button" type="submit">
-            Entrar
+          {error && <p className="error-message">{error}</p>}
+          <button className="login-button" type="submit" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
         <a className="login-link" href="#">

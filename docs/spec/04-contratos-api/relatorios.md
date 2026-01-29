@@ -104,20 +104,18 @@ Content-Disposition: attachment; filename="relatorio-{id}.pdf"
 
 **Descricao:** Anexa midia ao relatorio.
 
-**Request Body:**
+**Request:** `multipart/form-data`
 
-```json
-{
-  "media_type": "image|video",
-  "url": "string",
-  "size_bytes": 123456
-}
+**Campos:**
+
+```
+file (arquivo) - obrigatório
+media_type (image|video) - opcional, se não enviado o tipo é inferido pelo arquivo
 ```
 
 **Validacoes:**
 - `media_type` deve ser `image` ou `video`
-- `size_bytes` deve ser maior que zero
-- `url` deve terminar com extensao valida (ex: .jpg, .png, .mp4)
+- Arquivo deve ter extensao valida (ex: .jpg, .png, .mp4)
 - Limites: image ate 10MB, video ate 50MB
 
 **Response 201 Created:**

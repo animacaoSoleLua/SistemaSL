@@ -16,10 +16,15 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Configuracao inicial de banco e cache via Docker Compose
 - Prisma configurado para PostgreSQL
 - Seeds base de usuarios e helper de reset do banco para testes
+- Relatorio automatico de cobertura de testes (Vitest)
+- Validacao de escrita da pasta de uploads no startup
+- Variavel UPLOADS_DIR para definir pasta de uploads em producao
 
 ### Modificado
 - Stores da API agora usam Prisma/PostgreSQL em vez de memoria
 - Testes de integracao atualizados para preparar dados no banco
+- Script de testes da API agora gera cobertura automaticamente
+- Teste de upload valida que o arquivo fica acessivel via /uploads
 
 ### Corrigido
 - Nenhuma
