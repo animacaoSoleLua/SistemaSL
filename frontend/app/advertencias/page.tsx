@@ -1,29 +1,95 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getMembers, getWarnings } from "../../lib/api";
+import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
 
-// Mock data, replace with API calls
-const members = [
-  {
-    id: 1,
-    name: "João da Silva",
-    warnings: [
-      { id: 1, date: "2024-01-15", description: "Falta injustificada." },
-      { id: 2, date: "2024-02-01", description: "Atraso na entrega de tarefas." },
-    ],
-  },
-  {
-    id: 2,
-    name: "Maria Oliveira",
-    warnings: [],
-  },
-];
+interface Warning {
+  id: string;
+  member_id: string;
+  reason: string;
+  warning_date: string;
+}
+
+interface MemberSummary {
+  id: string;
+  name: string;
+}
 
 export default function WarningsPage() {
+  const router = useRouter();
+  const [currentRole, setCurrentRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [warnings, setWarnings] = useState<Warning[]>([]);
+  const [memberMap, setMemberMap] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredMembers = members.filter((member) =>
+  useEffect(() => {
+    const user = getStoredUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!isRoleAllowed(user.role, ["admin", "animador"])) {
+      router.push(getDefaultRoute(user.role));
+      return;
+    }
+    setCurrentRole(user.role);
+  }, [router]);
+
+  useEffect(() => {
+    if (!currentRole) return;
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const warningsParams =
+          currentRole === "animador" ? { created_by: "me" } : {};
+        const [warningsResponse, membersResponse] = await Promise.all([
+          getWarnings(warningsParams),
+          getMembers(),
+        ]);
+        const members = membersResponse.data as MemberSummary[];
+        const map: Record<string, string> = {};
+        members.forEach((member) => {
+          map[member.id] = member.name;
+        });
+        setMemberMap(map);
+        setWarnings(warningsResponse.data as Warning[]);
+      } catch (err: any) {
+        setError(err.message || "Erro ao carregar advertencias.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [currentRole]);
+
+  const groupedMembers = useMemo(() => {
+    const grouped = new Map<
+      string,
+      { id: string; name: string; warnings: Warning[] }
+    >();
+    warnings.forEach((warning) => {
+      const name = memberMap[warning.member_id] ?? "Membro";
+      const existing = grouped.get(warning.member_id);
+      if (existing) {
+        existing.warnings.push(warning);
+      } else {
+        grouped.set(warning.member_id, {
+          id: warning.member_id,
+          name,
+          warnings: [warning],
+        });
+      }
+    });
+    return Array.from(grouped.values());
+  }, [warnings, memberMap]);
+
+  const filteredMembers = groupedMembers.filter((member) =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -46,7 +112,11 @@ export default function WarningsPage() {
           <div className="report-header">
             <div>
               <h2 className="section-title">Membros e ocorrencias</h2>
-              <p>Veja o historico e a quantidade de advertencias.</p>
+              <p>
+                {currentRole === "animador"
+                  ? "Mostrando apenas as advertencias que voce registrou."
+                  : "Veja o historico e a quantidade de advertencias."}
+              </p>
             </div>
             <label className="field report-search">
               <span>Buscar</span>
@@ -60,7 +130,15 @@ export default function WarningsPage() {
             </label>
           </div>
 
-          {filteredMembers.length > 0 ? (
+          {loading ? (
+            <div className="empty-state">
+              <p>Carregando advertencias...</p>
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <p className="text-red-500">Erro ao carregar advertencias: {error}</p>
+            </div>
+          ) : filteredMembers.length > 0 ? (
             <div className="warning-list">
               {filteredMembers.map((member) => (
                 <article key={member.id} className="warning-card">
@@ -80,8 +158,8 @@ export default function WarningsPage() {
                     <ul className="warning-items">
                       {member.warnings.map((warning) => (
                         <li key={warning.id} className="warning-item">
-                          <span className="warning-date">{warning.date}</span>
-                          <span className="warning-desc">{warning.description}</span>
+                          <span className="warning-date">{warning.warning_date}</span>
+                          <span className="warning-desc">{warning.reason}</span>
                         </li>
                       ))}
                     </ul>

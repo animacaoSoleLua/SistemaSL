@@ -1,30 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-// Mock data, replace with API calls
-const members = [
-  { id: 1, name: "João da Silva" },
-  { id: 2, name: "Maria Oliveira" },
-];
+import { createWarning, getMembers } from "../../lib/api";
+import { getDefaultRoute, getStoredUser, isRoleAllowed } from "../../lib/auth";
 
 export default function NewWarningPage() {
   const router = useRouter();
+  const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
   const [selectedMember, setSelectedMember] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const user = getStoredUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!isRoleAllowed(user.role, ["admin", "animador"])) {
+      router.push(getDefaultRoute(user.role));
+      return;
+    }
+    const loadMembers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await getMembers();
+        setMembers(response.data);
+      } catch (err: any) {
+        setError(err.message || "Erro ao carregar membros.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadMembers();
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically make an API call to save the new warning
-    console.log({
-      memberId: selectedMember,
-      description,
-      date,
-    });
-    router.push("/advertencias");
+    setSaving(true);
+    setError(null);
+    try {
+      await createWarning({
+        member_id: selectedMember,
+        reason: description.trim(),
+        warning_date: date,
+      });
+      router.push("/advertencias");
+    } catch (err: any) {
+      setError(err.message || "Erro ao salvar advertencia.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -55,9 +87,10 @@ export default function NewWarningPage() {
                   value={selectedMember}
                   onChange={(e) => setSelectedMember(e.target.value)}
                   required
+                  disabled={loading || saving}
                 >
                   <option value="" disabled>
-                    Selecione um membro
+                    {loading ? "Carregando membros..." : "Selecione um membro"}
                   </option>
                   {members.map((member) => (
                     <option key={member.id} value={member.id}>
@@ -76,6 +109,7 @@ export default function NewWarningPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
+                  disabled={saving}
                 />
               </label>
 
@@ -88,6 +122,7 @@ export default function NewWarningPage() {
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   required
+                  disabled={saving}
                 />
               </label>
             </div>
@@ -99,10 +134,11 @@ export default function NewWarningPage() {
               <Link className="button secondary" href="/advertencias">
                 Cancelar
               </Link>
-              <button type="submit" className="button">
-                Salvar
+              <button type="submit" className="button" disabled={saving}>
+                {saving ? "Salvando..." : "Salvar"}
               </button>
             </div>
+            {error && <p className="text-red-500">{error}</p>}
           </div>
         </form>
       </section>

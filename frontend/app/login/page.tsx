@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "../../lib/api";
+import { getDefaultRoute, type Role } from "../../lib/auth";
 import logo from "../../assets/logo.png";
 
 export default function LoginPage() {
@@ -22,7 +23,8 @@ export default function LoginPage() {
       const response = await login(email, password);
       localStorage.setItem("authToken", response.data.access_token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      router.push("/relatorios");
+      const role = response.data.user.role as Role;
+      router.push(getDefaultRoute(role));
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login. Verifique suas credenciais.");
     } finally {

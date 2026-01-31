@@ -41,7 +41,8 @@
 {
   "name": "string",
   "email": "string",
-  "role": "admin|animador|recreador"
+  "role": "admin|animador|recreador",
+  "password": "string (opcional)"
 }
 ```
 

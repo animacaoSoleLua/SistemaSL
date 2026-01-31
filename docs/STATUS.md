@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-01-29
+**Ultima Atualizacao:** 2026-01-30
 **Atualizado por:** Codex
 
 ---
@@ -15,31 +15,32 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 20/20 |
-| Ultima Tarefa | MELHORIA-012 |
+| Tarefas Completas | 22/22 |
+| Ultima Tarefa | MELHORIA-015 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-012: Ajuste visual das advertencias
+### MELHORIA-015: Acesso por papel e perfil do recreador
 
 **Epic:** Estabilidade e Produto
-**User Story:** Tela de Advertencias
-**API:** Advertencias
+**User Story:** Controle de acesso por papel
+**API:** Usuarios / Advertencias
 
-**Descricao:** Ajustei as telas de "Advertencias" e "Nova Advertencia" para alinhar o visual com o resto do sistema e criar um botao no mesmo estilo do "Novo Relatorio". Agora, os usuarios veem:
+**Descricao:** Ajuste de acesso por papel (admin, animador, recreador), com redirecionamento no login e pagina de perfil para recreadores.
 
-*   Layout mais consistente com o restante do sistema.
-*   Botao de "Nova Advertencia" com o mesmo estilo do relatorio.
-*   Lista de advertencias mais clara por membro.
+**O que mudou:**
+- Admin ve todas as abas e telas.
+- Animador ve apenas relatorios, nova advertencia, advertencias (somente dele) e usuarios em modo leitura.
+- Recreador cai no perfil e ve somente perfil + usuarios (modo leitura).
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Padronizei o layout das telas de advertencias.
-- [x] Criei botao no mesmo estilo do relatorio.
-- [ ] Conectar as telas com a API para usar dados reais.
+- [x] Ajustar menu e acesso por papel no frontend.
+- [x] Redirecionar login conforme papel.
+- [x] Criar tela de perfil para recreador com advertencias.
 
 ---
 
@@ -93,6 +94,9 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-01-30 | MELHORIA-015 | Acesso por papel e perfil |
+| 2026-01-30 | MELHORIA-014 | Usuarios conectados a API |
+| 2026-01-30 | MELHORIA-013 | Tela de Usuarios completa |
 | 2026-01-29 | MELHORIA-012 | Ajuste visual de advertencias |
 | 2026-01-29 | MELHORIA-011 | Ajuste visual dos relatórios |
 | 2026-01-28 | MELHORIA-010 | Tela de Relatórios |
@@ -132,7 +136,7 @@ Nenhum bloqueador no momento.
 
 ### Pontos que faltam ou estao incompletos
 
-1. O frontend ainda nao conversa com a API (telas usam dados fixos).
+1. A tela de usuarios agora conversa com a API. Outras telas menores ainda usam dados fixos.
 2. Recuperacao de senha nao envia email de verdade (so retorna "email enviado").
 3. Scripts do projeto na raiz apontam para `apps/backend` e `apps/frontend`, mas as pastas reais sao `backend` e `frontend`.
 
@@ -161,6 +165,29 @@ Nenhum bloqueador no momento.
 ---
 
 ## Log de Atividades
+
+### 2026-01-30
+
+**Sessao:** acesso-por-papel
+```
+16:10 - Menu ajustado por papel (admin, animador, recreador).
+16:15 - Login redireciona para a tela correta.
+16:20 - Perfil do recreador com advertencias criado.
+```
+
+**Sessao:** tela-usuarios
+```
+09:20 - Tela de usuarios criada com cards de resumo e listagem completa.
+09:25 - Acoes de editar e excluir visiveis apenas para administradores.
+09:30 - Botao de novo usuario adicionado no topo da pagina.
+```
+
+**Sessao:** usuarios-api
+```
+14:10 - Tela de usuarios conectada a API real.
+14:20 - Modal de novo usuario com nome, email, senha e funcao.
+14:30 - Editar e excluir usuarios funcionando com confirmacao.
+```
 
 ### 2026-01-29
 

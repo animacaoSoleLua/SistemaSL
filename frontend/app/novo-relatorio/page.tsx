@@ -1,14 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { getDefaultRoute, getStoredUser, isRoleAllowed } from "../../lib/auth";
 
 export default function NovoRelatorioPage() {
   const router = useRouter();
   const [reportName, setReportName] = useState("");
   const [reportDate, setReportDate] = useState("");
   const [reportContent, setReportContent] = useState("");
+
+  useEffect(() => {
+    const user = getStoredUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!isRoleAllowed(user.role, ["admin", "animador"])) {
+      router.push(getDefaultRoute(user.role));
+    }
+  }, [router]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

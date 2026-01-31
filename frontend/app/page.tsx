@@ -1,11 +1,31 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getDefaultRoute, getStoredUser, isRoleAllowed } from "../lib/auth";
+
+const allowedRoles = ["admin"] as const;
+
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const user = getStoredUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!isRoleAllowed(user.role, [...allowedRoles])) {
+      router.push(getDefaultRoute(user.role));
+    }
+  }, [router]);
+
   return (
     <main className="app-page">
       <section className="shell reveal">
         <header className="page-header">
           <div>
             <h1 className="hero-title">Dashboard</h1>
-            <p className="hero-copy">Visao geral do sistema.</p>
           </div>
         </header>
 

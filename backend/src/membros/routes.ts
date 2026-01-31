@@ -19,6 +19,7 @@ interface MemberBody {
   email?: string;
   role?: Role;
   photo_url?: string;
+  password?: string;
 }
 
 interface MemberQuery {
@@ -150,12 +151,19 @@ export async function membrosRoutes(app: FastifyInstance) {
     "/api/v1/membros",
     { preHandler: requireRole(["admin"]) },
     async (request, reply) => {
-      const { name, email, role } = request.body as MemberBody;
+      const { name, email, role, password } = request.body as MemberBody;
 
       if (!name || !email || !role) {
         return reply.status(400).send({
           error: "invalid_request",
           message: "Nome, email e papel sao obrigatorios",
+        });
+      }
+
+      if (password !== undefined && password.trim().length === 0) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Senha invalida",
         });
       }
 
@@ -180,7 +188,7 @@ export async function membrosRoutes(app: FastifyInstance) {
         });
       }
 
-      const member = await createUser({ name, email, role });
+      const member = await createUser({ name, email, role, password });
       if (!member) {
         return reply.status(409).send({
           error: "email_exists",

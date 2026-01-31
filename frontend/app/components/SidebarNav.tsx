@@ -5,11 +5,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import logo from "../../assets/logo.png";
+import { getStoredUser, roleLabels, type Role } from "../../lib/auth";
 
 const navItems = [
   {
     label: "Dashboard",
     href: "/",
+    roles: ["admin"],
     icon: (
       <svg viewBox="0 0 20 20" aria-hidden="true">
         <rect x="3" y="3" width="6" height="6" rx="1.5" />
@@ -22,6 +24,7 @@ const navItems = [
   {
     label: "Relatorios",
     href: "/relatorios",
+    roles: ["admin", "animador"],
     icon: (
       <svg viewBox="0 0 20 20" aria-hidden="true">
         <path d="M5 3.5h7l3 3V16a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 16V5A1.5 1.5 0 0 1 5.5 3.5z" />
@@ -32,6 +35,18 @@ const navItems = [
   {
     label: "Novo Relatorio",
     href: "/novo-relatorio",
+    roles: ["admin", "animador"],
+    icon: (
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="7" />
+        <path d="M10 7v6M7 10h6" />
+      </svg>
+    )
+  },
+  {
+    label: "Cursos",
+    href: "/novo-curso",
+    roles: ["admin", "animador"],
     icon: (
       <svg viewBox="0 0 20 20" aria-hidden="true">
         <circle cx="10" cy="10" r="7" />
@@ -42,6 +57,7 @@ const navItems = [
   {
     label: "Advertências",
     href: "/advertencias",
+    roles: ["admin", "animador"],
     icon: (
       <svg viewBox="0 0 20 20" aria-hidden="true">
         <path d="M10 3L3 17h14L10 3zm-1 8h2v5h-2v-5zm0-4h2v2h-2V7z" />
@@ -49,8 +65,20 @@ const navItems = [
     )
   },
   {
-    label: "Usuarios",
+    label: "Perfil",
+    href: "/perfil",
+    roles: ["recreador"],
+    icon: (
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="7.5" r="3.2" />
+        <path d="M4.5 16c1-2.5 3.1-4 5.5-4s4.5 1.5 5.5 4" />
+      </svg>
+    )
+  },
+  {
+    label: "Membros",
     href: "/usuarios",
+    roles: ["admin", "animador", "recreador"],
     icon: (
       <svg viewBox="0 0 20 20" aria-hidden="true">
         <circle cx="10" cy="7.5" r="3.2" />
@@ -63,7 +91,7 @@ const navItems = [
 interface User {
   id: string;
   name: string;
-  role: string;
+  role: Role;
 }
 
 function isActive(pathname: string, href: string) {
@@ -72,6 +100,9 @@ function isActive(pathname: string, href: string) {
   }
   if (href === "/relatorios") {
     return pathname.startsWith("/relatorios");
+  }
+  if (href === "/perfil") {
+    return pathname.startsWith("/perfil");
   }
   return pathname.startsWith(href);
 }
@@ -83,10 +114,7 @@ export default function SidebarNav() {
   const [showLogout, setShowLogout] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    setUser(getStoredUser());
   }, []);
 
   const handleLogout = () => {
@@ -96,33 +124,28 @@ export default function SidebarNav() {
   };
 
   return (
-    <aside className="app-sidebar">
+    <header className="app-navbar">
       <div className="app-brand">
-        <Image
-          src={logo}
-          alt="Sol e Lua Animacao"
-          className="app-logo"
-          priority
-        />
+        <Image src={logo} alt="Sol e Lua Animacao" className="app-logo" priority />
       </div>
       <nav className="app-nav" aria-label="Navegacao principal">
-        {navItems.map((item) => {
-          const active = isActive(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-link${active ? " active" : ""}`}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              {item.label}
-            </Link>
-          );
-        })}
+        {navItems
+          .filter((item) => (user ? item.roles.includes(user.role) : false))
+          .map((item) => {
+            const active = isActive(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link${active ? " active" : ""}`}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {item.label}
+              </Link>
+            );
+          })}
       </nav>
-      
-      {/* User profile section */}
-      {user && (
+      {user ? (
         <div className="sidebar-footer-wrapper">
           {showLogout && (
             <div className="logout-popup">
@@ -131,15 +154,20 @@ export default function SidebarNav() {
               </button>
             </div>
           )}
-          <button className="sidebar-footer" onClick={() => setShowLogout(!showLogout)}>
+          <button
+            className="sidebar-footer"
+            onClick={() => setShowLogout(!showLogout)}
+          >
             <span className="user-avatar">{user.name.charAt(0).toUpperCase()}</span>
             <div className="user-meta">
               <strong>{user.name}</strong>
-              <span>{user.role}</span>
+              <span>{roleLabels[user.role]}</span>
             </div>
           </button>
         </div>
+      ) : (
+        <div className="sidebar-footer-wrapper" />
       )}
-    </aside>
+    </header>
   );
 }

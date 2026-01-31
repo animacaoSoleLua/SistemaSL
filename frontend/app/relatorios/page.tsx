@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getReports } from "../../lib/api";
+import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
 
 interface Report {
   id: string;
@@ -11,12 +13,28 @@ interface Report {
 }
 
 export default function RelatoriosPage() {
+  const router = useRouter();
+  const [currentRole, setCurrentRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const user = getStoredUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!isRoleAllowed(user.role, ["admin", "animador"])) {
+      router.push(getDefaultRoute(user.role));
+      return;
+    }
+    setCurrentRole(user.role);
+  }, [router]);
+
+  useEffect(() => {
+    if (!currentRole) return;
     getReports()
       .then((data) => {
         setReports(data.data);
@@ -26,7 +44,7 @@ export default function RelatoriosPage() {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [currentRole]);
 
   const filteredReports = reports.filter((report) =>
     report.contractor_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -38,24 +56,24 @@ export default function RelatoriosPage() {
         <header className="page-header">
           <div>
             <h1 className="hero-title">Relatórios</h1>
-            <p className="hero-copy">Gerencie os relatórios de eventos</p>
           </div>
-          <Link className="button" href="/novo-relatorio">
-            + Novo Relatório
-          </Link>
+          {currentRole && (
+            <Link className="button" href="/novo-relatorio">
+              + Novo Relatório
+            </Link>
+          )}
         </header>
 
         <section className="report-panel">
           <div className="report-header">
             <div>
-              <h2 className="section-title">Lista de relatórios</h2>
-              <p>Encontre um relatório pelo nome do contratante ou data.</p>
+              <h2 className="section-title">Listagem de relatórios</h2>
+              <p>Encontre um relatório pelo nome do animador ou data do evento.</p>
             </div>
             <label className="field report-search">
-              <span>Buscar</span>
               <input
                 type="text"
-                placeholder="Digite o nome do contratante"
+                placeholder="Buscar por nome..."
                 className="input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
