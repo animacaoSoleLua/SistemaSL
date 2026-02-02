@@ -1,7 +1,8 @@
+import type { Prisma } from "@prisma/client";
 import { hashPassword } from "../auth/password.js";
 import { prisma } from "./prisma.js";
 
-export const baseUsers = [
+export const baseUsers: Prisma.UserCreateManyInput[] = [
   {
     id: "11111111-1111-1111-1111-111111111111",
     name: "Admin",

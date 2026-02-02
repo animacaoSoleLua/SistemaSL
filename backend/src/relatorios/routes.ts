@@ -1,3 +1,4 @@
+import type { Multipart } from "@fastify/multipart";
 import { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
@@ -96,6 +97,19 @@ function resolveExtension(
     : undefined;
   if (mimeExtension) {
     return mimeExtension;
+  }
+  return undefined;
+}
+
+function getMultipartFieldValue(
+  field?: Multipart | Multipart[]
+): string | undefined {
+  const candidate = Array.isArray(field) ? field[0] : field;
+  if (!candidate) {
+    return undefined;
+  }
+  if ("value" in candidate && typeof candidate.value === "string") {
+    return candidate.value;
   }
   return undefined;
 }
@@ -568,10 +582,9 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
-    const mediaTypeValue =
-      typeof fileData.fields?.media_type?.value === "string"
-        ? fileData.fields.media_type.value
-        : undefined;
+    const mediaTypeValue = getMultipartFieldValue(
+      fileData.fields?.media_type
+    );
     const mediaType = parseMediaType(mediaTypeValue, fileData.mimetype);
     if (!mediaType) {
       return reply.status(400).send({

@@ -12,7 +12,11 @@ import {
   getActiveSuspension,
   listWarningsForMember,
 } from "../advertencias/store.js";
-import { getCourseById, listEnrollmentsForMember } from "../cursos/store.js";
+import {
+  getCourseById,
+  listEnrollmentsForMember,
+  type EnrollmentStatus,
+} from "../cursos/store.js";
 import { listFeedbacksForMember } from "../relatorios/store.js";
 
 interface MemberBody {
@@ -298,7 +302,7 @@ export async function membrosRoutes(app: FastifyInstance) {
             id: string;
             title: string;
             course_date: string;
-            status: string;
+            status: EnrollmentStatus;
           } => entry !== null
         ),
         warnings: warnings.map((warning) => ({
