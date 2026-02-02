@@ -34,8 +34,12 @@ export function buildServer(): FastifyInstance {
   const app = Fastify({ logger: true });
 
   // Enable CORS for the frontend origin
+  const corsOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
+    : ["http://localhost:3000", "https://solelua.cloud", "https://www.solelua.cloud"];
+
   app.register(cors, {
-    origin: "http://localhost:3000",
+    origin: corsOrigins,
   });
 
   const uploadsRoot = process.env.UPLOADS_DIR
