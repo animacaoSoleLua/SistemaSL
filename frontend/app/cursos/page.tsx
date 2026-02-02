@@ -1,179 +1,181 @@
-export default function NovoCursoPage() {
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getCourses } from "../../lib/api";
+import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+
+interface Course {
+  id: string;
+  title: string;
+  course_date: string;
+  capacity: number;
+  enrolled_count: number;
+  available_spots: number;
+}
+
+export default function CursosPage() {
+  const router = useRouter();
+  const [currentRole, setCurrentRole] = useState<Role | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"available" | "full" | "all">("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const user = getStoredUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!isRoleAllowed(user.role, ["admin", "animador"])) {
+      router.push(getDefaultRoute(user.role));
+      return;
+    }
+    setCurrentRole(user.role);
+  }, [router]);
+
+  useEffect(() => {
+    if (!currentRole) return;
+    setLoading(true);
+    setError(null);
+    getCourses({ status: statusFilter })
+      .then((data) => {
+        setCourses(data.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [currentRole, statusFilter]);
+
+  const filteredCourses = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return courses;
+    return courses.filter((course) => course.title.toLowerCase().includes(term));
+  }, [courses, searchTerm]);
+
+  const stats = useMemo(() => {
+    const totalCourses = courses.length;
+    const totalSpots = courses.reduce((acc, course) => acc + course.capacity, 0);
+    const availableCourses = courses.filter((course) => course.available_spots > 0).length;
+    return { totalCourses, totalSpots, availableCourses };
+  }, [courses]);
+
   return (
     <main className="app-page">
       <section className="shell reveal">
-        <header className="page-header centered">
+        <header className="page-header">
           <div>
-            <h1 className="hero-title">Novo Curso</h1>
-            <p className="hero-copy">Cadastre uma nova turma de forma rapida</p>
+            <h1 className="hero-title">Cursos</h1>
+            <p className="hero-copy">Acompanhe turmas, vagas e datas principais.</p>
           </div>
+          {currentRole === "admin" && (
+            <Link className="button" href="/novo-curso">
+              + Novo Curso
+            </Link>
+          )}
         </header>
 
-        <section className="form-layout">
-          <article className="form-card">
-            <div className="form-card-head">
-              <h2 className="section-title">Informacoes do Curso</h2>
-              <p>Dados principais para divulgar</p>
+        <section className="stats">
+          <article className="stat">
+            <span>Total de cursos</span>
+            <strong>{stats.totalCourses}</strong>
+          </article>
+          <article className="stat">
+            <span>Vagas ofertadas</span>
+            <strong>{stats.totalSpots}</strong>
+          </article>
+          <article className="stat">
+            <span>Turmas com vagas</span>
+            <strong>{stats.availableCourses}</strong>
+          </article>
+        </section>
+
+        <section className="report-panel">
+          <div className="report-header">
+            <div>
+              <h2 className="section-title">Listagem de cursos</h2>
+              <p>Busque por nome e veja disponibilidade.</p>
             </div>
-            <div className="form-grid">
-              <label className="field full">
-                <span>Nome do Curso (Obrigatorio)</span>
+            <div className="report-actions">
+              <label className="field report-search">
                 <input
-                  className="input"
                   type="text"
-                  placeholder="Ex: Ritmos para iniciantes"
+                  placeholder="Buscar por curso..."
+                  className="input"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </label>
-              <label className="field">
-                <span>Professor/Responsavel</span>
-                <input className="input" type="text" placeholder="Nome completo" />
-              </label>
-              <label className="field">
-                <span>Nivel</span>
-                <select className="input" defaultValue="Iniciante">
-                  <option>Iniciante</option>
-                  <option>Intermediario</option>
-                  <option>Avancado</option>
+              <label className="field report-search">
+                <select
+                  className="input"
+                  value={statusFilter}
+                  onChange={(e) =>
+                    setStatusFilter(e.target.value as "available" | "full" | "all")
+                  }
+                >
+                  <option value="all">Todas as turmas</option>
+                  <option value="available">Com vagas</option>
+                  <option value="full">Lotadas</option>
                 </select>
               </label>
-              <label className="field">
-                <span>Modalidade</span>
-                <select className="input" defaultValue="Presencial">
-                  <option>Presencial</option>
-                  <option>Online</option>
-                  <option>Hibrido</option>
-                </select>
-              </label>
-              <label className="field">
-                <span>Vagas Disponiveis</span>
-                <input className="input" type="number" placeholder="Ex: 25" />
-              </label>
-              <label className="field full">
-                <span>Descricao</span>
-                <textarea
-                  className="input"
-                  rows={4}
-                  placeholder="Resumo do conteudo do curso"
-                />
-              </label>
-            </div>
-          </article>
-
-          <article className="form-card">
-            <div className="form-card-head">
-              <h2 className="section-title">Agenda e Valores</h2>
-              <p>Datas, horario e investimento</p>
-            </div>
-            <div className="form-grid">
-              <label className="field">
-                <span>Data de Inicio</span>
-                <div className="field-input">
-                  <input className="input" type="text" placeholder="dd/mm/aaaa" />
-                  <span className="input-icon" aria-hidden="true">
-                    <svg viewBox="0 0 20 20">
-                      <rect x="3" y="4.5" width="14" height="12" rx="2" />
-                      <path d="M6.5 2.8v3M13.5 2.8v3M3 8h14" />
-                    </svg>
-                  </span>
-                </div>
-              </label>
-              <label className="field">
-                <span>Data de Termino</span>
-                <div className="field-input">
-                  <input className="input" type="text" placeholder="dd/mm/aaaa" />
-                  <span className="input-icon" aria-hidden="true">
-                    <svg viewBox="0 0 20 20">
-                      <rect x="3" y="4.5" width="14" height="12" rx="2" />
-                      <path d="M6.5 2.8v3M13.5 2.8v3M3 8h14" />
-                    </svg>
-                  </span>
-                </div>
-              </label>
-              <label className="field">
-                <span>Horario</span>
-                <input className="input" type="text" placeholder="Ex: Seg e Qua, 19h" />
-              </label>
-              <label className="field">
-                <span>Duracao Total</span>
-                <input className="input" type="text" placeholder="Ex: 8 aulas" />
-              </label>
-              <label className="field">
-                <span>Valor do Curso</span>
-                <input className="input" type="text" placeholder="Ex: R$ 250,00" />
-              </label>
-              <label className="field">
-                <span>Desconto</span>
-                <input className="input" type="text" placeholder="Ex: 10% a vista" />
-              </label>
-              <label className="field full">
-                <span>Local</span>
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Endereco ou link da sala online"
-                />
-              </label>
-            </div>
-            <div className="toggle-row">
-              <label className="toggle-card">
-                <span>Certificado?</span>
-                <span className="switch">
-                  <input type="checkbox" aria-label="Certificado" />
-                  <span className="slider" />
-                </span>
-              </label>
-              <label className="toggle-card">
-                <span>Material incluso?</span>
-                <span className="switch">
-                  <input type="checkbox" aria-label="Material incluso" />
-                  <span className="slider" />
-                </span>
-              </label>
-              <label className="toggle-card">
-                <span>Turma aberta?</span>
-                <span className="switch">
-                  <input type="checkbox" aria-label="Turma aberta" />
-                  <span className="slider" />
-                </span>
-              </label>
-            </div>
-          </article>
-
-          <article className="form-card">
-            <div className="form-card-head">
-              <h2 className="section-title">Contato e Midia</h2>
-              <p>Informacoes para comunicacao</p>
-            </div>
-            <div className="form-grid">
-              <label className="field">
-                <span>WhatsApp</span>
-                <input className="input" type="text" placeholder="(61) 99999-9999" />
-              </label>
-              <label className="field">
-                <span>Link de Inscricao</span>
-                <input className="input" type="text" placeholder="URL do formulario" />
-              </label>
-              <label className="field full">
-                <span>Imagem de Capa</span>
-                <input className="input" type="file" />
-              </label>
-              <p className="helper full">
-                Use uma imagem quadrada para divulgar nas redes sociais.
-              </p>
-            </div>
-          </article>
-
-          <div className="form-actions">
-            <p className="helper">Revise os dados antes de salvar</p>
-            <div className="form-buttons">
-              <button className="button secondary" type="button">
-                Salvar rascunho
-              </button>
-              <button className="button" type="button">
-                Publicar curso
-              </button>
             </div>
           </div>
+
+          {loading ? (
+            <div className="empty-state">
+              <p>Carregando cursos...</p>
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <p className="text-red-500">Erro ao carregar cursos: {error}</p>
+            </div>
+          ) : filteredCourses.length > 0 ? (
+            <div className="report-list">
+              {filteredCourses.map((course) => (
+                <article className="report-item" key={course.id}>
+                  <div className="report-meta">
+                    <strong className="report-name">{course.title}</strong>
+                    <span className="report-date">Data: {course.course_date}</span>
+                    <span className="report-date">
+                      Vagas: {course.enrolled_count}/{course.capacity}
+                    </span>
+                  </div>
+                  <div className="course-actions">
+                    <span
+                      className={`status-pill ${
+                        course.available_spots > 0 ? "active" : "inactive"
+                      }`}
+                    >
+                      {course.available_spots > 0
+                        ? `${course.available_spots} vagas`
+                        : "Lotado"}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <span className="empty-state-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M7 4h10l2 4v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8l2-4zm0 0h10" />
+                </svg>
+              </span>
+              <p>Nenhum curso encontrado</p>
+              <p className="helper">Crie a primeira turma para aparecer aqui.</p>
+              {currentRole === "admin" && (
+                <Link className="button" href="/novo-curso">
+                  + Criar Curso
+                </Link>
+              )}
+            </div>
+          )}
         </section>
       </section>
     </main>

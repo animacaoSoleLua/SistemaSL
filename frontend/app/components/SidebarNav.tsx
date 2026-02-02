@@ -45,7 +45,7 @@ const navItems = [
   },
   {
     label: "Cursos",
-    href: "/novo-curso",
+    href: "/cursos",
     roles: ["admin", "animador"],
     icon: (
       <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -100,6 +100,9 @@ function isActive(pathname: string, href: string) {
   }
   if (href === "/relatorios") {
     return pathname.startsWith("/relatorios");
+  }
+  if (href === "/cursos") {
+    return pathname.startsWith("/cursos") || pathname.startsWith("/novo-curso");
   }
   if (href === "/perfil") {
     return pathname.startsWith("/perfil");

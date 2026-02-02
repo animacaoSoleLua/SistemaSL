@@ -64,6 +64,14 @@ export default function PerfilPage() {
     loadProfile();
   }, [router]);
 
+  const formatDateBR = (value: string) => {
+    const [year, month, day] = value.split("-");
+    if (!year || !month || !day) {
+      return value;
+    }
+    return `${day}/${month}/${year}`;
+  };
+
   return (
     <main className="app-page">
       <section className="shell reveal">
@@ -139,7 +147,9 @@ export default function PerfilPage() {
                     <ul className="warning-items">
                       {member.warnings.map((warning) => (
                         <li key={warning.id} className="warning-item">
-                          <span className="warning-date">{warning.warning_date}</span>
+                          <span className="warning-date">
+                            {formatDateBR(warning.warning_date)}
+                          </span>
                           <span className="warning-desc">{warning.reason}</span>
                         </li>
                       ))}

@@ -4,9 +4,11 @@ import { getUserById } from "../auth/store.js";
 import {
   createWarning,
   deleteWarning,
+  getWarningById,
   listWarnings,
   listWarningsByCreator,
   listWarningsForMember,
+  updateWarning,
 } from "./store.js";
 
 interface WarningBody {
@@ -202,6 +204,80 @@ export async function advertenciasRoutes(app: FastifyInstance) {
       }
 
       return reply.status(204).send();
+    }
+  );
+
+  app.patch(
+    "/api/v1/advertencias/:id",
+    { preHandler: requireRole(["admin", "animador"]) },
+    async (request, reply) => {
+      const params = request.params as { id?: string };
+      if (!params.id) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Advertencia invalida",
+        });
+      }
+
+      const existing = await getWarningById(params.id);
+      if (!existing || existing.deletedAt) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Advertencia nao encontrada",
+        });
+      }
+
+      if (request.user?.role !== "admin" && existing.createdBy !== request.user?.id) {
+        return reply.status(403).send({
+          error: "forbidden",
+          message: "Acesso negado",
+        });
+      }
+
+      const { reason, warning_date } = request.body as WarningBody;
+      const trimmedReason = reason?.trim();
+      const parsedDate = parseDate(warning_date);
+
+      if (!trimmedReason && !parsedDate) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Informe uma descricao ou data",
+        });
+      }
+
+      if (reason !== undefined && !trimmedReason) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Descricao invalida",
+        });
+      }
+
+      if (warning_date !== undefined && !parsedDate) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Data da advertencia invalida",
+        });
+      }
+
+      const updated = await updateWarning(params.id, {
+        reason: trimmedReason ?? undefined,
+        warningDate: parsedDate,
+      });
+
+      if (!updated) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Advertencia nao encontrada",
+        });
+      }
+
+      return reply.status(200).send({
+        data: {
+          id: updated.id,
+          warning_date: formatDate(updated.warningDate),
+          reason: updated.reason,
+        },
+      });
     }
   );
 

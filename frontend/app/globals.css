@@ -551,6 +551,13 @@ p {
   box-shadow: none;
 }
 
+.button.danger {
+  background: transparent;
+  color: #d04b4b;
+  border: 1px solid rgba(208, 75, 75, 0.4);
+  box-shadow: none;
+}
+
 .helper {
   font-size: 14px;
   color: var(--muted);
@@ -742,6 +749,13 @@ p {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.report-actions {
+  display: flex;
+  align-items: flex-end;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -1369,12 +1383,26 @@ p {
   background: #ffffff;
 }
 
+.warning-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .warning-date {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted);
   font-weight: 600;
+}
+
+.warning-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .warning-desc {
@@ -1390,6 +1418,12 @@ p {
   border-radius: 14px;
   border: 1px solid rgba(111, 76, 255, 0.12);
   background: #fbfaff;
+}
+
+.course-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .report-meta {

@@ -185,6 +185,36 @@ export async function getWarningById(
   };
 }
 
+export async function updateWarning(
+  warningId: string,
+  input: { reason?: string; warningDate?: Date }
+): Promise<WarningRecord | undefined> {
+  const warning = await prisma.warning.findUnique({
+    where: { id: warningId },
+  });
+  if (!warning || warning.deletedAt) {
+    return undefined;
+  }
+
+  const updated = await prisma.warning.update({
+    where: { id: warningId },
+    data: {
+      reason: input.reason ?? warning.reason,
+      warningDate: input.warningDate ?? warning.warningDate,
+    },
+  });
+
+  return {
+    id: updated.id,
+    memberId: updated.memberId,
+    createdBy: updated.createdBy,
+    reason: updated.reason,
+    warningDate: updated.warningDate,
+    createdAt: updated.createdAt,
+    deletedAt: updated.deletedAt ?? undefined,
+  };
+}
+
 export async function deleteWarning(
   warningId: string,
   _deletedBy: string

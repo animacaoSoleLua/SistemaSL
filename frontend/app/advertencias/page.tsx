@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getMembers, getWarnings } from "../../lib/api";
+import { deleteWarning, getMembers, getWarnings, updateWarning } from "../../lib/api";
 import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
 
 interface Warning {
@@ -26,6 +26,11 @@ export default function WarningsPage() {
   const [memberMap, setMemberMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingWarning, setEditingWarning] = useState<Warning | null>(null);
+  const [editReason, setEditReason] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -93,6 +98,74 @@ export default function WarningsPage() {
     member.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const formatDateBR = (value: string) => {
+    const [year, month, day] = value.split("-");
+    if (!year || !month || !day) {
+      return value;
+    }
+    return `${day}/${month}/${year}`;
+  };
+
+  const openEditModal = (warning: Warning) => {
+    setEditingWarning(warning);
+    setEditReason(warning.reason);
+    setEditDate(warning.warning_date);
+    setActionError(null);
+  };
+
+  const closeEditModal = () => {
+    setEditingWarning(null);
+    setEditReason("");
+    setEditDate("");
+  };
+
+  const handleEditSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editingWarning) return;
+    const trimmedReason = editReason.trim();
+    if (!trimmedReason || !editDate) {
+      setActionError("Preencha a descricao e a data.");
+      return;
+    }
+    setActionLoadingId(editingWarning.id);
+    setActionError(null);
+    try {
+      const response = await updateWarning(editingWarning.id, {
+        reason: trimmedReason,
+        warning_date: editDate,
+      });
+      const updated = response?.data as { id: string; reason: string; warning_date: string };
+      setWarnings((prev) =>
+        prev.map((warning) =>
+          warning.id === updated.id
+            ? { ...warning, reason: updated.reason, warning_date: updated.warning_date }
+            : warning
+        )
+      );
+      closeEditModal();
+    } catch (err: any) {
+      setActionError(err.message || "Erro ao atualizar advertencia.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleDelete = async (warning: Warning) => {
+    if (!window.confirm("Deseja excluir esta advertencia?")) {
+      return;
+    }
+    setActionLoadingId(warning.id);
+    setActionError(null);
+    try {
+      await deleteWarning(warning.id);
+      setWarnings((prev) => prev.filter((item) => item.id !== warning.id));
+    } catch (err: any) {
+      setActionError(err.message || "Erro ao excluir advertencia.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   return (
     <main className="app-page">
       <section className="shell reveal">
@@ -129,6 +202,11 @@ export default function WarningsPage() {
               />
             </label>
           </div>
+          {actionError && !editingWarning && (
+            <div className="empty-state">
+              <p className="text-red-500">{actionError}</p>
+            </div>
+          )}
 
           {loading ? (
             <div className="empty-state">
@@ -149,16 +227,39 @@ export default function WarningsPage() {
                         {member.warnings.length} advertencia(s)
                       </span>
                     </div>
-                    <Link className="button secondary small" href="/nova-advertencia">
-                      Nova advertencia
-                    </Link>
                   </div>
 
                   {member.warnings.length > 0 ? (
                     <ul className="warning-items">
                       {member.warnings.map((warning) => (
                         <li key={warning.id} className="warning-item">
-                          <span className="warning-date">{warning.warning_date}</span>
+                          <div className="warning-row">
+                            <span className="warning-date">
+                              {formatDateBR(warning.warning_date)}
+                            </span>
+                            <div className="warning-actions">
+                              {(currentRole === "admin" || currentRole === "animador") && (
+                                <button
+                                  className="button secondary small"
+                                  type="button"
+                                  onClick={() => openEditModal(warning)}
+                                  disabled={actionLoadingId === warning.id}
+                                >
+                                  Editar
+                                </button>
+                              )}
+                              {currentRole === "admin" && (
+                                <button
+                                  className="button danger small"
+                                  type="button"
+                                  onClick={() => handleDelete(warning)}
+                                  disabled={actionLoadingId === warning.id}
+                                >
+                                  Excluir
+                                </button>
+                              )}
+                            </div>
+                          </div>
                           <span className="warning-desc">{warning.reason}</span>
                         </li>
                       ))}
@@ -189,6 +290,78 @@ export default function WarningsPage() {
           )}
         </section>
       </section>
+
+      {editingWarning && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <header className="modal-header">
+              <div>
+                <h2 className="section-title">Editar advertencia</h2>
+                <p>Atualize a descricao e a data da ocorrencia.</p>
+              </div>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Fechar"
+                onClick={closeEditModal}
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M18 6L6 18" />
+                  <path d="M6 6l12 12" />
+                </svg>
+              </button>
+            </header>
+
+            <form className="modal-body" onSubmit={handleEditSubmit}>
+              <div className="form-grid">
+                <label className="field full">
+                  <span>Descricao</span>
+                  <textarea
+                    className="input"
+                    rows={5}
+                    value={editReason}
+                    onChange={(event) => setEditReason(event.target.value)}
+                    required
+                    disabled={actionLoadingId === editingWarning.id}
+                  />
+                </label>
+                <label className="field">
+                  <span>Data da ocorrencia</span>
+                  <input
+                    type="date"
+                    className="input"
+                    value={editDate}
+                    onChange={(event) => setEditDate(event.target.value)}
+                    required
+                    disabled={actionLoadingId === editingWarning.id}
+                  />
+                </label>
+              </div>
+              <div className="form-actions">
+                <p className="helper">Revise antes de salvar.</p>
+                <div className="form-buttons">
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={closeEditModal}
+                    disabled={actionLoadingId === editingWarning.id}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="button"
+                    disabled={actionLoadingId === editingWarning.id}
+                  >
+                    {actionLoadingId === editingWarning.id ? "Salvando..." : "Salvar"}
+                  </button>
+                </div>
+                {actionError && <p className="text-red-500">{actionError}</p>}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

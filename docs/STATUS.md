@@ -16,31 +16,31 @@
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
 | Tarefas Completas | 22/22 |
-| Ultima Tarefa | MELHORIA-020 |
+| Ultima Tarefa | MELHORIA-021 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-020: Detalhes e feedbacks na tela de usuarios
+### MELHORIA-021: Aba de cursos finalizada e caminho corrigido
 
 **Epic:** Estabilidade e Produto
-**User Story:** Gestao de membros
-**API:** Membros
+**User Story:** Cursos e inscricoes
+**API:** Cursos
 
-**Descricao:** Ajustar a tela de usuarios para exibir feedbacks do membro para admin e simplificar detalhes para recreador/animador, removendo status ativo/inativo.
+**Descricao:** Finalizar a tela de cursos com listagem, filtros e botao de novo curso (admin), corrigindo o caminho no menu lateral.
 
 **O que mudou:**
-- Painel de detalhes mostra feedbacks quando admin seleciona um membro.
-- Para animador/recreador, painel mostra apenas informacoes basicas.
-- Removidos status ativo/inativo e botao de alterar status.
+- Tela de cursos agora mostra lista, busca e filtro de disponibilidade.
+- Indicadores de vagas e turmas abertas adicionados.
+- Caminho do menu de cursos corrigido para /cursos e pagina de novo curso criada.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Feedbacks exibidos para admin na tela de usuarios.
-- [x] Informacoes basicas para animador/recreador.
-- [x] Status ativo/inativo removido da interface.
+- [x] Aba de cursos finalizada com listagem e filtros.
+- [x] Botao de novo curso funcionando para admin.
+- [x] Caminho corrigido no menu lateral.
 
 ---
 
@@ -94,6 +94,7 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-02 | MELHORIA-021 | Aba de cursos finalizada e caminho corrigido |
 | 2026-02-02 | MELHORIA-020 | Detalhes e feedbacks na tela de usuarios |
 | 2026-02-02 | MELHORIA-019 | Frontend em modo dev no Docker |
 | 2026-02-02 | MELHORIA-018 | Ajuste da tela de membros (detalhes a direita) |
@@ -172,6 +173,12 @@ Nenhum bloqueador no momento.
 ## Log de Atividades
 
 ### 2026-02-02
+
+**Sessao:** cursos-finalizados
+```
+19:05 - Listagem de cursos com busca e filtro adicionada.
+19:08 - Novo curso separado e caminho do menu corrigido.
+```
 
 **Sessao:** usuarios-feedbacks
 ```

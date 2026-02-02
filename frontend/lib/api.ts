@@ -67,6 +67,20 @@ export async function createWarning(input: {
   });
 }
 
+export async function updateWarning(
+  id: string,
+  input: { reason?: string; warning_date?: string }
+) {
+  return request(`/advertencias/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteWarning(id: string) {
+  return request(`/advertencias/${id}`, { method: "DELETE" });
+}
+
 export async function getMembers() {
   return request('/membros', { method: 'GET' });
 }
@@ -105,6 +119,34 @@ export async function login(email: string, password: string) {
   return request('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function getCourses(params: {
+  status?: "available" | "full" | "all";
+  page?: number;
+  limit?: number;
+} = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.status) searchParams.set("status", params.status);
+  if (params.page) searchParams.set("page", String(params.page));
+  if (params.limit) searchParams.set("limit", String(params.limit));
+
+  const query = searchParams.toString();
+  const endpoint = query ? `/cursos?${query}` : "/cursos";
+  return request(endpoint, { method: "GET" });
+}
+
+export async function createCourse(input: {
+  title: string;
+  description?: string;
+  course_date: string;
+  location?: string;
+  capacity: number;
+}) {
+  return request("/cursos", {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }
 
