@@ -13,6 +13,7 @@ import {
   listWarningsForMember,
 } from "../advertencias/store.js";
 import { getCourseById, listEnrollmentsForMember } from "../cursos/store.js";
+import { listFeedbacksForMember } from "../relatorios/store.js";
 
 interface MemberBody {
   name?: string;
@@ -20,6 +21,7 @@ interface MemberBody {
   role?: Role;
   photo_url?: string;
   password?: string;
+  is_active?: boolean;
 }
 
 interface MemberQuery {
@@ -75,6 +77,7 @@ function toMemberSummary(user: {
   email: string;
   role: Role;
   photoUrl?: string;
+  isActive: boolean;
 }) {
   return {
     id: user.id,
@@ -82,6 +85,7 @@ function toMemberSummary(user: {
     email: user.email,
     role: user.role,
     photo_url: user.photoUrl ?? null,
+    is_active: user.isActive,
   };
 }
 
@@ -202,6 +206,7 @@ export async function membrosRoutes(app: FastifyInstance) {
           name: member.name,
           email: member.email,
           role: member.role,
+          is_active: member.isActive,
         },
       });
     }
@@ -248,6 +253,18 @@ export async function membrosRoutes(app: FastifyInstance) {
     });
 
     const suspension = await getActiveSuspension(member.id);
+    const feedbacks =
+      request.user.role === "admin"
+        ? await listFeedbacksForMember(member.id)
+        : [];
+
+    feedbacks.sort((a, b) => {
+      const dateDiff = b.eventDate.getTime() - a.eventDate.getTime();
+      if (dateDiff !== 0) {
+        return dateDiff;
+      }
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
 
     return reply.status(200).send({
       data: {
@@ -256,6 +273,7 @@ export async function membrosRoutes(app: FastifyInstance) {
         email: member.email,
         role: member.role,
         photo_url: member.photoUrl ?? null,
+        is_active: member.isActive,
         courses: (
           await Promise.all(
             (await listEnrollmentsForMember(member.id)).map(
@@ -290,6 +308,13 @@ export async function membrosRoutes(app: FastifyInstance) {
           created_by: warning.createdBy,
         })),
         warnings_total: warnings.length,
+        feedbacks: feedbacks.map((entry) => ({
+          id: entry.id,
+          report_id: entry.reportId,
+          feedback: entry.feedback,
+          event_date: formatDate(entry.eventDate),
+          contractor_name: entry.contractorName,
+        })),
         suspension: suspension
           ? {
               status: "suspended",
@@ -337,9 +362,15 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
-    const { name, email, role, photo_url } = request.body as MemberBody;
+    const { name, email, role, photo_url, is_active } = request.body as MemberBody;
 
-    if (!name && !email && !role && photo_url === undefined) {
+    if (
+      !name &&
+      !email &&
+      !role &&
+      photo_url === undefined &&
+      is_active === undefined
+    ) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Nenhuma alteracao informada",
@@ -367,6 +398,20 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
+    if (is_active !== undefined && typeof is_active !== "boolean") {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Status invalido",
+      });
+    }
+
+    if (!isAdmin && is_active !== undefined) {
+      return reply.status(403).send({
+        error: "forbidden",
+        message: "Acesso negado",
+      });
+    }
+
     if (email && (await isEmailTaken(email, member.id))) {
       return reply.status(409).send({
         error: "email_exists",
@@ -379,6 +424,7 @@ export async function membrosRoutes(app: FastifyInstance) {
       email,
       role: isAdmin ? role : undefined,
       photoUrl: photo_url,
+      isActive: isAdmin ? is_active : undefined,
     });
 
     if (!updated) {

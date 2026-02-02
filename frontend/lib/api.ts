@@ -88,7 +88,7 @@ export async function createMember(input: {
 
 export async function updateMember(
   id: string,
-  input: { name?: string; email?: string; role?: string }
+  input: { name?: string; email?: string; role?: string; is_active?: boolean }
 ) {
   return request(`/membros/${id}`, {
     method: 'PATCH',

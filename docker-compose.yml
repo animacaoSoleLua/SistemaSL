@@ -24,18 +24,54 @@ services:
       - "6379:6379"
 
   migrate:
-    image: node:20
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: sol-e-lua-migrate
-    working_dir: /app/backend
+    working_dir: /app
     environment:
       DATABASE_URL: postgres://slr:admin@postgres:5432/slr
-    volumes:
-      - .:/app
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "npm ci && npx prisma db push"
+    command: npx prisma db push
     restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sol-e-lua-backend
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgres://slr:admin@postgres:5432/slr
+      REDIS_URL: redis://redis:6379
+      HOST: 0.0.0.0
+      PORT: 3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: sol-e-lua-frontend
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
 
 volumes:
   postgres_data:

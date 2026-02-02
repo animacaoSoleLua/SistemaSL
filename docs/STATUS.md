@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-01-30
+**Ultima Atualizacao:** 2026-02-02
 **Atualizado por:** Codex
 
 ---
@@ -16,31 +16,31 @@
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
 | Tarefas Completas | 22/22 |
-| Ultima Tarefa | MELHORIA-015 |
+| Ultima Tarefa | MELHORIA-020 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-015: Acesso por papel e perfil do recreador
+### MELHORIA-020: Detalhes e feedbacks na tela de usuarios
 
 **Epic:** Estabilidade e Produto
-**User Story:** Controle de acesso por papel
-**API:** Usuarios / Advertencias
+**User Story:** Gestao de membros
+**API:** Membros
 
-**Descricao:** Ajuste de acesso por papel (admin, animador, recreador), com redirecionamento no login e pagina de perfil para recreadores.
+**Descricao:** Ajustar a tela de usuarios para exibir feedbacks do membro para admin e simplificar detalhes para recreador/animador, removendo status ativo/inativo.
 
 **O que mudou:**
-- Admin ve todas as abas e telas.
-- Animador ve apenas relatorios, nova advertencia, advertencias (somente dele) e usuarios em modo leitura.
-- Recreador cai no perfil e ve somente perfil + usuarios (modo leitura).
+- Painel de detalhes mostra feedbacks quando admin seleciona um membro.
+- Para animador/recreador, painel mostra apenas informacoes basicas.
+- Removidos status ativo/inativo e botao de alterar status.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Ajustar menu e acesso por papel no frontend.
-- [x] Redirecionar login conforme papel.
-- [x] Criar tela de perfil para recreador com advertencias.
+- [x] Feedbacks exibidos para admin na tela de usuarios.
+- [x] Informacoes basicas para animador/recreador.
+- [x] Status ativo/inativo removido da interface.
 
 ---
 
@@ -94,6 +94,11 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-02 | MELHORIA-020 | Detalhes e feedbacks na tela de usuarios |
+| 2026-02-02 | MELHORIA-019 | Frontend em modo dev no Docker |
+| 2026-02-02 | MELHORIA-018 | Ajuste da tela de membros (detalhes a direita) |
+| 2026-02-02 | MELHORIA-017 | Docker sobe backend e frontend juntos |
+| 2026-02-02 | MELHORIA-016 | Docker sobe backend junto com o banco |
 | 2026-01-30 | MELHORIA-015 | Acesso por papel e perfil |
 | 2026-01-30 | MELHORIA-014 | Usuarios conectados a API |
 | 2026-01-30 | MELHORIA-013 | Tela de Usuarios completa |
@@ -165,6 +170,26 @@ Nenhum bloqueador no momento.
 ---
 
 ## Log de Atividades
+
+### 2026-02-02
+
+**Sessao:** usuarios-feedbacks
+```
+15:10 - Detalhes do membro com feedbacks para admin adicionados.
+15:12 - Status ativo/inativo removido da tela de usuarios.
+```
+
+**Sessao:** ajuste-membros-direita
+```
+14:05 - Painel de detalhes dos membros alinhado mais a direita.
+14:08 - Area de detalhes fica vazia quando nenhum membro e selecionado.
+```
+
+**Sessao:** frontend-dev-docker
+```
+14:20 - Dockerfile.dev criado para o frontend.
+14:23 - docker-compose ajustado para hot-reload com volume.
+```
 
 ### 2026-01-30
 

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createMember,
   deleteMember,
+  getMember,
   getMembers,
   updateMember,
 } from "../../lib/api";
@@ -17,6 +18,30 @@ interface Member {
   role: Role;
 }
 
+interface MemberFeedback {
+  id: string;
+  report_id: string;
+  feedback: string;
+  event_date: string;
+  contractor_name: string;
+}
+
+interface MemberWarning {
+  id: string;
+  reason: string;
+  warning_date: string;
+  created_by: string;
+}
+
+interface MemberDetails {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  feedbacks?: MemberFeedback[];
+  warnings?: MemberWarning[];
+}
+
 export default function UsuariosPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
@@ -27,13 +52,19 @@ export default function UsuariosPage() {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [saving, setSaving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     role: "animador" as Role,
     password: "",
   });
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [selectedMemberDetails, setSelectedMemberDetails] =
+    useState<MemberDetails | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const isAdmin = currentUser?.role === "admin";
 
@@ -44,7 +75,7 @@ export default function UsuariosPage() {
       const response = await getMembers();
       setUsers(response.data as Member[]);
     } catch (err: any) {
-      setError(err.message || "Erro ao carregar usuarios.");
+      setError(err.message || "Erro ao carregar membros.");
     } finally {
       setLoading(false);
     }
@@ -71,7 +102,7 @@ export default function UsuariosPage() {
   const openCreateModal = () => {
     setModalMode("create");
     setFormData({ name: "", email: "", role: "animador", password: "" });
-    setSelectedId(null);
+    setEditingId(null);
     setActionError(null);
     setModalOpen(true);
   };
@@ -79,7 +110,7 @@ export default function UsuariosPage() {
   const openEditModal = (member: Member) => {
     setModalMode("edit");
     setFormData({ name: member.name, email: member.email, role: member.role, password: "" });
-    setSelectedId(member.id);
+    setEditingId(member.id);
     setActionError(null);
     setModalOpen(true);
   };
@@ -106,8 +137,8 @@ export default function UsuariosPage() {
           role: formData.role,
           password: formData.password.trim(),
         });
-      } else if (selectedId) {
-        await updateMember(selectedId, {
+      } else if (editingId) {
+        await updateMember(editingId, {
           name: formData.name.trim(),
           email: formData.email.trim(),
           role: formData.role,
@@ -116,23 +147,103 @@ export default function UsuariosPage() {
       await loadMembers();
       setModalOpen(false);
     } catch (err: any) {
-      setActionError(err.message || "Nao foi possivel salvar o usuario.");
+      setActionError(err.message || "Nao foi possivel salvar o membro.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (member: Member) => {
-    const confirmed = window.confirm(`Excluir ${member.name}?`);
+    const confirmed = window.confirm(`Excluir membro ${member.name}?`);
     if (!confirmed) return;
     setActionError(null);
     try {
       await deleteMember(member.id);
       await loadMembers();
     } catch (err: any) {
-      setActionError(err.message || "Nao foi possivel excluir o usuario.");
+      setActionError(err.message || "Nao foi possivel excluir o membro.");
     }
   };
+
+  const filteredUsers = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) {
+      return users;
+    }
+    return users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(search) ||
+        user.email.toLowerCase().includes(search)
+    );
+  }, [users, searchTerm]);
+
+  useEffect(() => {
+    if (filteredUsers.length === 0) {
+      setSelectedMemberId(null);
+      return;
+    }
+    if (selectedMemberId && !filteredUsers.some((user) => user.id === selectedMemberId)) {
+      setSelectedMemberId(null);
+    }
+  }, [filteredUsers, selectedMemberId]);
+
+  const selectedMember =
+    selectedMemberId ? users.find((user) => user.id === selectedMemberId) ?? null : null;
+
+  useEffect(() => {
+    if (!isAdmin || !selectedMemberId) {
+      setSelectedMemberDetails(null);
+      setDetailsError(null);
+      setDetailsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setDetailsLoading(true);
+    setDetailsError(null);
+
+    getMember(selectedMemberId)
+      .then((response) => {
+        if (cancelled) return;
+        setSelectedMemberDetails(response.data as MemberDetails);
+      })
+      .catch((err: any) => {
+        if (cancelled) return;
+        setDetailsError(err.message || "Erro ao carregar detalhes.");
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setDetailsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, selectedMemberId]);
+
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("");
+
+  const formatDateBR = (value: string) => {
+    const [year, month, day] = value.split("-");
+    if (!year || !month || !day) {
+      return value;
+    }
+    return `${day}/${month}/${year}`;
+  };
+
+  const creatorNameById = useMemo(() => {
+    return new Map(users.map((user) => [user.id, user.name]));
+  }, [users]);
+
+  const selectedMemberInfo = selectedMemberDetails ?? selectedMember;
+  const warnings = selectedMemberDetails?.warnings ?? [];
 
   return (
     <main className="app-page">
@@ -160,7 +271,7 @@ export default function UsuariosPage() {
                   <path d="M22 11h-6" />
                 </svg>
               </span>
-              Novo Usuário
+              Novo Membro
             </button>
           )}
         </header>
@@ -221,88 +332,194 @@ export default function UsuariosPage() {
           </article>
         </section>
 
-        <section className="card users-card">
-          <div className="users-header">
-            <div>
-              <h2 className="section-title">Membros Sol e Lua</h2>
-              <p>Lista de todos os Membros.</p>
+        <section className="users-board">
+          <div className="card users-card">
+            <div className="members-header">
+              <div>
+                <h2 className="section-title">Membros Sol e Lua</h2>
+                <p>Lista de todos os membros.</p>
+              </div>
+              <div className="members-search">
+                <input
+                  className="input"
+                  type="search"
+                  placeholder="Buscar por nome ou email..."
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                />
+              </div>
             </div>
+
+            {loading ? (
+              <div className="empty-state">
+                <p>Carregando membros...</p>
+              </div>
+            ) : error ? (
+              <div className="empty-state">
+                <p className="text-red-500">Erro ao carregar membros: {error}</p>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="empty-state">
+                <p>Nenhum membro encontrado.</p>
+              </div>
+            ) : (
+              <div className="members-list">
+                {filteredUsers.map((user) => {
+                  const isSelected = selectedMemberId === user.id;
+                  return (
+                    <div
+                      className={`member-row ${isAdmin ? "admin" : "read-only"} ${
+                        isSelected ? "selected" : ""
+                      }`}
+                      key={user.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
+                      onClick={() => setSelectedMemberId(user.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setSelectedMemberId(user.id);
+                        }
+                      }}
+                    >
+                      <div className="member-row-avatar" aria-hidden="true">
+                        {getInitials(user.name)}
+                      </div>
+                      <div className="member-row-info">
+                        <strong className="member-row-name">{user.name}</strong>
+                        <span className="member-row-email">{user.email}</span>
+                      </div>
+                      <div className="member-row-right">
+                        <span className={`role-pill ${user.role}`}>
+                          {roleLabels[user.role]}
+                        </span>
+                        {isAdmin && (
+                          <div className="member-row-actions">
+                            <button
+                              className="icon-button"
+                              type="button"
+                              aria-label="Editar membro"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openEditModal(user);
+                              }}
+                            >
+                              <svg viewBox="0 0 24 24">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+                              </svg>
+                            </button>
+                            <button
+                              className="icon-button danger"
+                              type="button"
+                              aria-label="Excluir membro"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDelete(user);
+                              }}
+                            >
+                              <svg viewBox="0 0 24 24">
+                                <path d="M3 6h18" />
+                                <path d="M8 6V4h8v2" />
+                                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                                <path d="M10 11v6" />
+                                <path d="M14 11v6" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                        </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {actionError && (
+              <div className="empty-state">
+                <p className="text-red-500">{actionError}</p>
+              </div>
+            )}
           </div>
 
-          {loading ? (
-            <div className="empty-state">
-              <p>Carregando usuarios...</p>
+          <aside className="card member-panel">
+            <div className="member-panel-header">
+              <h2 className="section-title">Detalhes do membro</h2>
+              <p>Clique em um membro para ver os detalhes.</p>
             </div>
-          ) : error ? (
-            <div className="empty-state">
-              <p className="text-red-500">Erro ao carregar usuarios: {error}</p>
-            </div>
-          ) : users.length === 0 ? (
-            <div className="empty-state">
-              <p>Nenhum usuario encontrado.</p>
-            </div>
-          ) : (
-            <div className="users-table">
-              <div className={`user-row user-head ${isAdmin ? "admin" : "read-only"}`}>
-                <span>Nome</span>
-                <span>E-mail</span>
-                <span>Função</span>
-                {isAdmin && <span className="user-actions-label">Ações</span>}
+
+            {!selectedMember ? (
+              <div className="member-panel-empty">
+                <span className="member-panel-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4.2 3.6-7 8-7s8 2.8 8 7" />
+                  </svg>
+                </span>
+                <p>Selecione um membro para ver detalhes.</p>
               </div>
-
-              {users.map((user) => (
-                <div
-                  className={`user-row ${isAdmin ? "admin" : "read-only"}`}
-                  key={user.id}
-                >
-                  <div className="user-cell user-name">{user.name}</div>
-                  <div className="user-cell">{user.email}</div>
-                  <div className="user-cell">
-                    <span
-                      className={`role-pill ${user.role === "admin" ? "admin" : ""}`}
-                    >
-                      {roleLabels[user.role]}
-                    </span>
-                  </div>
-                  {isAdmin && (
-                    <div className="user-cell user-actions">
-                      <button
-                        className="icon-button"
-                        type="button"
-                        aria-label="Editar usuário"
-                        onClick={() => openEditModal(user)}
-                      >
-                        <svg viewBox="0 0 24 24">
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
-                        </svg>
-                      </button>
-                      <button
-                        className="icon-button danger"
-                        type="button"
-                        aria-label="Excluir usuário"
-                        onClick={() => handleDelete(user)}
-                      >
-                        <svg viewBox="0 0 24 24">
-                          <path d="M3 6h18" />
-                          <path d="M8 6V4h8v2" />
-                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                          <path d="M10 11v6" />
-                          <path d="M14 11v6" />
-                        </svg>
-                      </button>
+            ) : (
+              <div className="member-panel-body">
+                {selectedMemberInfo && (
+                  <div className="member-identity">
+                    <div className="member-avatar" aria-hidden="true">
+                      {getInitials(selectedMemberInfo.name)}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                    <div>
+                      <strong className="member-name">{selectedMemberInfo.name}</strong>
+                      <span className="member-email">{selectedMemberInfo.email}</span>
+                    </div>
+                  </div>
+                )}
 
-          {actionError && (
-            <div className="empty-state">
-              <p className="text-red-500">{actionError}</p>
-            </div>
-          )}
+                {selectedMemberInfo && (
+                  <div className="member-meta">
+                    <div className="member-meta-item">
+                      <span className="member-meta-label">Função</span>
+                      <span className={`role-pill ${selectedMemberInfo.role}`}>
+                        {roleLabels[selectedMemberInfo.role]}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {isAdmin && (
+                  <div className="member-feedbacks">
+                    <div className="member-feedbacks-header">
+                      <h3 className="section-title">Advertências</h3>
+                      <span className="member-feedbacks-count">
+                        {warnings.length}
+                      </span>
+                    </div>
+                    {detailsLoading ? (
+                      <p className="member-feedbacks-empty">Carregando advertências...</p>
+                    ) : detailsError ? (
+                      <p className="member-feedbacks-error">{detailsError}</p>
+                    ) : warnings.length === 0 ? (
+                      <p className="member-feedbacks-empty">Nenhuma advertência registrada.</p>
+                    ) : (
+                      <ul className="member-feedbacks-list">
+                        {warnings.map((entry) => (
+                          <li className="member-feedbacks-item" key={entry.id}>
+                            <span className="member-feedbacks-date">
+                              {formatDateBR(entry.warning_date)}
+                            </span>
+                            <strong className="member-feedbacks-title">
+                              {creatorNameById.get(entry.created_by) ?? "Usuario"}
+                            </strong>
+                            <span className="member-feedbacks-text">
+                              {entry.reason}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </aside>
         </section>
       </section>
 
@@ -312,12 +529,12 @@ export default function UsuariosPage() {
             <header className="modal-header">
               <div>
                 <h2 className="section-title">
-                  {modalMode === "create" ? "Novo usuario" : "Editar usuario"}
+                  {modalMode === "create" ? "Novo membro" : "Editar membro"}
                 </h2>
                 <p>
                   {modalMode === "create"
-                    ? "Preencha os dados para criar um novo usuario."
-                    : "Atualize as informacoes do usuario selecionado."}
+                    ? "Preencha os dados para criar um novo membro."
+                    : "Atualize as informacoes do membro selecionado."}
                 </p>
               </div>
               <button

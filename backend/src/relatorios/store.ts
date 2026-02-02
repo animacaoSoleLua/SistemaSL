@@ -19,6 +19,16 @@ export interface FeedbackRecord {
   createdAt: Date;
 }
 
+export interface MemberFeedbackRecord {
+  id: string;
+  reportId: string;
+  memberId: string;
+  feedback: string;
+  eventDate: Date;
+  contractorName: string;
+  createdAt: Date;
+}
+
 export interface ReportRecord {
   id: string;
   authorId: string;
@@ -169,6 +179,25 @@ export async function listReports(): Promise<ReportRecord[]> {
     include: { media: true, feedbacks: true },
   });
   return reports.map((report) => toReportRecord(report));
+}
+
+export async function listFeedbacksForMember(
+  memberId: string
+): Promise<MemberFeedbackRecord[]> {
+  const feedbacks = await prisma.reportFeedback.findMany({
+    where: { memberId },
+    include: { report: true },
+  });
+
+  return feedbacks.map((entry) => ({
+    id: entry.id,
+    reportId: entry.reportId,
+    memberId: entry.memberId,
+    feedback: entry.feedback,
+    eventDate: entry.report.eventDate,
+    contractorName: entry.report.contractorName,
+    createdAt: entry.createdAt,
+  }));
 }
 
 export async function addMediaToReport(
