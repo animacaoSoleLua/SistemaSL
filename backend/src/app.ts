@@ -40,6 +40,8 @@ export function buildServer(): FastifyInstance {
 
   app.register(cors, {
     origin: corsOrigins,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   });
 
   const uploadsRoot = process.env.UPLOADS_DIR
