@@ -1,7 +1,7 @@
 # 4.2 Membros
 
 **Versao:** 1.0.0
-**Ultima Atualizacao:** 2026-01-20
+**Ultima Atualizacao:** 2026-02-03
 
 ← [Voltar para Contratos de API](README.md)
 
@@ -74,6 +74,7 @@
     "name": "string",
     "email": "string",
     "role": "animador",
+    "photo_url": "string",
     "courses": [],
     "warnings": [
       {
@@ -117,6 +118,25 @@
   "data": {
     "id": "uuid",
     "name": "string"
+  }
+}
+```
+
+---
+
+## POST /api/v1/membros/:id/foto
+
+**Descricao:** Atualiza foto de perfil (upload de imagem).
+
+**Request:** `multipart/form-data` com campo `file` (imagem).
+
+**Response 200 OK:**
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "photo_url": "string"
   }
 }
 ```

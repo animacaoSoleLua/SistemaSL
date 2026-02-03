@@ -53,7 +53,7 @@ export default function NewWarningPage() {
       });
       router.push("/advertencias");
     } catch (err: any) {
-      setError(err.message || "Erro ao salvar advertencia.");
+      setError(err.message || "Erro ao salvar advertência.");
     } finally {
       setSaving(false);
     }
@@ -64,8 +64,8 @@ export default function NewWarningPage() {
       <section className="shell reveal">
         <header className="page-header">
           <div>
-            <h1 className="hero-title">Nova Advertencia</h1>
-            <p className="hero-copy">Registre uma ocorrencia do membro.</p>
+            <h1 className="hero-title">Nova Advertência</h1>
+            <p className="hero-copy">Registre uma ocorrência do membro.</p>
           </div>
           <Link className="button secondary" href="/advertencias">
             Voltar
@@ -75,7 +75,7 @@ export default function NewWarningPage() {
         <form className="form-layout" onSubmit={handleSubmit}>
           <article className="form-card">
             <div className="form-card-head">
-              <h2 className="section-title">Detalhes da advertencia</h2>
+              <h2 className="section-title">Detalhes da advertência</h2>
               <p>Escolha o membro e descreva o que aconteceu.</p>
             </div>
             <div className="form-grid">
@@ -101,7 +101,7 @@ export default function NewWarningPage() {
               </label>
 
               <label className="field full" htmlFor="description">
-                <span>Descricao</span>
+                <span>Descrição</span>
                 <textarea
                   id="description"
                   className="input"
@@ -114,7 +114,7 @@ export default function NewWarningPage() {
               </label>
 
               <label className="field" htmlFor="date">
-                <span>Data da ocorrencia</span>
+                <span>Data da ocorrência</span>
                 <input
                   type="date"
                   id="date"

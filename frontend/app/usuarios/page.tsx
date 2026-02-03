@@ -16,6 +16,7 @@ interface Member {
   name: string;
   email: string;
   role: Role;
+  photo_url?: string | null;
 }
 
 interface MemberFeedback {
@@ -38,6 +39,7 @@ interface MemberDetails {
   name: string;
   email: string;
   role: Role;
+  photo_url?: string | null;
   feedbacks?: MemberFeedback[];
   warnings?: MemberWarning[];
 }
@@ -147,7 +149,7 @@ export default function UsuariosPage() {
       await loadMembers();
       setModalOpen(false);
     } catch (err: any) {
-      setActionError(err.message || "Nao foi possivel salvar o membro.");
+      setActionError(err.message || "Não foi possível salvar o membro.");
     } finally {
       setSaving(false);
     }
@@ -161,7 +163,7 @@ export default function UsuariosPage() {
       await deleteMember(member.id);
       await loadMembers();
     } catch (err: any) {
-      setActionError(err.message || "Nao foi possivel excluir o membro.");
+      setActionError(err.message || "Não foi possível excluir o membro.");
     }
   };
 
@@ -229,6 +231,20 @@ export default function UsuariosPage() {
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join("");
+
+  const renderAvatar = (name: string, photoUrl?: string | null) => {
+    if (photoUrl) {
+      return (
+        <img
+          className="avatar-image"
+          src={photoUrl}
+          alt={`Foto de ${name}`}
+          loading="lazy"
+        />
+      );
+    }
+    return getInitials(name);
+  };
 
   const formatDateBR = (value: string) => {
     const [year, month, day] = value.split("-");
@@ -343,7 +359,7 @@ export default function UsuariosPage() {
                 <input
                   className="input"
                   type="search"
-                  placeholder="Buscar por nome ou email..."
+                  placeholder="Buscar por nome ou e-mail..."
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                 />
@@ -384,7 +400,7 @@ export default function UsuariosPage() {
                       }}
                     >
                       <div className="member-row-avatar" aria-hidden="true">
-                        {getInitials(user.name)}
+                        {renderAvatar(user.name, user.photo_url)}
                       </div>
                       <div className="member-row-info">
                         <strong className="member-row-name">{user.name}</strong>
@@ -464,7 +480,10 @@ export default function UsuariosPage() {
                 {selectedMemberInfo && (
                   <div className="member-identity">
                     <div className="member-avatar" aria-hidden="true">
-                      {getInitials(selectedMemberInfo.name)}
+                      {renderAvatar(
+                        selectedMemberInfo.name,
+                        selectedMemberInfo.photo_url
+                      )}
                     </div>
                     <div>
                       <strong className="member-name">{selectedMemberInfo.name}</strong>
@@ -506,7 +525,7 @@ export default function UsuariosPage() {
                               {formatDateBR(entry.warning_date)}
                             </span>
                             <strong className="member-feedbacks-title">
-                              {creatorNameById.get(entry.created_by) ?? "Usuario"}
+                              {creatorNameById.get(entry.created_by) ?? "Usuário"}
                             </strong>
                             <span className="member-feedbacks-text">
                               {entry.reason}
@@ -534,7 +553,7 @@ export default function UsuariosPage() {
                 <p>
                   {modalMode === "create"
                     ? "Preencha os dados para criar um novo membro."
-                    : "Atualize as informacoes do membro selecionado."}
+                    : "Atualize as informações do membro selecionado."}
                 </p>
               </div>
               <button

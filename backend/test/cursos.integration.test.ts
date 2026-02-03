@@ -125,6 +125,33 @@ describe("Cursos (integration)", () => {
     ).toBe(true);
   });
 
+  it("allows animador to create course", async () => {
+    const loginMember = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: {
+        email: "animador@sol-e-lua.com",
+        password: "animador123",
+      },
+    });
+    const memberToken = loginMember.json().data.access_token;
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos",
+      headers: { authorization: `Bearer ${memberToken}` },
+      payload: {
+        title: "Curso de Teatro",
+        description: "Expressao corporal",
+        course_date: "2026-04-01",
+        location: "Sala 3",
+        capacity: 12,
+      },
+    });
+
+    expect(createResponse.statusCode).toBe(201);
+  });
+
   it("blocks member from enrolling another member or updating attendance", async () => {
     const loginAdmin = await app.inject({
       method: "POST",

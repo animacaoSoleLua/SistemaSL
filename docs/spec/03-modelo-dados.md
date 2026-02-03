@@ -1,7 +1,7 @@
 # 3. Modelo de Dados
 
 **Versao:** 1.0.0
-**Ultima Atualizacao:** 2026-01-20
+**Ultima Atualizacao:** 2026-02-03
 
 ← [Voltar para SPEC](README.md)
 
@@ -27,7 +27,6 @@ erDiagram
         string name
         string email
         string password_hash
-        string phone
         string role
         string photo_url
         timestamp created_at
@@ -115,7 +114,6 @@ CREATE TABLE users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    phone VARCHAR(30),
     role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'animador', 'recreador')),
     photo_url TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),

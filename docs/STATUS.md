@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-02-02
+**Ultima Atualizacao:** 2026-02-03
 **Atualizado por:** Codex
 
 ---
@@ -15,32 +15,30 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 22/22 |
-| Ultima Tarefa | MELHORIA-021 |
+| Tarefas Completas | 24/24 |
+| Ultima Tarefa | MELHORIA-029 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-021: Aba de cursos finalizada e caminho corrigido
+### MELHORIA-029: Upload de foto de perfil
 
 **Epic:** Estabilidade e Produto
-**User Story:** Cursos e inscricoes
-**API:** Cursos
+**User Story:** Perfil e membros
+**API:** Membros
 
-**Descricao:** Finalizar a tela de cursos com listagem, filtros e botao de novo curso (admin), corrigindo o caminho no menu lateral.
+**Descricao:** Permitir upload de foto de perfil pelo arquivo do celular.
 
 **O que mudou:**
-- Tela de cursos agora mostra lista, busca e filtro de disponibilidade.
-- Indicadores de vagas e turmas abertas adicionados.
-- Caminho do menu de cursos corrigido para /cursos e pagina de novo curso criada.
+- Upload de foto de perfil via arquivo (imagem).
+- Foto de perfil atualizada aparece na aba de membros.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Aba de cursos finalizada com listagem e filtros.
-- [x] Botao de novo curso funcionando para admin.
-- [x] Caminho corrigido no menu lateral.
+- [x] Upload de imagem funcionando na aba Perfil.
+- [x] Foto aparece na lista de membros.
 
 ---
 
@@ -94,6 +92,14 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-03 | MELHORIA-029 | Upload de foto de perfil |
+| 2026-02-03 | MELHORIA-028 | Foto de perfil e limpeza de campos |
+| 2026-02-02 | MELHORIA-027 | Cursos no perfil e aviso de inscricao |
+| 2026-02-02 | MELHORIA-026 | CORS liberado para PATCH no perfil |
+| 2026-02-02 | MELHORIA-025 | Edicao de nome e email no perfil |
+| 2026-02-02 | MELHORIA-024 | Ajustes na aba de perfil |
+| 2026-02-02 | MELHORIA-023 | Criacao de cursos em modal |
+| 2026-02-02 | MELHORIA-022 | Inscricao em cursos para recreadores e animadores |
 | 2026-02-02 | MELHORIA-021 | Aba de cursos finalizada e caminho corrigido |
 | 2026-02-02 | MELHORIA-020 | Detalhes e feedbacks na tela de usuarios |
 | 2026-02-02 | MELHORIA-019 | Frontend em modo dev no Docker |
@@ -172,7 +178,64 @@ Nenhum bloqueador no momento.
 
 ## Log de Atividades
 
+### 2026-02-03
+
+**Sessao:** revisao-gramatica-responsivo
+```
+14:30 - Textos do sistema revisados (acentos e gramatica).
+14:32 - Ajustes de responsividade para uso no celular.
+```
+
+**Sessao:** perfil-foto-upload
+```
+10:05 - Upload de foto de perfil via arquivo adicionado.
+10:07 - Foto aparece na lista de membros.
+```
+
+**Sessao:** perfil-foto
+```
+09:10 - Campos phone/is_active removidos do modelo e API.
+09:12 - Edicao de foto de perfil adicionada na aba Perfil.
+09:15 - Foto de perfil exibida na lista de membros.
+```
+
 ### 2026-02-02
+
+**Sessao:** perfil-cursos
+```
+22:40 - Card de papel removido do perfil.
+22:42 - Cursos inscritos listados no perfil.
+22:44 - Cursos marcados como inscritos na listagem.
+```
+
+**Sessao:** cors-patch-perfil
+```
+22:30 - Preflight OPTIONS liberado no authGuard.
+```
+
+**Sessao:** perfil-edicao
+```
+22:20 - Formulario de edicao de nome e email no perfil.
+22:22 - Salvamento atualiza dados para login com novo email.
+```
+
+**Sessao:** perfil-ajustes
+```
+22:05 - Card de ativo/inativo removido da aba de perfil.
+22:07 - Aba de perfil liberada para animadores e admin verem advertencias.
+```
+
+**Sessao:** cursos-modal
+```
+21:10 - Criacao de cursos movida para modal na tela de cursos.
+21:12 - Campos de data e hora adicionados no cadastro do curso.
+```
+
+**Sessao:** cursos-inscricao-recreadores
+```
+20:10 - Cursos liberados para recreadores e animadores com inscricao e aviso de lotacao.
+20:12 - Animadores liberados para criar cursos.
+```
 
 **Sessao:** cursos-finalizados
 ```

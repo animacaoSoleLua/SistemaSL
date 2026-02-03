@@ -32,7 +32,7 @@ export default function Home() {
         <section className="dashboard-grid">
           <article className="summary-card">
             <div className="summary-head">
-              <span className="summary-label">Total de Relatorios</span>
+              <span className="summary-label">Total de Relatórios</span>
               <span className="summary-icon">
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <path d="M6 3.5h6l3 3V16a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 5 16V5A1.5 1.5 0 0 1 6.5 3.5z" />
@@ -41,11 +41,11 @@ export default function Home() {
               </span>
             </div>
             <strong className="summary-value">0</strong>
-            <p className="summary-note">Relatorios cadastrados</p>
+            <p className="summary-note">Relatórios cadastrados</p>
           </article>
           <article className="summary-card">
             <div className="summary-head">
-              <span className="summary-label">Avaliacao Media da Equipe</span>
+              <span className="summary-label">Avaliação Média da Equipe</span>
               <span className="summary-icon gold">
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <path d="M10 3.5l1.9 3.9 4.3.6-3.1 3 0.7 4.3L10 13.4 6.2 15.3l0.7-4.3-3.1-3 4.3-.6z" />
@@ -56,7 +56,7 @@ export default function Home() {
           </article>
           <article className="summary-card">
             <div className="summary-head">
-              <span className="summary-label">Qualidade Media do Som</span>
+              <span className="summary-label">Qualidade Média do Som</span>
               <span className="summary-icon gold">
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <path d="M10 3.5l1.9 3.9 4.3.6-3.1 3 0.7 4.3L10 13.4 6.2 15.3l0.7-4.3-3.1-3 4.3-.6z" />
@@ -64,11 +64,11 @@ export default function Home() {
               </span>
             </div>
             <strong className="summary-value">0.0</strong>
-            <p className="summary-note">Avaliacao do som nos eventos</p>
+            <p className="summary-note">Avaliação do som nos eventos</p>
           </article>
           <article className="summary-card">
             <div className="summary-head">
-              <span className="summary-label">Qualidade Media do Evento</span>
+              <span className="summary-label">Qualidade Média do Evento</span>
               <span className="summary-icon gold">
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <path d="M10 3.5l1.9 3.9 4.3.6-3.1 3 0.7 4.3L10 13.4 6.2 15.3l0.7-4.3-3.1-3 4.3-.6z" />
@@ -76,11 +76,11 @@ export default function Home() {
               </span>
             </div>
             <strong className="summary-value">0.0</strong>
-            <p className="summary-note">Avaliacao geral dos eventos</p>
+            <p className="summary-note">Avaliação geral dos eventos</p>
           </article>
           <article className="summary-card">
             <div className="summary-head">
-              <span className="summary-label">Relatorios do Mes</span>
+              <span className="summary-label">Relatórios do Mês</span>
               <span className="summary-icon">
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <rect x="3.5" y="4" width="13" height="12.5" rx="2" />
@@ -96,10 +96,10 @@ export default function Home() {
         <section className="report-panel">
           <div className="report-header">
             <div>
-              <h2 className="section-title">Relatorios Recentes</h2>
-              <p>Ultimos eventos cadastrados no sistema</p>
+              <h2 className="section-title">Relatórios Recentes</h2>
+              <p>Últimos eventos cadastrados no sistema</p>
             </div>
-            <div className="view-toggle" role="group" aria-label="Visualizacao">
+            <div className="view-toggle" role="group" aria-label="Visualização">
               <button className="toggle-button active" type="button">
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <rect x="4" y="5" width="12" height="2" rx="1" />
@@ -118,7 +118,7 @@ export default function Home() {
             </div>
           </div>
           <div className="empty-state">
-            <p>Nenhum relatorio cadastrado ainda</p>
+            <p>Nenhum relatório cadastrado ainda</p>
           </div>
         </section>
       </section>

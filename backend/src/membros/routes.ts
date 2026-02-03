@@ -1,4 +1,10 @@
 import { FastifyInstance } from "fastify";
+import { createWriteStream } from "node:fs";
+import { mkdir, unlink } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { dirname, extname, join, resolve, sep } from "node:path";
+import { pipeline } from "node:stream/promises";
+import { Transform } from "node:stream";
 import { requireRole } from "../auth/guard.js";
 import {
   createUser,
@@ -25,7 +31,6 @@ interface MemberBody {
   role?: Role;
   photo_url?: string;
   password?: string;
-  is_active?: boolean;
 }
 
 interface MemberQuery {
@@ -34,6 +39,19 @@ interface MemberQuery {
   page?: string;
   limit?: string;
 }
+
+const uploadsRoot = process.env.UPLOADS_DIR
+  ? resolve(process.env.UPLOADS_DIR)
+  : join(process.cwd(), "uploads");
+
+const MAX_PROFILE_PHOTO_BYTES = 5 * 1024 * 1024;
+const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+const mimeImageExtensions: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+};
 
 const roles: Role[] = ["admin", "animador", "recreador"];
 
@@ -60,6 +78,57 @@ function parsePositiveInt(value: string | undefined): number | undefined {
   return parsed;
 }
 
+function resolveImageExtension(
+  filename: string,
+  mimetype?: string
+): string | undefined {
+  const extension = extname(filename).toLowerCase();
+  if (extension && imageExtensions.includes(extension)) {
+    return extension;
+  }
+  if (mimetype && mimeImageExtensions[mimetype]) {
+    return mimeImageExtensions[mimetype];
+  }
+  return undefined;
+}
+
+async function safeUnlink(path: string): Promise<void> {
+  try {
+    await unlink(path);
+  } catch {
+    // ignore errors while cleaning up temporary files
+  }
+}
+
+async function saveUploadToDisk(options: {
+  stream: NodeJS.ReadableStream;
+  targetPath: string;
+  maxSize: number;
+}): Promise<number> {
+  let size = 0;
+  const counter = new Transform({
+    transform(chunk, _encoding, callback) {
+      size += chunk.length;
+      if (size > options.maxSize) {
+        callback(new Error("file_too_large"));
+        return;
+      }
+      callback(null, chunk);
+    },
+  });
+
+  await mkdir(dirname(options.targetPath), { recursive: true });
+
+  try {
+    await pipeline(options.stream, counter, createWriteStream(options.targetPath));
+  } catch (error) {
+    await safeUnlink(options.targetPath);
+    throw error;
+  }
+
+  return size;
+}
+
 function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
@@ -81,7 +150,6 @@ function toMemberSummary(user: {
   email: string;
   role: Role;
   photoUrl?: string;
-  isActive: boolean;
 }) {
   return {
     id: user.id,
@@ -89,7 +157,6 @@ function toMemberSummary(user: {
     email: user.email,
     role: user.role,
     photo_url: user.photoUrl ?? null,
-    is_active: user.isActive,
   };
 }
 
@@ -210,7 +277,6 @@ export async function membrosRoutes(app: FastifyInstance) {
           name: member.name,
           email: member.email,
           role: member.role,
-          is_active: member.isActive,
         },
       });
     }
@@ -277,7 +343,6 @@ export async function membrosRoutes(app: FastifyInstance) {
         email: member.email,
         role: member.role,
         photo_url: member.photoUrl ?? null,
-        is_active: member.isActive,
         courses: (
           await Promise.all(
             (await listEnrollmentsForMember(member.id)).map(
@@ -366,14 +431,13 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
-    const { name, email, role, photo_url, is_active } = request.body as MemberBody;
+    const { name, email, role, photo_url } = request.body as MemberBody;
 
     if (
       !name &&
       !email &&
       !role &&
-      photo_url === undefined &&
-      is_active === undefined
+      photo_url === undefined
     ) {
       return reply.status(400).send({
         error: "invalid_request",
@@ -402,20 +466,6 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
-    if (is_active !== undefined && typeof is_active !== "boolean") {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Status invalido",
-      });
-    }
-
-    if (!isAdmin && is_active !== undefined) {
-      return reply.status(403).send({
-        error: "forbidden",
-        message: "Acesso negado",
-      });
-    }
-
     if (email && (await isEmailTaken(email, member.id))) {
       return reply.status(409).send({
         error: "email_exists",
@@ -428,7 +478,6 @@ export async function membrosRoutes(app: FastifyInstance) {
       email,
       role: isAdmin ? role : undefined,
       photoUrl: photo_url,
-      isActive: isAdmin ? is_active : undefined,
     });
 
     if (!updated) {
@@ -442,6 +491,120 @@ export async function membrosRoutes(app: FastifyInstance) {
       data: {
         id: updated.id,
         name: updated.name,
+      },
+    });
+  });
+
+  app.post("/api/v1/membros/:id/foto", async (request, reply) => {
+    const params = request.params as { id?: string };
+    if (!params.id) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Membro invalido",
+      });
+    }
+
+    const member = await getUserById(params.id);
+    if (!member) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Membro nao encontrado",
+      });
+    }
+
+    if (!request.user) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Token ausente",
+      });
+    }
+
+    if (request.user.role !== "admin" && request.user.id !== member.id) {
+      return reply.status(403).send({
+        error: "forbidden",
+        message: "Acesso negado",
+      });
+    }
+
+    if (!request.isMultipart()) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Envie o arquivo usando multipart/form-data",
+      });
+    }
+
+    const fileData = await request.file();
+    if (!fileData) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Arquivo ausente",
+      });
+    }
+
+    if (!fileData.mimetype?.startsWith("image/")) {
+      return reply.status(400).send({
+        error: "invalid_media_type",
+        message: "Apenas imagens sao permitidas",
+      });
+    }
+
+    const extension = resolveImageExtension(
+      fileData.filename ?? "",
+      fileData.mimetype
+    );
+    if (!extension) {
+      return reply.status(400).send({
+        error: "invalid_media_url",
+        message: "Extensao de arquivo invalida",
+      });
+    }
+
+    const filename = `perfil-${randomUUID()}${extension}`;
+    const relativePath = join("membros", member.id, filename);
+    const storagePath = join(uploadsRoot, relativePath);
+    const fileStream = fileData.file as NodeJS.ReadableStream & {
+      truncated?: boolean;
+    };
+
+    try {
+      await saveUploadToDisk({
+        stream: fileStream,
+        targetPath: storagePath,
+        maxSize: MAX_PROFILE_PHOTO_BYTES,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "file_too_large") {
+        return reply.status(400).send({
+          error: "file_too_large",
+          message: "Arquivo excede o tamanho permitido",
+        });
+      }
+      throw error;
+    }
+
+    if (fileStream.truncated) {
+      await safeUnlink(storagePath);
+      return reply.status(400).send({
+        error: "file_too_large",
+        message: "Arquivo excede o tamanho permitido",
+      });
+    }
+
+    const publicPath = relativePath.split(sep).join("/");
+    const url = `/uploads/${publicPath}`;
+
+    const updated = await updateUser(member.id, { photoUrl: url });
+    if (!updated) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Membro nao encontrado",
+      });
+    }
+
+    return reply.status(200).send({
+      data: {
+        id: updated.id,
+        photo_url: updated.photoUrl ?? null,
       },
     });
   });

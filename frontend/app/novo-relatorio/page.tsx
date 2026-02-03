@@ -35,8 +35,8 @@ export default function NovoRelatorioPage() {
       <section className="shell reveal">
         <header className="page-header">
           <div>
-            <h1 className="hero-title">Novo Relatorio</h1>
-            <p className="hero-copy">Crie um novo relatorio de evento</p>
+            <h1 className="hero-title">Novo Relatório</h1>
+            <p className="hero-copy">Crie um novo relatório de evento</p>
           </div>
           <Link className="button secondary" href="/relatorios">
             Voltar
@@ -46,12 +46,12 @@ export default function NovoRelatorioPage() {
         <form className="form-layout" onSubmit={handleSubmit}>
           <article className="form-card">
             <div className="form-card-head">
-              <h2 className="section-title">Informacoes do relatorio</h2>
+              <h2 className="section-title">Informações do relatório</h2>
               <p>Preencha os dados principais do evento.</p>
             </div>
             <div className="form-grid">
               <label className="field full" htmlFor="reportName">
-                <span>Nome do Relatorio</span>
+                <span>Nome do Relatório</span>
                 <input
                   type="text"
                   name="reportName"
@@ -77,7 +77,7 @@ export default function NovoRelatorioPage() {
               </label>
 
               <label className="field full" htmlFor="reportContent">
-                <span>Conteudo do Relatorio</span>
+                <span>Conteúdo do Relatório</span>
                 <textarea
                   id="reportContent"
                   name="reportContent"
@@ -92,7 +92,7 @@ export default function NovoRelatorioPage() {
           </article>
 
           <div className="form-actions">
-            <p className="helper">Revise as informacoes antes de salvar.</p>
+            <p className="helper">Revise as informações antes de salvar.</p>
             <div className="form-buttons">
               <Link className="button secondary" href="/relatorios">
                 Cancelar

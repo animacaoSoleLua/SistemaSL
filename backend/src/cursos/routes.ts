@@ -134,7 +134,7 @@ export async function cursosRoutes(app: FastifyInstance) {
 
   app.post(
     "/api/v1/cursos",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireRole(["admin", "animador"]) },
     async (request, reply) => {
       const { title, description, course_date, location, capacity } =
         request.body as CourseBody;

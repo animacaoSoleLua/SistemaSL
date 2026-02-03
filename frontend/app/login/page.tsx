@@ -38,7 +38,7 @@ export default function LoginPage() {
         <div className="login-brand">
           <Image
             src={logo}
-            alt="Sol e Lua Animacao"
+            alt="Sol e Lua Animação"
             className="login-logo"
             priority
           />
@@ -49,7 +49,7 @@ export default function LoginPage() {
         </p>
         <form className="login-form" onSubmit={handleSubmit}>
           <label className="login-field">
-            Email
+            E-mail
             <input
               type="email"
               name="email"
@@ -83,7 +83,7 @@ export default function LoginPage() {
           Esqueci minha senha
         </a>
       </div>
-      <span className="login-footer">Animacao Sol e Lua</span>
+      <span className="login-footer">Animação Sol e Lua</span>
     </main>
   );
 }

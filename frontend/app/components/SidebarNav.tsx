@@ -8,45 +8,34 @@ import logo from "../../assets/logo.png";
 import { getStoredUser, roleLabels, type Role } from "../../lib/auth";
 
 const navItems = [
-  {
-    label: "Dashboard",
-    href: "/",
-    roles: ["admin"],
-    icon: (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <rect x="3" y="3" width="6" height="6" rx="1.5" />
-        <rect x="11" y="3" width="6" height="6" rx="1.5" />
-        <rect x="3" y="11" width="6" height="6" rx="1.5" />
-        <rect x="11" y="11" width="6" height="6" rx="1.5" />
-      </svg>
-    )
-  },
-  {
-    label: "Relatorios",
-    href: "/relatorios",
-    roles: ["admin", "animador"],
-    icon: (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="M5 3.5h7l3 3V16a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 16V5A1.5 1.5 0 0 1 5.5 3.5z" />
-        <path d="M12 3.5V7h3" />
-      </svg>
-    )
-  },
-  {
-    label: "Novo Relatorio",
-    href: "/novo-relatorio",
-    roles: ["admin", "animador"],
-    icon: (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <circle cx="10" cy="10" r="7" />
-        <path d="M10 7v6M7 10h6" />
-      </svg>
-    )
-  },
+  // {
+  //   label: "Dashboard",
+  //   href: "/",
+  //   roles: ["admin"],
+  //   icon: (
+  //     <svg viewBox="0 0 20 20" aria-hidden="true">
+  //       <rect x="3" y="3" width="6" height="6" rx="1.5" />
+  //       <rect x="11" y="3" width="6" height="6" rx="1.5" />
+  //       <rect x="3" y="11" width="6" height="6" rx="1.5" />
+  //       <rect x="11" y="11" width="6" height="6" rx="1.5" />
+  //     </svg>
+  //   )
+  // },
+  // {
+  //   label: "Relatorios",
+  //   href: "/relatorios",
+  //   roles: ["admin", "animador"],
+  //   icon: (
+  //     <svg viewBox="0 0 20 20" aria-hidden="true">
+  //       <path d="M5 3.5h7l3 3V16a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 16V5A1.5 1.5 0 0 1 5.5 3.5z" />
+  //       <path d="M12 3.5V7h3" />
+  //     </svg>
+  //   )
+  // },
   {
     label: "Cursos",
     href: "/cursos",
-    roles: ["admin", "animador"],
+    roles: ["admin", "animador", "recreador"],
     icon: (
       <svg viewBox="0 0 20 20" aria-hidden="true">
         <circle cx="10" cy="10" r="7" />
@@ -65,17 +54,6 @@ const navItems = [
     )
   },
   {
-    label: "Perfil",
-    href: "/perfil",
-    roles: ["recreador"],
-    icon: (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <circle cx="10" cy="7.5" r="3.2" />
-        <path d="M4.5 16c1-2.5 3.1-4 5.5-4s4.5 1.5 5.5 4" />
-      </svg>
-    )
-  },
-  {
     label: "Membros",
     href: "/usuarios",
     roles: ["admin", "animador", "recreador"],
@@ -85,7 +63,18 @@ const navItems = [
         <path d="M4.5 16c1-2.5 3.1-4 5.5-4s4.5 1.5 5.5 4" />
       </svg>
     )
-  }
+  },
+  {
+    label: "Perfil",
+    href: "/perfil",
+    roles: ["admin", "animador", "recreador"],
+    icon: (
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="7.5" r="3.2" />
+        <path d="M4.5 16c1-2.5 3.1-4 5.5-4s4.5 1.5 5.5 4" />
+      </svg>
+    )
+  },
 ];
 
 interface User {
@@ -129,9 +118,9 @@ export default function SidebarNav() {
   return (
     <header className="app-navbar">
       <div className="app-brand">
-        <Image src={logo} alt="Sol e Lua Animacao" className="app-logo" priority />
+        <Image src={logo} alt="Sol e Lua Animação" className="app-logo" priority />
       </div>
-      <nav className="app-nav" aria-label="Navegacao principal">
+      <nav className="app-nav" aria-label="Navegação principal">
         {navItems
           .filter((item) => (user ? item.roles.includes(user.role) : false))
           .map((item) => {

@@ -8,7 +8,11 @@ async function request(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('authToken');
 
   const headers = new Headers(options.headers);
-  headers.set('Content-Type', 'application/json');
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+  if (!isFormData) {
+    headers.set("Content-Type", "application/json");
+  }
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
@@ -103,11 +107,25 @@ export async function createMember(input: {
 
 export async function updateMember(
   id: string,
-  input: { name?: string; email?: string; role?: string; is_active?: boolean }
+  input: {
+    name?: string;
+    email?: string;
+    role?: string;
+    photo_url?: string | null;
+  }
 ) {
   return request(`/membros/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(input),
+  });
+}
+
+export async function uploadMemberPhoto(id: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return request(`/membros/${id}/foto`, {
+    method: "POST",
+    body: formData,
   });
 }
 
@@ -147,6 +165,13 @@ export async function createCourse(input: {
   return request("/cursos", {
     method: "POST",
     body: JSON.stringify(input),
+  });
+}
+
+export async function enrollInCourse(courseId: string, memberId: string) {
+  return request(`/cursos/${courseId}/inscricoes`, {
+    method: "POST",
+    body: JSON.stringify({ member_id: memberId }),
   });
 }
 

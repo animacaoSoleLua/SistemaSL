@@ -17,6 +17,9 @@ export async function authGuard(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  if (request.method === "OPTIONS") {
+    return;
+  }
   const path = getPath(request);
   if (!path.startsWith("/api/v1")) {
     return;

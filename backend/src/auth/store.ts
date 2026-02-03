@@ -10,8 +10,6 @@ export interface UserRecord {
   email: string;
   passwordHash: string;
   role: Role;
-  isActive: boolean;
-  phone?: string;
   photoUrl?: string;
 }
 
@@ -27,8 +25,6 @@ function toUserRecord(user: {
   email: string;
   passwordHash: string;
   role: Role;
-  isActive: boolean;
-  phone: string | null;
   photoUrl: string | null;
 }): UserRecord {
   return {
@@ -37,8 +33,6 @@ function toUserRecord(user: {
     email: user.email,
     passwordHash: user.passwordHash,
     role: user.role,
-    isActive: user.isActive,
-    phone: user.phone ?? undefined,
     photoUrl: user.photoUrl ?? undefined,
   };
 }
@@ -79,7 +73,6 @@ export async function createUser(input: {
   email: string;
   role: Role;
   password?: string;
-  phone?: string;
   photoUrl?: string;
 }): Promise<UserRecord | undefined> {
   const email = normalizeEmail(input.email);
@@ -96,8 +89,6 @@ export async function createUser(input: {
       email,
       passwordHash,
       role: input.role,
-      isActive: true,
-      phone: input.phone,
       photoUrl: input.photoUrl,
     },
   });
@@ -120,8 +111,6 @@ export async function updateUser(
     name?: string;
     email?: string;
     role?: Role;
-    isActive?: boolean;
-    phone?: string | null;
     photoUrl?: string | null;
     passwordHash?: string;
   } = {};
@@ -134,12 +123,6 @@ export async function updateUser(
   }
   if (updates.role !== undefined) {
     data.role = updates.role;
-  }
-  if (updates.isActive !== undefined) {
-    data.isActive = updates.isActive;
-  }
-  if (updates.phone !== undefined) {
-    data.phone = updates.phone ?? null;
   }
   if (updates.photoUrl !== undefined) {
     data.photoUrl = updates.photoUrl ?? null;

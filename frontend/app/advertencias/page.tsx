@@ -65,7 +65,7 @@ export default function WarningsPage() {
         setMemberMap(map);
         setWarnings(warningsResponse.data as Warning[]);
       } catch (err: any) {
-        setError(err.message || "Erro ao carregar advertencias.");
+        setError(err.message || "Erro ao carregar advertências.");
       } finally {
         setLoading(false);
       }
@@ -124,7 +124,7 @@ export default function WarningsPage() {
     if (!editingWarning) return;
     const trimmedReason = editReason.trim();
     if (!trimmedReason || !editDate) {
-      setActionError("Preencha a descricao e a data.");
+      setActionError("Preencha a descrição e a data.");
       return;
     }
     setActionLoadingId(editingWarning.id);
@@ -144,14 +144,14 @@ export default function WarningsPage() {
       );
       closeEditModal();
     } catch (err: any) {
-      setActionError(err.message || "Erro ao atualizar advertencia.");
+      setActionError(err.message || "Erro ao atualizar advertência.");
     } finally {
       setActionLoadingId(null);
     }
   };
 
   const handleDelete = async (warning: Warning) => {
-    if (!window.confirm("Deseja excluir esta advertencia?")) {
+    if (!window.confirm("Deseja excluir esta advertência?")) {
       return;
     }
     setActionLoadingId(warning.id);
@@ -160,7 +160,7 @@ export default function WarningsPage() {
       await deleteWarning(warning.id);
       setWarnings((prev) => prev.filter((item) => item.id !== warning.id));
     } catch (err: any) {
-      setActionError(err.message || "Erro ao excluir advertencia.");
+      setActionError(err.message || "Erro ao excluir advertência.");
     } finally {
       setActionLoadingId(null);
     }
@@ -171,24 +171,24 @@ export default function WarningsPage() {
       <section className="shell reveal">
         <header className="page-header">
           <div>
-            <h1 className="hero-title">Advertencias</h1>
+            <h1 className="hero-title">Advertências</h1>
             <p className="hero-copy">
-              Registre e acompanhe advertencias dos membros.
+              Registre e acompanhe advertências dos membros.
             </p>
           </div>
           <Link className="button" href="/nova-advertencia">
-            + Nova Advertencia
+            + Nova Advertência
           </Link>
         </header>
 
         <section className="report-panel">
           <div className="report-header">
             <div>
-              <h2 className="section-title">Membros e ocorrencias</h2>
+              <h2 className="section-title">Membros e ocorrências</h2>
               <p>
                 {currentRole === "animador"
-                  ? "Mostrando apenas as advertencias que voce registrou."
-                  : "Veja o historico e a quantidade de advertencias."}
+                  ? "Mostrando apenas as advertências que você registrou."
+                  : "Veja o histórico e a quantidade de advertências."}
               </p>
             </div>
             <label className="field report-search">
@@ -210,11 +210,11 @@ export default function WarningsPage() {
 
           {loading ? (
             <div className="empty-state">
-              <p>Carregando advertencias...</p>
+              <p>Carregando advertências...</p>
             </div>
           ) : error ? (
             <div className="empty-state">
-              <p className="text-red-500">Erro ao carregar advertencias: {error}</p>
+              <p className="text-red-500">Erro ao carregar advertências: {error}</p>
             </div>
           ) : filteredMembers.length > 0 ? (
             <div className="warning-list">
@@ -224,7 +224,7 @@ export default function WarningsPage() {
                     <div className="warning-meta">
                       <strong className="warning-name">{member.name}</strong>
                       <span className="warning-count">
-                        {member.warnings.length} advertencia(s)
+                        {member.warnings.length} advertência(s)
                       </span>
                     </div>
                   </div>
@@ -266,7 +266,7 @@ export default function WarningsPage() {
                     </ul>
                   ) : (
                     <p className="helper">
-                      Nenhuma advertencia registrada para este membro.
+                      Nenhuma advertência registrada para este membro.
                     </p>
                   )}
                 </article>
@@ -279,12 +279,12 @@ export default function WarningsPage() {
                   <path d="M12 9v4m0 4h.01M10.29 3.86l-7.4 13.03A2 2 0 004.62 20h14.76a2 2 0 001.73-3.11l-7.4-13.03a2 2 0 00-3.42 0z" />
                 </svg>
               </span>
-              <p>Nenhuma advertencia encontrada</p>
+              <p>Nenhuma advertência encontrada</p>
               <p className="helper">
-                Comece registrando a primeira advertencia.
+                Comece registrando a primeira advertência.
               </p>
               <Link className="button" href="/nova-advertencia">
-                + Criar Advertencia
+                + Criar Advertência
               </Link>
             </div>
           )}
@@ -296,8 +296,8 @@ export default function WarningsPage() {
           <div className="modal-card">
             <header className="modal-header">
               <div>
-                <h2 className="section-title">Editar advertencia</h2>
-                <p>Atualize a descricao e a data da ocorrencia.</p>
+                <h2 className="section-title">Editar advertência</h2>
+                <p>Atualize a descrição e a data da ocorrência.</p>
               </div>
               <button
                 className="icon-button"
@@ -315,7 +315,7 @@ export default function WarningsPage() {
             <form className="modal-body" onSubmit={handleEditSubmit}>
               <div className="form-grid">
                 <label className="field full">
-                  <span>Descricao</span>
+                  <span>Descrição</span>
                   <textarea
                     className="input"
                     rows={5}
@@ -326,7 +326,7 @@ export default function WarningsPage() {
                   />
                 </label>
                 <label className="field">
-                  <span>Data da ocorrencia</span>
+                  <span>Data da ocorrência</span>
                   <input
                     type="date"
                     className="input"
