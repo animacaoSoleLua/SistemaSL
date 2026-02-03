@@ -15,30 +15,29 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 24/24 |
-| Ultima Tarefa | MELHORIA-029 |
+| Tarefas Completas | 26/26 |
+| Ultima Tarefa | MELHORIA-036 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-029: Upload de foto de perfil
+### MELHORIA-036: Lista de membros sugeridos na busca
 
 **Epic:** Estabilidade e Produto
 **User Story:** Perfil e membros
 **API:** Membros
 
-**Descricao:** Permitir upload de foto de perfil pelo arquivo do celular.
+**Descricao:** Mostrar sugestões enquanto digita o nome do membro.
 
 **O que mudou:**
-- Upload de foto de perfil via arquivo (imagem).
-- Foto de perfil atualizada aparece na aba de membros.
+- Busca agora mostra uma lista com nomes sugeridos.
+- Clique em um nome preenche o membro automaticamente.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Upload de imagem funcionando na aba Perfil.
-- [x] Foto aparece na lista de membros.
+- [x] Lista aparece enquanto digita e permite selecionar um nome.
 
 ---
 
@@ -92,6 +91,13 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-03 | MELHORIA-036 | Lista de nomes sugeridos na busca |
+| 2026-02-03 | MELHORIA-035 | Seleção de membro por busca |
+| 2026-02-03 | MELHORIA-034 | Busca de membro no modal de advertência |
+| 2026-02-03 | MELHORIA-033 | Remover tela antiga de advertência |
+| 2026-02-03 | MELHORIA-032 | Advertência em modal |
+| 2026-02-03 | MELHORIA-031 | Login como pagina inicial |
+| 2026-02-03 | MELHORIA-030 | Exclusao real de usuarios + confirmacao melhor |
 | 2026-02-03 | MELHORIA-029 | Upload de foto de perfil |
 | 2026-02-03 | MELHORIA-028 | Foto de perfil e limpeza de campos |
 | 2026-02-02 | MELHORIA-027 | Cursos no perfil e aviso de inscricao |
@@ -186,10 +192,32 @@ Nenhum bloqueador no momento.
 14:32 - Ajustes de responsividade para uso no celular.
 ```
 
+**Sessao:** favicon-logo
+```
+15:10 - Logo configurada como favicon do sistema.
+```
+
 **Sessao:** perfil-foto-upload
 ```
 10:05 - Upload de foto de perfil via arquivo adicionado.
 10:07 - Foto aparece na lista de membros.
+```
+
+**Sessao:** advertencia-modal
+```
+16:05 - Botão de nova advertência abre modal simples na mesma tela.
+```
+
+**Sessao:** usuarios-exclusao-confirmacao
+```
+16:20 - Exclusao de usuarios com registros corrigida.
+16:25 - Confirmacao de exclusao ganhou alerta visual melhor.
+```
+
+**Sessao:** login-home-dashboard
+```
+16:45 - Pagina inicial redireciona direto para o login.
+16:46 - Dashboard movido para /dashboard.
 ```
 
 **Sessao:** perfil-foto

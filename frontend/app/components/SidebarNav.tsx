@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import logo from "../../assets/logo.png";
+import { getMember, resolveApiAssetUrl } from "../../lib/api";
 import { getStoredUser, roleLabels, type Role } from "../../lib/auth";
 
 const navItems = [
@@ -81,6 +82,7 @@ interface User {
   id: string;
   name: string;
   role: Role;
+  photo_url?: string | null;
 }
 
 function isActive(pathname: string, href: string) {
@@ -106,8 +108,44 @@ export default function SidebarNav() {
   const [showLogout, setShowLogout] = useState(false);
 
   useEffect(() => {
-    setUser(getStoredUser());
+    const refreshUser = () => {
+      setUser(getStoredUser());
+    };
+    refreshUser();
+    window.addEventListener("storage", refreshUser);
+    window.addEventListener("user-updated", refreshUser);
+    return () => {
+      window.removeEventListener("storage", refreshUser);
+      window.removeEventListener("user-updated", refreshUser);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!user || user.photo_url) {
+      return;
+    }
+    let cancelled = false;
+    getMember(user.id)
+      .then((response) => {
+        if (cancelled) return;
+        const photoUrl = response?.data?.photo_url ?? null;
+        if (!photoUrl) return;
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...user,
+            photo_url: photoUrl,
+          })
+        );
+        setUser((current) =>
+          current ? { ...current, photo_url: photoUrl } : current
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -150,7 +188,17 @@ export default function SidebarNav() {
             className="sidebar-footer"
             onClick={() => setShowLogout(!showLogout)}
           >
-            <span className="user-avatar">{user.name.charAt(0).toUpperCase()}</span>
+            {user.photo_url ? (
+              <img
+                className="user-avatar avatar-image"
+                src={resolveApiAssetUrl(user.photo_url)}
+                alt={`Foto de ${user.name}`}
+              />
+            ) : (
+              <span className="user-avatar">
+                {user.name.charAt(0).toUpperCase()}
+              </span>
+            )}
             <div className="user-meta">
               <strong>{user.name}</strong>
               <span>{roleLabels[user.role]}</span>

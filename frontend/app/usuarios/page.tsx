@@ -7,6 +7,7 @@ import {
   deleteMember,
   getMember,
   getMembers,
+  resolveApiAssetUrl,
   updateMember,
 } from "../../lib/api";
 import { getStoredUser, roleLabels, type Role, type StoredUser } from "../../lib/auth";
@@ -54,6 +55,8 @@ export default function UsuariosPage() {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [saving, setSaving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Member | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -155,15 +158,31 @@ export default function UsuariosPage() {
     }
   };
 
-  const handleDelete = async (member: Member) => {
-    const confirmed = window.confirm(`Excluir membro ${member.name}?`);
-    if (!confirmed) return;
+  const handleDelete = (member: Member) => {
+    setActionError(null);
+    setDeleteTarget(member);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     setActionError(null);
     try {
-      await deleteMember(member.id);
+      await deleteMember(deleteTarget.id);
       await loadMembers();
+      if (selectedMemberId === deleteTarget.id) {
+        setSelectedMemberId(null);
+      }
+      setDeleteTarget(null);
     } catch (err: any) {
       setActionError(err.message || "Não foi possível excluir o membro.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -233,11 +252,12 @@ export default function UsuariosPage() {
       .join("");
 
   const renderAvatar = (name: string, photoUrl?: string | null) => {
-    if (photoUrl) {
+    const resolvedPhotoUrl = resolveApiAssetUrl(photoUrl);
+    if (resolvedPhotoUrl) {
       return (
         <img
           className="avatar-image"
-          src={photoUrl}
+          src={resolvedPhotoUrl}
           alt={`Foto de ${name}`}
           loading="lazy"
         />
@@ -643,6 +663,68 @@ export default function UsuariosPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal-card confirm-modal">
+            <header className="modal-header">
+              <div>
+                <h2 className="section-title">Confirmar exclusão</h2>
+                <p>Esta ação remove o membro e seus registros relacionados.</p>
+              </div>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Fechar"
+                onClick={closeDeleteModal}
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M18 6L6 18" />
+                  <path d="M6 6l12 12" />
+                </svg>
+              </button>
+            </header>
+
+            <div className="modal-body confirm-body">
+              <div className="confirm-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 9v4" />
+                  <path d="M12 17h.01" />
+                  <path d="M10.3 3.3l-7 12.1a2 2 0 001.7 3h14a2 2 0 001.7-3l-7-12.1a2 2 0 00-3.4 0z" />
+                </svg>
+              </div>
+              <div className="confirm-text">
+                <p>
+                  Tem certeza que deseja excluir{" "}
+                  <strong>{deleteTarget.name}</strong>?
+                </p>
+                <p className="confirm-muted">
+                  Essa ação não poderá ser desfeita.
+                </p>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="button secondary"
+                type="button"
+                onClick={closeDeleteModal}
+                disabled={deleting}
+              >
+                Cancelar
+              </button>
+              <button
+                className="button danger"
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Excluindo..." : "Excluir membro"}
+              </button>
+            </div>
           </div>
         </div>
       )}

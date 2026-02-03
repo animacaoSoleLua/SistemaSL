@@ -23,6 +23,7 @@ export default function LoginPage() {
       const response = await login(email, password);
       localStorage.setItem("authToken", response.data.access_token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
+      window.dispatchEvent(new Event("user-updated"));
       const role = response.data.user.role as Role;
       router.push(getDefaultRoute(role));
     } catch (err: any) {

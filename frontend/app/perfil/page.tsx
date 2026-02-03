@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getMember, updateMember, uploadMemberPhoto } from "../../lib/api";
+import {
+  getMember,
+  resolveApiAssetUrl,
+  updateMember,
+  uploadMemberPhoto,
+} from "../../lib/api";
 import {
   getDefaultRoute,
   getStoredUser,
@@ -165,6 +170,7 @@ export default function PerfilPage() {
               name: trimmedName,
             })
           );
+          window.dispatchEvent(new Event("user-updated"));
         }
       }
       if (photoFile) {
@@ -178,6 +184,17 @@ export default function PerfilPage() {
               }
             : current
         );
+        const storedUser = getStoredUser();
+        if (storedUser) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...storedUser,
+              photo_url: photoUrl,
+            })
+          );
+          window.dispatchEvent(new Event("user-updated"));
+        }
         setPhotoFile(null);
         setPhotoInputKey((prev) => prev + 1);
       }
@@ -195,7 +212,7 @@ export default function PerfilPage() {
     }
   };
 
-  const previewUrl = photoPreview ?? member?.photo_url ?? "";
+  const previewUrl = photoPreview ?? resolveApiAssetUrl(member?.photo_url);
 
   return (
     <main className="app-page">
@@ -203,7 +220,7 @@ export default function PerfilPage() {
         <header className="page-header">
           <div>
             <h1 className="hero-title">Meu Perfil</h1>
-            <p className="hero-copy">Veja suas informações e advertências.</p>
+            <p className="hero-copy">Veja suas informações.</p>
           </div>
         </header>
 
@@ -234,10 +251,20 @@ export default function PerfilPage() {
                     </div>
                     <div className="profile-photo-meta">
                       <strong>Foto de perfil</strong>
-                      <p className="helper">
-                        Envie uma imagem do seu celular para aparecer no sistema.
-                      </p>
-                    </div>
+                      </div>
+                    <label className="field full" htmlFor="profilePhotoFile">
+                    <span>Enviar foto</span>
+                    <input
+                      id="profilePhotoFile"
+                      className="input"
+                      type="file"
+                      accept="image/*"
+                      key={photoInputKey}
+                      onChange={(event) =>
+                        setPhotoFile(event.target.files?.[0] ?? null)
+                      }
+                    />
+                  </label>
                   </div>
                   <label className="field full" htmlFor="profileName">
                     <span>Nome</span>
@@ -258,19 +285,6 @@ export default function PerfilPage() {
                       value={editEmail}
                       onChange={(e) => setEditEmail(e.target.value)}
                       placeholder="seu@email.com"
-                    />
-                  </label>
-                  <label className="field full" htmlFor="profilePhotoFile">
-                    <span>Enviar foto</span>
-                    <input
-                      id="profilePhotoFile"
-                      className="input"
-                      type="file"
-                      accept="image/*"
-                      key={photoInputKey}
-                      onChange={(event) =>
-                        setPhotoFile(event.target.files?.[0] ?? null)
-                      }
                     />
                   </label>
                 </div>

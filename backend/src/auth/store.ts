@@ -141,7 +141,17 @@ export async function updateUser(
 
 export async function deleteUser(id: string): Promise<boolean> {
   try {
-    await prisma.user.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      await tx.reportFeedback.deleteMany({ where: { memberId: id } });
+      await tx.warning.deleteMany({
+        where: { OR: [{ memberId: id }, { createdBy: id }] },
+      });
+      await tx.suspension.deleteMany({ where: { memberId: id } });
+      await tx.courseEnrollment.deleteMany({ where: { memberId: id } });
+      await tx.course.deleteMany({ where: { createdBy: id } });
+      await tx.report.deleteMany({ where: { authorId: id } });
+      await tx.user.delete({ where: { id } });
+    });
     return true;
   } catch {
     return false;

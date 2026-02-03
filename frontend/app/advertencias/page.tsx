@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { deleteWarning, getMembers, getWarnings, updateWarning } from "../../lib/api";
+import {
+  createWarning,
+  deleteWarning,
+  getMembers,
+  getWarnings,
+  updateWarning,
+} from "../../lib/api";
 import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
 
 interface Warning {
@@ -23,12 +28,19 @@ export default function WarningsPage() {
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [warnings, setWarnings] = useState<Warning[]>([]);
+  const [members, setMembers] = useState<MemberSummary[]>([]);
   const [memberMap, setMemberMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingWarning, setEditingWarning] = useState<Warning | null>(null);
+  const [creatingWarning, setCreatingWarning] = useState(false);
+  const [newMemberId, setNewMemberId] = useState("");
+  const [newReason, setNewReason] = useState("");
+  const [newDate, setNewDate] = useState("");
+  const [memberSearch, setMemberSearch] = useState("");
   const [editReason, setEditReason] = useState("");
   const [editDate, setEditDate] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
@@ -62,6 +74,7 @@ export default function WarningsPage() {
         members.forEach((member) => {
           map[member.id] = member.name;
         });
+        setMembers(members);
         setMemberMap(map);
         setWarnings(warningsResponse.data as Warning[]);
       } catch (err: any) {
@@ -119,6 +132,24 @@ export default function WarningsPage() {
     setEditDate("");
   };
 
+  const openCreateModal = () => {
+    setNewMemberId("");
+    setNewReason("");
+    setNewDate("");
+    setMemberSearch("");
+    setCreateError(null);
+    setCreatingWarning(true);
+  };
+
+  const closeCreateModal = () => {
+    setCreatingWarning(false);
+    setNewMemberId("");
+    setNewReason("");
+    setNewDate("");
+    setMemberSearch("");
+    setCreateError(null);
+  };
+
   const handleEditSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!editingWarning) return;
@@ -166,6 +197,49 @@ export default function WarningsPage() {
     }
   };
 
+  const handleCreateWarning = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!newMemberId || !newReason.trim() || !newDate) {
+      setCreateError("Preencha membro, descrição e data.");
+      return;
+    }
+    setCreateError(null);
+    setActionLoadingId("new");
+    try {
+      await createWarning({
+        member_id: newMemberId,
+        reason: newReason.trim(),
+        warning_date: newDate,
+      });
+      const warningsParams = currentRole === "animador" ? { created_by: "me" } : {};
+      const response = await getWarnings(warningsParams);
+      setWarnings(response.data as Warning[]);
+      closeCreateModal();
+    } catch (err: any) {
+      setCreateError(err.message || "Erro ao salvar advertência.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const filteredMemberOptions = useMemo(() => {
+    const term = memberSearch.trim().toLowerCase();
+    if (!term) return members;
+    return members.filter((member) => member.name.toLowerCase().includes(term));
+  }, [memberSearch, members]);
+
+  const handleMemberSearchChange = (value: string) => {
+    setMemberSearch(value);
+    setNewMemberId("");
+    setCreateError(null);
+  };
+
+  const handleSelectMember = (member: MemberSummary) => {
+    setNewMemberId(member.id);
+    setMemberSearch(member.name);
+    setCreateError(null);
+  };
+
   return (
     <main className="app-page">
       <section className="shell reveal">
@@ -176,9 +250,11 @@ export default function WarningsPage() {
               Registre e acompanhe advertências dos membros.
             </p>
           </div>
-          <Link className="button" href="/nova-advertencia">
-            + Nova Advertência
-          </Link>
+          {(currentRole === "admin" || currentRole === "animador") && (
+            <button className="button" type="button" onClick={openCreateModal}>
+              + Nova Advertência
+            </button>
+          )}
         </header>
 
         <section className="report-panel">
@@ -283,9 +359,11 @@ export default function WarningsPage() {
               <p className="helper">
                 Comece registrando a primeira advertência.
               </p>
-              <Link className="button" href="/nova-advertencia">
-                + Criar Advertência
-              </Link>
+              {(currentRole === "admin" || currentRole === "animador") && (
+                <button className="button" type="button" onClick={openCreateModal}>
+                  + Criar Advertência
+                </button>
+              )}
             </div>
           )}
         </section>
@@ -357,6 +435,96 @@ export default function WarningsPage() {
                   </button>
                 </div>
                 {actionError && <p className="text-red-500">{actionError}</p>}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {creatingWarning && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <header className="modal-header">
+              <div>
+                <strong>Nova advertência</strong>
+                <p className="helper">Registre somente o essencial.</p>
+              </div>
+              <button className="button secondary" type="button" onClick={closeCreateModal}>
+                Fechar
+              </button>
+            </header>
+            <form className="modal-body" onSubmit={handleCreateWarning}>
+              <div className="form-grid">
+                <label className="field full">
+                  <span>Buscar membro</span>
+                  <input
+                    className="input"
+                    type="text"
+                    placeholder="Digite o nome"
+                    value={memberSearch}
+                    onChange={(event) => handleMemberSearchChange(event.target.value)}
+                    disabled={actionLoadingId === "new"}
+                  />
+                  {memberSearch.trim().length > 0 && (
+                    <div className="member-autocomplete" role="listbox">
+                      {filteredMemberOptions.length === 0 ? (
+                        <div className="member-autocomplete-empty">
+                          Nenhum membro encontrado.
+                        </div>
+                      ) : (
+                        filteredMemberOptions.map((member) => (
+                          <button
+                            key={member.id}
+                            type="button"
+                            className={`member-autocomplete-item ${
+                              newMemberId === member.id ? "selected" : ""
+                            }`}
+                            onClick={() => handleSelectMember(member)}
+                            disabled={actionLoadingId === "new"}
+                          >
+                            {member.name}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </label>
+                <label className="field">
+                  <span>Data da ocorrência</span>
+                  <input
+                    type="date"
+                    className="input"
+                    value={newDate}
+                    onChange={(event) => setNewDate(event.target.value)}
+                    required
+                    disabled={actionLoadingId === "new"}
+                  />
+                </label>
+                <label className="field full">
+                  <span>Descrição</span>
+                  <textarea
+                    className="input"
+                    rows={4}
+                    value={newReason}
+                    onChange={(event) => setNewReason(event.target.value)}
+                    required
+                    disabled={actionLoadingId === "new"}
+                  />
+                </label>
+              </div>
+              {createError && <p className="text-red-500">{createError}</p>}
+              <div className="modal-footer">
+                <button
+                  className="button secondary"
+                  type="button"
+                  onClick={closeCreateModal}
+                  disabled={actionLoadingId === "new"}
+                >
+                  Cancelar
+                </button>
+                <button className="button" type="submit" disabled={actionLoadingId === "new"}>
+                  {actionLoadingId === "new" ? "Salvando..." : "Salvar advertência"}
+                </button>
               </div>
             </form>
           </div>

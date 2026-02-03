@@ -345,6 +345,11 @@ p {
   font-size: 14px;
 }
 
+.sidebar-footer .user-avatar {
+  flex: 0 0 36px;
+  overflow: hidden;
+}
+
 .user-meta {
   display: grid;
   gap: 2px;
@@ -911,11 +916,93 @@ p {
   gap: 18px;
 }
 
+.member-autocomplete {
+  margin-top: 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(111, 76, 255, 0.16);
+  background: rgba(255, 255, 255, 0.98);
+  display: grid;
+  gap: 2px;
+  max-height: 220px;
+  overflow: auto;
+  padding: 6px;
+  box-shadow: 0 16px 30px rgba(22, 16, 40, 0.12);
+}
+
+.member-autocomplete-item {
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.member-autocomplete-item:hover,
+.member-autocomplete-item:focus {
+  background: rgba(111, 76, 255, 0.1);
+  outline: none;
+}
+
+.member-autocomplete-item.selected {
+  background: rgba(111, 76, 255, 0.18);
+  font-weight: 600;
+}
+
+.member-autocomplete-empty {
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.confirm-modal {
+  max-width: 520px;
+  border-color: rgba(208, 75, 75, 0.2);
+}
+
+.confirm-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.confirm-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #fff1f1;
+  color: #d04b4b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.confirm-icon svg {
+  width: 26px;
+  height: 26px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+}
+
+.confirm-text {
+  display: grid;
+  gap: 6px;
+}
+
+.confirm-muted {
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .users-table {

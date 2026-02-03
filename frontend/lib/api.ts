@@ -1,6 +1,7 @@
 // lib/api.ts
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001/api/v1";
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1$/, "");
 
 async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -10,7 +11,8 @@ async function request(endpoint: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers);
   const isFormData =
     typeof FormData !== "undefined" && options.body instanceof FormData;
-  if (!isFormData) {
+  const hasBody = options.body !== undefined && options.body !== null;
+  if (hasBody && !isFormData) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -37,6 +39,22 @@ async function request(endpoint: string, options: RequestInit = {}) {
   }
 
   return response.json();
+}
+
+export function resolveApiAssetUrl(url?: string | null) {
+  if (!url) return "";
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("data:") ||
+    url.startsWith("blob:")
+  ) {
+    return url;
+  }
+  if (url.startsWith("/")) {
+    return `${API_ORIGIN}${url}`;
+  }
+  return `${API_ORIGIN}/${url}`;
 }
 
 export async function getReports() {

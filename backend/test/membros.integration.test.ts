@@ -84,6 +84,65 @@ describe("Membros (integration)", () => {
     expect(deleteResponse.statusCode).toBe(204);
   });
 
+  it("deletes member even with related records", async () => {
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: {
+        email: "admin@sol-e-lua.com",
+        password: "admin123",
+      },
+    });
+    const token = login.json().data.access_token;
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/membros",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        name: "Membro com registros",
+        email: "membro-registros@sol-e-lua.com",
+        role: "animador",
+      },
+    });
+
+    expect(createResponse.statusCode).toBe(201);
+    const created = createResponse.json().data;
+
+    const warningResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/advertencias",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        member_id: created.id,
+        reason: "Registro de teste",
+        warning_date: "2026-01-10",
+      },
+    });
+
+    expect(warningResponse.statusCode).toBe(201);
+
+    const deleteResponse = await app.inject({
+      method: "DELETE",
+      url: `/api/v1/membros/${created.id}`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(deleteResponse.statusCode).toBe(204);
+
+    const listResponse = await app.inject({
+      method: "GET",
+      url: "/api/v1/membros?search=registros",
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(listResponse.statusCode).toBe(200);
+    const listData = listResponse.json().data;
+    expect(listData.some((member: { id: string }) => member.id === created.id)).toBe(
+      false
+    );
+  });
+
   it("allows member to update own profile without role change", async () => {
     const animador = await getUserByEmail("animador@sol-e-lua.com");
 

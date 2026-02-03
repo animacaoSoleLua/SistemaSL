@@ -61,6 +61,7 @@ export async function authRoutes(app: FastifyInstance) {
           id: user.id,
           name: user.name,
           role: user.role,
+          photo_url: user.photoUrl ?? null,
         },
       },
     });

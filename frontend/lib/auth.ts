@@ -4,6 +4,7 @@ export interface StoredUser {
   id: string;
   name: string;
   role: Role;
+  photo_url?: string | null;
 }
 
 export const roleLabels: Record<Role, string> = {
@@ -28,8 +29,7 @@ export function getStoredUser(): StoredUser | null {
 }
 
 export function getDefaultRoute(role: Role): string {
-  if (role === "admin") return "/";
-  if (role === "animador") return "/relatorios";
+  if (role === "admin") return "/usuarios";
   return "/perfil";
 }
 
