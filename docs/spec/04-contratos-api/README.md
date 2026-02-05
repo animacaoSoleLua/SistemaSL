@@ -60,7 +60,9 @@ Authorization: Bearer {jwt_token}
 |--------|----------|-----------|
 | GET | `/cursos` | Listar cursos |
 | POST | `/cursos` | Criar curso |
+| PATCH | `/cursos/:id` | Editar curso |
 | GET | `/cursos/:id` | Detalhe do curso |
+| DELETE | `/cursos/:id` | Apagar curso |
 | POST | `/cursos/:id/inscricoes` | Inscrever membro |
 | PATCH | `/cursos/:id/inscricoes/:inscricaoId` | Atualizar presenca |
 

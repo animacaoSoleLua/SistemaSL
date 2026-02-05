@@ -83,6 +83,11 @@ export default function LoginPage() {
         <a className="login-link" href="#">
           Esqueci minha senha
         </a>
+        <div className="login-links">
+          <a className="login-link login-link--signup" href="/cadastro">
+            Não possuo conta
+          </a>
+        </div>
       </div>
       <span className="login-footer">Animação Sol e Lua</span>
     </main>

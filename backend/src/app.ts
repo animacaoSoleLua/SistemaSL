@@ -31,7 +31,11 @@ async function ensureUploadsWritable(root: string): Promise<void> {
 }
 
 export function buildServer(): FastifyInstance {
-  const app = Fastify({ logger: true });
+  const app = Fastify({
+    logger: true,
+    ignoreTrailingSlash: true,
+    ignoreDuplicateSlashes: true,
+  });
 
   // Enable CORS for the frontend origin
   const corsOrigins = process.env.CORS_ORIGINS

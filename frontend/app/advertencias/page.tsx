@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createWarning,
@@ -25,6 +25,10 @@ interface MemberSummary {
 
 export default function WarningsPage() {
   const router = useRouter();
+  const editModalTitleId = useId();
+  const editModalDescriptionId = useId();
+  const createModalTitleId = useId();
+  const createModalDescriptionId = useId();
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [warnings, setWarnings] = useState<Warning[]>([]);
@@ -43,6 +47,8 @@ export default function WarningsPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [noticeVisible, setNoticeVisible] = useState(false);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -138,6 +144,7 @@ export default function WarningsPage() {
     setNewDate("");
     setMemberSearch("");
     setCreateError(null);
+    setNotice(null);
     setCreatingWarning(true);
   };
 
@@ -148,6 +155,11 @@ export default function WarningsPage() {
     setNewDate("");
     setMemberSearch("");
     setCreateError(null);
+  };
+
+  const hideNotice = () => {
+    setNoticeVisible(false);
+    window.setTimeout(() => setNotice(null), 260);
   };
 
   const handleEditSubmit = async (event: React.FormEvent) => {
@@ -206,15 +218,28 @@ export default function WarningsPage() {
     setCreateError(null);
     setActionLoadingId("new");
     try {
-      await createWarning({
+      const createResponse = await createWarning({
         member_id: newMemberId,
         reason: newReason.trim(),
         warning_date: newDate,
       });
+      const suspensionApplied =
+        (createResponse?.data as { suspension_applied?: boolean })?.suspension_applied ??
+        false;
       const warningsParams = currentRole === "animador" ? { created_by: "me" } : {};
-      const response = await getWarnings(warningsParams);
-      setWarnings(response.data as Warning[]);
+      const warningsResponse = await getWarnings(warningsParams);
+      setWarnings(warningsResponse.data as Warning[]);
       closeCreateModal();
+      if (suspensionApplied) {
+        const memberName = memberMap[newMemberId] ?? "Membro";
+        setNotice(
+          `${memberName} recebeu a 3ª advertência em 1 mês e ficará suspenso por 1 mês.`
+        );
+        setNoticeVisible(true);
+      } else {
+        setNotice(null);
+        setNoticeVisible(false);
+      }
     } catch (err: any) {
       setCreateError(err.message || "Erro ao salvar advertência.");
     } finally {
@@ -239,6 +264,15 @@ export default function WarningsPage() {
     setMemberSearch(member.name);
     setCreateError(null);
   };
+
+  useEffect(() => {
+    if (!notice) return;
+    setNoticeVisible(true);
+    const timer = window.setTimeout(() => {
+      hideNotice();
+    }, 4200);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   return (
     <main className="app-page">
@@ -281,6 +315,26 @@ export default function WarningsPage() {
           {actionError && !editingWarning && (
             <div className="empty-state">
               <p className="text-red-500">{actionError}</p>
+            </div>
+          )}
+          {notice && (
+            <div
+              className={`floating-notice${noticeVisible ? "" : " is-hiding"}`}
+              role="status"
+              aria-live="polite"
+            >
+              <div className="floating-notice-content">
+                <span className="floating-notice-title">Suspensão aplicada</span>
+                <span className="floating-notice-text">{notice}</span>
+                <button
+                  className="floating-notice-close"
+                  type="button"
+                  aria-label="Fechar aviso"
+                  onClick={hideNotice}
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           )}
 
@@ -370,12 +424,28 @@ export default function WarningsPage() {
       </section>
 
       {editingWarning && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true">
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={editModalTitleId}
+          aria-describedby={editModalDescriptionId}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeEditModal();
+            }
+          }}
+        >
           <div className="modal-card">
             <header className="modal-header">
               <div>
-                <h2 className="section-title">Editar advertência</h2>
-                <p>Atualize a descrição e a data da ocorrência.</p>
+                <h2 className="section-title" id={editModalTitleId}>
+                  Editar advertência
+                </h2>
+                <p id={editModalDescriptionId}>
+                  Atualize a descrição e a data da ocorrência.
+                </p>
               </div>
               <button
                 className="icon-button"
@@ -442,12 +512,26 @@ export default function WarningsPage() {
       )}
 
       {creatingWarning && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true">
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={createModalTitleId}
+          aria-describedby={createModalDescriptionId}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeCreateModal();
+            }
+          }}
+        >
           <div className="modal-card">
             <header className="modal-header">
               <div>
-                <strong>Nova advertência</strong>
-                <p className="helper">Registre somente o essencial.</p>
+                <strong id={createModalTitleId}>Nova advertência</strong>
+                <p className="helper" id={createModalDescriptionId}>
+                  Registre somente o essencial.
+                </p>
               </div>
               <button className="button secondary" type="button" onClick={closeCreateModal}>
                 Fechar
@@ -466,7 +550,11 @@ export default function WarningsPage() {
                     disabled={actionLoadingId === "new"}
                   />
                   {memberSearch.trim().length > 0 && (
-                    <div className="member-autocomplete" role="listbox">
+                    <div
+                      className="member-autocomplete"
+                      role="listbox"
+                      aria-label="Resultados da busca de membros"
+                    >
                       {filteredMemberOptions.length === 0 ? (
                         <div className="member-autocomplete-empty">
                           Nenhum membro encontrado.
@@ -479,6 +567,8 @@ export default function WarningsPage() {
                             className={`member-autocomplete-item ${
                               newMemberId === member.id ? "selected" : ""
                             }`}
+                            role="option"
+                            aria-selected={newMemberId === member.id}
                             onClick={() => handleSelectMember(member)}
                             disabled={actionLoadingId === "new"}
                           >

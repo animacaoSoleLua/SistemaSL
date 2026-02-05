@@ -36,7 +36,12 @@ describe("Membros (integration)", () => {
       headers: { authorization: `Bearer ${token}` },
       payload: {
         name: "Novo Membro",
+        last_name: "Silva",
+        cpf: "390.533.447-05",
         email: "novo-membro@sol-e-lua.com",
+        birth_date: "1997-03-22",
+        region: "Ceilândia",
+        phone: "(61) 99999-1111",
         role: "recreador",
       },
     });
@@ -101,7 +106,12 @@ describe("Membros (integration)", () => {
       headers: { authorization: `Bearer ${token}` },
       payload: {
         name: "Membro com registros",
+        last_name: "Souza",
+        cpf: "529.982.247-25",
         email: "membro-registros@sol-e-lua.com",
+        birth_date: "1996-02-12",
+        region: "Gama",
+        phone: "(61) 99999-2222",
         role: "animador",
       },
     });

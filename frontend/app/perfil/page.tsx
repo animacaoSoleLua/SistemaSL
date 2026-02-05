@@ -30,7 +30,12 @@ interface SuspensionInfo {
 interface MemberDetail {
   id: string;
   name: string;
+  last_name?: string | null;
+  cpf?: string | null;
   email: string;
+  birth_date?: string | null;
+  region?: string | null;
+  phone?: string | null;
   role: Role;
   photo_url?: string | null;
   courses: Array<{
@@ -50,7 +55,12 @@ export default function PerfilPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editCpf, setEditCpf] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editBirthDate, setEditBirthDate] = useState("");
+  const [editRegion, setEditRegion] = useState("");
+  const [editPhone, setEditPhone] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoInputKey, setPhotoInputKey] = useState(0);
@@ -86,7 +96,12 @@ export default function PerfilPage() {
   useEffect(() => {
     if (member) {
       setEditName(member.name);
+      setEditLastName(member.last_name ?? "");
+      setEditCpf(member.cpf ?? "");
       setEditEmail(member.email);
+      setEditBirthDate(member.birth_date ?? "");
+      setEditRegion(member.region ?? "");
+      setEditPhone(formatPhone(member.phone ?? ""));
       setPhotoFile(null);
     }
   }, [member]);
@@ -111,6 +126,32 @@ export default function PerfilPage() {
     return `${day}/${month}/${year}`;
   };
 
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+
+    if (digits.length <= 2) return digits ? `(${digits}` : "";
+    if (digits.length <= 6) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    }
+    if (digits.length <= 10) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    }
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
+
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6)
+      return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9)
+      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(
+      6,
+      9
+    )}-${digits.slice(9)}`;
+  };
+
   const formatCourseStatus = (status: "enrolled" | "attended" | "missed") => {
     if (status === "attended") return "Presente";
     if (status === "missed") return "Faltou";
@@ -119,7 +160,13 @@ export default function PerfilPage() {
 
   const hasProfileChanges =
     member &&
-    (editName.trim() !== member.name || editEmail.trim() !== member.email);
+    (editName.trim() !== member.name ||
+      editLastName.trim() !== (member.last_name ?? "") ||
+      editCpf.trim() !== (member.cpf ?? "") ||
+      editEmail.trim() !== member.email ||
+      editBirthDate !== (member.birth_date ?? "") ||
+      editRegion.trim() !== (member.region ?? "") ||
+      editPhone.trim() !== (member.phone ?? ""));
   const hasPhotoChange = !!photoFile;
   const hasChanges = !!hasProfileChanges || hasPhotoChange;
 
@@ -129,10 +176,23 @@ export default function PerfilPage() {
       return;
     }
     const trimmedName = editName.trim();
+    const trimmedLastName = editLastName.trim();
+    const trimmedCpf = editCpf.trim();
     const trimmedEmail = editEmail.trim();
+    const trimmedRegion = editRegion.trim();
+    const trimmedPhone = editPhone.trim();
+    const birthDateValue = editBirthDate;
 
-    if (!trimmedName || !trimmedEmail) {
-      setSaveError("Preencha nome e e-mail para salvar.");
+    if (
+      !trimmedName ||
+      !trimmedLastName ||
+      !trimmedCpf ||
+      !trimmedEmail ||
+      !birthDateValue ||
+      !trimmedRegion ||
+      !trimmedPhone
+    ) {
+      setSaveError("Preencha todos os dados pessoais para salvar.");
       setSaveSuccess(null);
       return;
     }
@@ -150,14 +210,24 @@ export default function PerfilPage() {
       if (hasProfileChanges) {
         await updateMember(member.id, {
           name: trimmedName,
+          last_name: trimmedLastName,
+          cpf: trimmedCpf,
           email: trimmedEmail,
+          birth_date: birthDateValue,
+          region: trimmedRegion,
+          phone: trimmedPhone,
         });
         setMember((current) =>
           current
             ? {
                 ...current,
                 name: trimmedName,
+                last_name: trimmedLastName,
+                cpf: trimmedCpf,
                 email: trimmedEmail,
+                birth_date: birthDateValue,
+                region: trimmedRegion,
+                phone: trimmedPhone,
               }
             : current
         );
@@ -234,11 +304,25 @@ export default function PerfilPage() {
           </div>
         ) : member ? (
           <>
+            {member.suspension.status === "suspended" && (
+              <div className="suspension-alert">
+                <div className="suspension-alert-title">SUSPENSÃO ATIVA</div>
+                <p className="suspension-alert-text">
+                  Você está suspenso por 1 mês e não pode trabalhar.
+                </p>
+                {member.suspension.start_date && member.suspension.end_date && (
+                  <p className="suspension-alert-text">
+                    Período: {formatDateBR(member.suspension.start_date)} até{" "}
+                    {formatDateBR(member.suspension.end_date)}.
+                  </p>
+                )}
+              </div>
+            )}
             <form className="form-layout" onSubmit={handleSave}>
               <article className="form-card">
                 <div className="form-card-head">
                   <h2 className="section-title">Editar perfil</h2>
-                  <p>Atualize seu nome e e-mail para usar no login.</p>
+                  <p>Atualize seus dados pessoais para o sistema.</p>
                 </div>
                 <div className="form-grid">
                   <div className="profile-photo-block">
@@ -276,6 +360,29 @@ export default function PerfilPage() {
                       placeholder="Seu nome completo"
                     />
                   </label>
+                  <label className="field full" htmlFor="profileLastName">
+                    <span>Sobrenome</span>
+                    <input
+                      id="profileLastName"
+                      className="input"
+                      value={editLastName}
+                      onChange={(e) => setEditLastName(e.target.value)}
+                      placeholder="Seu sobrenome"
+                    />
+                  </label>
+                  <label className="field full" htmlFor="profileCpf">
+                    <span>CPF</span>
+                    <input
+                      id="profileCpf"
+                      name="cpf"
+                      className="input"
+                      inputMode="numeric"
+                      autoComplete="national-id"
+                      value={editCpf}
+                      onChange={(e) => setEditCpf(formatCpf(e.target.value))}
+                      placeholder="000.000.000-00"
+                    />
+                  </label>
                   <label className="field full" htmlFor="profileEmail">
                     <span>E-mail</span>
                     <input
@@ -285,6 +392,46 @@ export default function PerfilPage() {
                       value={editEmail}
                       onChange={(e) => setEditEmail(e.target.value)}
                       placeholder="seu@email.com"
+                    />
+                  </label>
+                  <label className="field full" htmlFor="profileBirthDate">
+                    <span>Data de nascimento</span>
+                    <input
+                      id="profileBirthDate"
+                      className="input"
+                      type="date"
+                      value={editBirthDate}
+                      onChange={(e) => setEditBirthDate(e.target.value)}
+                    />
+                  </label>
+                  <label className="field full" htmlFor="profileRegion">
+                    <span>Região administrativa</span>
+                    <input
+                      id="profileRegion"
+                      className="input"
+                      value={editRegion}
+                      onChange={(e) => setEditRegion(e.target.value)}
+                      placeholder="Ex: Ceilândia"
+                    />
+                  </label>
+                  <label className="field full" htmlFor="profilePhone">
+                    <span>Telefone</span>
+                    <input
+                      id="profilePhone"
+                      name="tel"
+                      className="input"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel-national"
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(formatPhone(e.target.value))}
+                      onInput={(e) =>
+                        setEditPhone(
+                          formatPhone((e.target as HTMLInputElement).value)
+                        )
+                      }
+                      onBlur={(e) => setEditPhone(formatPhone(e.target.value))}
+                      placeholder="(61) 99999-9999"
                     />
                   </label>
                 </div>
@@ -354,7 +501,6 @@ export default function PerfilPage() {
                   </p>
                 </div>
               </div>
-
               {member.warnings.length > 0 ? (
                 <div className="warning-list">
                   <article className="warning-card">

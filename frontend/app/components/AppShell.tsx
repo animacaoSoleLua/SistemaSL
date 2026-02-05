@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import SidebarNav from "./SidebarNav";
 
-const HIDE_SIDEBAR_ROUTES = new Set(["/login"]);
+const HIDE_SIDEBAR_ROUTES = new Set(["/login", "/cadastro"]);
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();

@@ -169,7 +169,7 @@ export async function advertenciasRoutes(app: FastifyInstance) {
         });
       }
 
-      const warning = await createWarning(request.user!.id, {
+      const result = await createWarning(request.user!.id, {
         memberId: member.id,
         reason: normalizedReason,
         warningDate: parsedDate,
@@ -177,7 +177,8 @@ export async function advertenciasRoutes(app: FastifyInstance) {
 
       return reply.status(201).send({
         data: {
-          id: warning.id,
+          id: result.warning.id,
+          suspension_applied: result.suspensionApplied,
         },
       });
     }

@@ -1,7 +1,7 @@
 # 3. Modelo de Dados
 
 **Versao:** 1.0.0
-**Ultima Atualizacao:** 2026-02-03
+**Ultima Atualizacao:** 2026-02-04
 
 ← [Voltar para SPEC](README.md)
 
@@ -25,7 +25,11 @@ erDiagram
     USERS {
         uuid id PK
         string name
+        string last_name
         string email
+        date birth_date
+        string region
+        string phone
         string password_hash
         string role
         string photo_url
@@ -112,7 +116,11 @@ erDiagram
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(120),
     email VARCHAR(255) NOT NULL UNIQUE,
+    birth_date DATE,
+    region VARCHAR(100),
+    phone VARCHAR(40),
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'animador', 'recreador')),
     photo_url TEXT,

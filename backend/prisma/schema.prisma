@@ -27,7 +27,12 @@ enum EnrollmentStatus {
 model User {
   id           String             @id @default(uuid()) @db.Uuid
   name         String             @db.VarChar(100)
+  lastName     String?            @map("last_name") @db.VarChar(120)
   email        String             @unique(map: "idx_users_email") @db.VarChar(255)
+  cpf          String?            @map("cpf") @db.VarChar(20)
+  birthDate    DateTime?          @map("birth_date") @db.Date
+  region       String?            @map("region") @db.VarChar(100)
+  phone        String?            @map("phone") @db.VarChar(40)
   passwordHash String             @map("password_hash") @db.VarChar(255)
   role         UserRole
   photoUrl     String?            @map("photo_url") @db.Text
@@ -36,6 +41,7 @@ model User {
   reports      Report[]           @relation("ReportsByAuthor")
   reportNotes  ReportFeedback[]   @relation("FeedbacksForMember")
   courses      Course[]           @relation("CoursesByCreator")
+  instructedCourses Course[]      @relation("CoursesByInstructor")
   enrollments  CourseEnrollment[] @relation("EnrollmentsByMember")
   warnings     Warning[]          @relation("WarningsForMember")
   warningsMade Warning[]          @relation("WarningsByCreator")
@@ -90,6 +96,7 @@ model ReportFeedback {
 model Course {
   id          String             @id @default(uuid()) @db.Uuid
   createdBy   String             @map("created_by") @db.Uuid
+  instructorId String            @map("instructor_id") @db.Uuid
   title       String             @db.VarChar(150)
   description String?            @db.Text
   courseDate  DateTime           @map("course_date") @db.Date
@@ -97,6 +104,7 @@ model Course {
   capacity    Int?
   createdAt   DateTime           @default(now()) @map("created_at")
   creator     User               @relation("CoursesByCreator", fields: [createdBy], references: [id])
+  instructor  User               @relation("CoursesByInstructor", fields: [instructorId], references: [id])
   enrollments CourseEnrollment[]
 
   @@map("courses")

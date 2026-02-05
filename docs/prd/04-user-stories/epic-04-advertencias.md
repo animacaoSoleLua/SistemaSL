@@ -104,7 +104,7 @@ Registrar advertencias de membros, permitir consulta e aplicar regra de suspensa
 **Dependencias:** US-020
 
 **Criterios de Aceitacao:**
-1. Ao chegar a 3 advertencias, marca "suspenso por 1 mes"
+1. Ao chegar a 3 advertencias em ate 1 mes, marca "suspenso por 1 mes"
 2. Admin ve alerta no perfil do membro
 3. Membro ve aviso no proprio perfil
 4. Guarda data de inicio e fim da suspensao

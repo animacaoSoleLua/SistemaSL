@@ -1,6 +1,7 @@
 // lib/api.ts
-const API_BASE_URL =
+const RAW_API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001/api/v1";
+const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, "");
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1$/, "");
 
 async function request(endpoint: string, options: RequestInit = {}) {
@@ -103,8 +104,20 @@ export async function deleteWarning(id: string) {
   return request(`/advertencias/${id}`, { method: "DELETE" });
 }
 
-export async function getMembers() {
-  return request('/membros', { method: 'GET' });
+export async function getMembers(params: {
+  search?: string;
+  role?: string;
+  page?: number;
+  limit?: number;
+} = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.search) searchParams.set("search", params.search);
+  if (params.role) searchParams.set("role", params.role);
+  if (params.page) searchParams.set("page", String(params.page));
+  if (params.limit) searchParams.set("limit", String(params.limit));
+  const query = searchParams.toString();
+  const endpoint = query ? `/membros?${query}` : "/membros";
+  return request(endpoint, { method: "GET" });
 }
 
 export async function getMember(id: string) {
@@ -113,7 +126,12 @@ export async function getMember(id: string) {
 
 export async function createMember(input: {
   name: string;
+  last_name: string;
+  cpf: string;
   email: string;
+  birth_date: string;
+  region: string;
+  phone: string;
   role: string;
   password?: string;
 }) {
@@ -127,7 +145,12 @@ export async function updateMember(
   id: string,
   input: {
     name?: string;
+    last_name?: string;
+    cpf?: string;
     email?: string;
+    birth_date?: string;
+    region?: string;
+    phone?: string;
     role?: string;
     photo_url?: string | null;
   }
@@ -158,6 +181,23 @@ export async function login(email: string, password: string) {
   });
 }
 
+export async function registerUser(input: {
+  name: string;
+  last_name: string;
+  cpf: string;
+  email: string;
+  birth_date: string;
+  region: string;
+  phone: string;
+  role: string;
+  password: string;
+}) {
+  return request('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
 export async function getCourses(params: {
   status?: "available" | "full" | "all";
   page?: number;
@@ -179,11 +219,37 @@ export async function createCourse(input: {
   course_date: string;
   location?: string;
   capacity: number;
+  instructor_id: string;
 }) {
   return request("/cursos", {
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export async function getCourse(courseId: string) {
+  return request(`/cursos/${courseId}`, { method: "GET" });
+}
+
+export async function updateCourse(
+  courseId: string,
+  input: {
+    title?: string;
+    description?: string;
+    course_date?: string;
+    location?: string;
+    capacity?: number;
+    instructor_id?: string;
+  }
+) {
+  return request(`/cursos/${courseId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteCourse(courseId: string) {
+  return request(`/cursos/${courseId}`, { method: "DELETE" });
 }
 
 export async function enrollInCourse(courseId: string, memberId: string) {

@@ -4,11 +4,13 @@ import { getUserById } from "../auth/store.js";
 import {
   addEnrollment,
   createCourse,
+  deleteCourse,
   EnrollmentStatus,
   getCourseById,
   getEnrollmentById,
   getEnrollmentByMember,
   listCourses,
+  updateCourse,
   updateEnrollmentStatus,
 } from "./store.js";
 
@@ -18,6 +20,7 @@ interface CourseBody {
   course_date?: string;
   location?: string;
   capacity?: number;
+  instructor_id?: string;
 }
 
 interface EnrollmentBody {
@@ -123,6 +126,11 @@ export async function cursosRoutes(app: FastifyInstance) {
         title: course.title,
         course_date: formatDate(course.courseDate),
         capacity: course.capacity,
+        created_by: course.createdBy,
+        instructor: {
+          id: course.instructorId,
+          name: course.instructorName,
+        },
         enrolled_count: course.enrollments.length,
         available_spots: Math.max(
           course.capacity - course.enrollments.length,
@@ -136,13 +144,13 @@ export async function cursosRoutes(app: FastifyInstance) {
     "/api/v1/cursos",
     { preHandler: requireRole(["admin", "animador"]) },
     async (request, reply) => {
-      const { title, description, course_date, location, capacity } =
+      const { title, description, course_date, location, capacity, instructor_id } =
         request.body as CourseBody;
 
-      if (!title || !course_date || capacity === undefined) {
+      if (!title || !course_date || capacity === undefined || !instructor_id) {
         return reply.status(400).send({
           error: "invalid_request",
-          message: "Titulo, data e vagas sao obrigatorios",
+          message: "Titulo, data, vagas e instrutor sao obrigatorios",
         });
       }
 
@@ -161,7 +169,15 @@ export async function cursosRoutes(app: FastifyInstance) {
         });
       }
 
+      if (!(await getUserById(instructor_id))) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Instrutor nao encontrado",
+        });
+      }
+
       const course = await createCourse(request.user!.id, {
+        instructorId: instructor_id,
         title,
         description,
         courseDate,
@@ -170,6 +186,137 @@ export async function cursosRoutes(app: FastifyInstance) {
       });
 
       return reply.status(201).send({
+        data: { id: course.id },
+      });
+    }
+  );
+
+  app.patch(
+    "/api/v1/cursos/:id",
+    { preHandler: requireRole(["admin", "animador"]) },
+    async (request, reply) => {
+      const params = request.params as { id?: string };
+      if (!params.id) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Curso invalido",
+        });
+      }
+
+      const course = await getCourseById(params.id);
+      if (!course) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Curso nao encontrado",
+        });
+      }
+
+      if (!request.user) {
+        return reply.status(401).send({
+          error: "unauthorized",
+          message: "Token ausente",
+        });
+      }
+
+      if (request.user.role !== "admin" && course.createdBy !== request.user.id) {
+        return reply.status(403).send({
+          error: "forbidden",
+          message: "Acesso negado",
+        });
+      }
+
+      const { title, description, course_date, location, capacity, instructor_id } =
+        request.body as CourseBody;
+
+      if (capacity !== undefined) {
+        if (!Number.isInteger(capacity) || capacity <= 0) {
+          return reply.status(400).send({
+            error: "invalid_request",
+            message: "Vagas invalidas",
+          });
+        }
+        if (capacity < course.enrollments.length) {
+          return reply.status(409).send({
+            error: "invalid_request",
+            message: "Vagas menores que inscritos",
+          });
+        }
+      }
+
+      const courseDate = course_date ? parseDate(course_date) : undefined;
+      if (course_date && !courseDate) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Data do curso invalida",
+        });
+      }
+
+      if (instructor_id && !(await getUserById(instructor_id))) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Instrutor nao encontrado",
+        });
+      }
+
+      const normalizedDescription =
+        description === undefined ? undefined : description.trim() || null;
+      const normalizedLocation =
+        location === undefined ? undefined : location.trim() || null;
+
+      const updated = await updateCourse(course.id, {
+        instructorId: instructor_id,
+        title: title?.trim(),
+        description: normalizedDescription,
+        courseDate,
+        location: normalizedLocation,
+        capacity,
+      });
+
+      return reply.status(200).send({
+        data: {
+          id: updated.id,
+        },
+      });
+    }
+  );
+
+  app.delete(
+    "/api/v1/cursos/:id",
+    { preHandler: requireRole(["admin", "animador"]) },
+    async (request, reply) => {
+      const params = request.params as { id?: string };
+      if (!params.id) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Curso invalido",
+        });
+      }
+
+      const course = await getCourseById(params.id);
+      if (!course) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Curso nao encontrado",
+        });
+      }
+
+      if (!request.user) {
+        return reply.status(401).send({
+          error: "unauthorized",
+          message: "Token ausente",
+        });
+      }
+
+      if (request.user.role !== "admin" && course.createdBy !== request.user.id) {
+        return reply.status(403).send({
+          error: "forbidden",
+          message: "Acesso negado",
+        });
+      }
+
+      await deleteCourse(course.id);
+
+      return reply.status(200).send({
         data: { id: course.id },
       });
     }
@@ -206,6 +353,11 @@ export async function cursosRoutes(app: FastifyInstance) {
       course_date: formatDate(course.courseDate),
       location: course.location ?? null,
       capacity: course.capacity,
+      created_by: course.createdBy,
+      instructor: {
+        id: course.instructorId,
+        name: course.instructorName,
+      },
       enrolled_count: course.enrollments.length,
       available_spots: Math.max(course.capacity - course.enrollments.length, 0),
     };
@@ -284,6 +436,13 @@ export async function cursosRoutes(app: FastifyInstance) {
       return reply.status(409).send({
         error: "already_enrolled",
         message: "Membro ja inscrito",
+      });
+    }
+
+    if (member_id === course.createdBy || member_id === course.instructorId) {
+      return reply.status(409).send({
+        error: "course_restricted",
+        message: "Criador ou instrutor nao pode se inscrever no curso",
       });
     }
 

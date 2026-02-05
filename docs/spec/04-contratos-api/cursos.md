@@ -22,7 +22,12 @@
       "id": "uuid",
       "title": "string",
       "course_date": "2026-02-01",
-      "capacity": 20
+      "capacity": 20,
+      "created_by": "uuid",
+      "instructor": {
+        "id": "uuid",
+        "name": "string"
+      }
     }
   ]
 }
@@ -42,11 +47,39 @@
   "description": "string",
   "course_date": "2026-02-01",
   "location": "string",
-  "capacity": 20
+  "capacity": 20,
+  "instructor_id": "uuid"
 }
 ```
 
 **Response 201 Created:**
+
+```json
+{
+  "data": { "id": "uuid" }
+}
+```
+
+---
+
+## PATCH /api/v1/cursos/:id
+
+**Descricao:** Atualiza dados do curso (admin ou criador).
+
+**Request Body:**
+
+```json
+{
+  "title": "string",
+  "description": "string",
+  "course_date": "2026-02-01",
+  "location": "string",
+  "capacity": 20,
+  "instructor_id": "uuid"
+}
+```
+
+**Response 200 OK:**
 
 ```json
 {
@@ -64,7 +97,29 @@
 
 ```json
 {
-  "data": { "id": "uuid", "title": "string" }
+  "data": {
+    "id": "uuid",
+    "title": "string",
+    "created_by": "uuid",
+    "instructor": {
+      "id": "uuid",
+      "name": "string"
+    }
+  }
+}
+```
+
+---
+
+## DELETE /api/v1/cursos/:id
+
+**Descricao:** Remove curso (admin ou criador).
+
+**Response 200 OK:**
+
+```json
+{
+  "data": { "id": "uuid" }
 }
 ```
 

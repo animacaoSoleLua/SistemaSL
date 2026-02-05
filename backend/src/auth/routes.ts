@@ -3,7 +3,9 @@ import {
   consumeResetToken,
   createResetToken,
   getUserByEmail,
+  createUser,
   updateUserPassword,
+  type Role,
 } from "./store.js";
 import { verifyPassword } from "./password.js";
 import { createAccessToken } from "./token.js";
@@ -20,6 +22,50 @@ interface ForgotPasswordBody {
 interface ResetPasswordBody {
   token?: string;
   password?: string;
+}
+
+interface RegisterBody {
+  name?: string;
+  last_name?: string;
+  cpf?: string;
+  email?: string;
+  birth_date?: string;
+  region?: string;
+  phone?: string;
+  role?: Role;
+  password?: string;
+}
+
+const registerRoles: Role[] = ["animador", "recreador"];
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function normalizeCpf(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
+function isValidCpf(value: string): boolean {
+  const digits = normalizeCpf(value);
+  return digits.length === 11;
+}
+
+function parseDate(value: string | undefined): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return undefined;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+  if (parsed.toISOString().slice(0, 10) !== value) {
+    return undefined;
+  }
+  return parsed;
 }
 
 export async function authRoutes(app: FastifyInstance) {
@@ -112,6 +158,117 @@ export async function authRoutes(app: FastifyInstance) {
     return reply.status(200).send({
       data: {
         message: "Senha atualizada",
+      },
+    });
+  });
+
+  app.post("/register", async (request, reply) => {
+    const {
+      name,
+      last_name,
+      cpf,
+      email,
+      birth_date,
+      region,
+      phone,
+      role,
+      password,
+    } = request.body as RegisterBody;
+
+    if (
+      !name ||
+      !last_name ||
+      !cpf ||
+      !email ||
+      !birth_date ||
+      !region ||
+      !phone ||
+      !role ||
+      !password
+    ) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Preencha todos os campos obrigatorios",
+      });
+    }
+
+    if (!isValidEmail(email)) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Email invalido",
+      });
+    }
+
+    if (!registerRoles.includes(role)) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Papel invalido",
+      });
+    }
+
+    if (!password.trim()) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Senha invalida",
+      });
+    }
+
+    const parsedBirthDate = parseDate(birth_date);
+    if (!parsedBirthDate) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Data de nascimento invalida",
+      });
+    }
+
+    if (!region.trim()) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Regiao invalida",
+      });
+    }
+
+    if (!phone.trim()) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Telefone invalido",
+      });
+    }
+
+    if (!isValidCpf(cpf)) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "CPF invalido",
+      });
+    }
+
+    const normalizedCpf = normalizeCpf(cpf);
+
+    const created = await createUser({
+      name,
+      lastName: last_name,
+      email,
+      cpf: normalizedCpf,
+      birthDate: parsedBirthDate,
+      region: region.trim(),
+      phone: phone.trim(),
+      role,
+      password,
+    });
+
+    if (!created) {
+      return reply.status(409).send({
+        error: "email_exists",
+        message: "Email ja cadastrado",
+      });
+    }
+
+    return reply.status(201).send({
+      data: {
+        id: created.id,
+        name: created.name,
+        last_name: created.lastName ?? null,
+        role: created.role,
       },
     });
   });

@@ -100,14 +100,24 @@ export default function DashboardPage() {
               <p>Últimos eventos cadastrados no sistema</p>
             </div>
             <div className="view-toggle" role="group" aria-label="Visualização">
-              <button className="toggle-button active" type="button">
+              <button
+                className="toggle-button active"
+                type="button"
+                aria-pressed="true"
+                aria-label="Visualização em lista"
+              >
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <rect x="4" y="5" width="12" height="2" rx="1" />
                   <rect x="4" y="9" width="12" height="2" rx="1" />
                   <rect x="4" y="13" width="12" height="2" rx="1" />
                 </svg>
               </button>
-              <button className="toggle-button" type="button">
+              <button
+                className="toggle-button"
+                type="button"
+                aria-pressed="false"
+                aria-label="Visualização em grade"
+              >
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <rect x="4" y="4" width="5" height="5" rx="1" />
                   <rect x="11" y="4" width="5" height="5" rx="1" />

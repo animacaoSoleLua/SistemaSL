@@ -31,6 +31,12 @@ function addOneMonth(date: Date): Date {
   return next;
 }
 
+function subtractOneMonth(date: Date): Date {
+  const previous = new Date(date.getTime());
+  previous.setMonth(previous.getMonth() - 1);
+  return previous;
+}
+
 function isSuspensionActive(suspension: SuspensionRecord, now: Date): boolean {
   return (
     suspension.startDate.getTime() <= now.getTime() &&
@@ -38,13 +44,27 @@ function isSuspensionActive(suspension: SuspensionRecord, now: Date): boolean {
   );
 }
 
-async function countActiveWarnings(memberId: string): Promise<number> {
+async function countWarningsInWindow(
+  memberId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<number> {
   return prisma.warning.count({
-    where: { memberId, deletedAt: null },
+    where: {
+      memberId,
+      deletedAt: null,
+      warningDate: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
   });
 }
 
-async function ensureSuspension(memberId: string, startDate: Date): Promise<void> {
+async function ensureSuspension(
+  memberId: string,
+  startDate: Date
+): Promise<boolean> {
   const now = new Date();
   const existing = await prisma.suspension.findFirst({
     where: {
@@ -54,7 +74,7 @@ async function ensureSuspension(memberId: string, startDate: Date): Promise<void
     },
   });
   if (existing) {
-    return;
+    return false;
   }
 
   await prisma.suspension.create({
@@ -65,10 +85,13 @@ async function ensureSuspension(memberId: string, startDate: Date): Promise<void
       reason: "3 advertencias",
     },
   });
+  return true;
 }
 
 async function clearSuspensionIfNeeded(memberId: string): Promise<void> {
-  const count = await countActiveWarnings(memberId);
+  const now = new Date();
+  const windowStart = subtractOneMonth(now);
+  const count = await countWarningsInWindow(memberId, windowStart, now);
   if (count < 3) {
     await prisma.suspension.deleteMany({ where: { memberId } });
   }
@@ -77,7 +100,7 @@ async function clearSuspensionIfNeeded(memberId: string): Promise<void> {
 export async function createWarning(
   createdBy: string,
   input: CreateWarningInput
-): Promise<WarningRecord> {
+): Promise<{ warning: WarningRecord; suspensionApplied: boolean }> {
   const warning = await prisma.warning.create({
     data: {
       memberId: input.memberId,
@@ -87,18 +110,28 @@ export async function createWarning(
     },
   });
 
-  if ((await countActiveWarnings(input.memberId)) >= 3) {
-    await ensureSuspension(input.memberId, input.warningDate);
+  let suspensionApplied = false;
+  const windowStart = subtractOneMonth(input.warningDate);
+  const countInWindow = await countWarningsInWindow(
+    input.memberId,
+    windowStart,
+    input.warningDate
+  );
+  if (countInWindow >= 3) {
+    suspensionApplied = await ensureSuspension(input.memberId, input.warningDate);
   }
 
   return {
-    id: warning.id,
-    memberId: warning.memberId,
-    createdBy: warning.createdBy,
-    reason: warning.reason,
-    warningDate: warning.warningDate,
-    createdAt: warning.createdAt,
-    deletedAt: warning.deletedAt ?? undefined,
+    warning: {
+      id: warning.id,
+      memberId: warning.memberId,
+      createdBy: warning.createdBy,
+      reason: warning.reason,
+      warningDate: warning.warningDate,
+      createdAt: warning.createdAt,
+      deletedAt: warning.deletedAt ?? undefined,
+    },
+    suspensionApplied,
   };
 }
 

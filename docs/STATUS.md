@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-02-03
+**Ultima Atualizacao:** 2026-02-05
 **Atualizado por:** Codex
 
 ---
@@ -15,29 +15,30 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 26/26 |
-| Ultima Tarefa | MELHORIA-036 |
+| Tarefas Completas | 28/28 |
+| Ultima Tarefa | MELHORIA-043 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-036: Lista de membros sugeridos na busca
+### MELHORIA-043: Editar e apagar cursos
 
-**Epic:** Estabilidade e Produto
-**User Story:** Perfil e membros
-**API:** Membros
+**Epic:** Cursos
+**User Story:** US-014
+**API:** Cursos
 
-**Descricao:** Mostrar sugestões enquanto digita o nome do membro.
+**Descricao:** Permitir editar e apagar cursos cadastrados.
 
 **O que mudou:**
-- Busca agora mostra uma lista com nomes sugeridos.
-- Clique em um nome preenche o membro automaticamente.
+- Cursos podem ser editados.
+- Cursos podem ser apagados.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Lista aparece enquanto digita e permite selecionar um nome.
+- [x] Banco e API com novos campos.
+- [x] Tela de cadastro disponivel no login.
 
 ---
 
@@ -91,6 +92,13 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-05 | MELHORIA-043 | Editar e apagar cursos |
+| 2026-02-05 | MELHORIA-042 | CPF editavel no perfil + autocomplete |
+| 2026-02-05 | MELHORIA-041 | Acessibilidade geral (teclado e foco) |
+| 2026-02-05 | MELHORIA-040 | CPF no cadastro e novo membro |
+| 2026-02-04 | MELHORIA-039 | Ajustes na tela de usuarios |
+| 2026-02-04 | MELHORIA-038 | Cadastro com novos campos e tela publica |
+| 2026-02-03 | MELHORIA-037 | Instrutor do curso e bloqueio de auto-inscricao |
 | 2026-02-03 | MELHORIA-036 | Lista de nomes sugeridos na busca |
 | 2026-02-03 | MELHORIA-035 | Seleção de membro por busca |
 | 2026-02-03 | MELHORIA-034 | Busca de membro no modal de advertência |
@@ -154,16 +162,14 @@ Nenhum bloqueador no momento.
 
 ### Pontos que faltam ou estao incompletos
 
-1. A tela de usuarios agora conversa com a API. Outras telas menores ainda usam dados fixos.
-2. Recuperacao de senha nao envia email de verdade (so retorna "email enviado").
-3. Scripts do projeto na raiz apontam para `apps/backend` e `apps/frontend`, mas as pastas reais sao `backend` e `frontend`.
+1. Recuperacao de senha nao envia email de verdade (so retorna "email enviado").
+2. Scripts do projeto na raiz apontam para `apps/backend` e `apps/frontend`, mas as pastas reais sao `backend` e `frontend`.
 
 ### Melhorias recomendadas
 
 - Implementar envio de email para reset de senha (ex: Resend ou similar).
 - Implementar storage externo para uploads (S3/compatível), como descrito na SPEC.
 - Adicionar rate limiting e observabilidade (metricas e alertas).
-- Arrumar tela de login, navbar está nela.
 ---
 
 ## Melhorias Sugeridas
@@ -184,7 +190,44 @@ Nenhum bloqueador no momento.
 
 ## Log de Atividades
 
+### 2026-02-05
+
+**Sessao:** cursos-formato-data
+```
+09:30 - Data dos cursos ajustada para formato dd/mm/yyyy na listagem.
+```
+
+**Sessao:** cursos-editar-apagar
+```
+14:20 - Edicao e exclusao de cursos adicionadas.
+```
+
+**Sessao:** perfil-cpf-autocomplete
+```
+11:10 - CPF editavel no perfil e autocomplete para CPF e telefone.
+```
+
+### 2026-02-04
+
+**Sessao:** cadastro-campos
+```
+10:15 - Campos novos no cadastro (sobrenome, nascimento, regiao, telefone).
+10:17 - Tela publica de cadastro criada e linkada no login.
+```
+
+**Sessao:** advertencias-suspensao-janela
+```
+20:45 - Regra de suspensao ajustada para 3 advertencias em 1 mes.
+20:47 - Aviso de suspensao no perfil e notificacao ao criar advertencia.
+```
+
 ### 2026-02-03
+
+**Sessao:** cursos-instrutor
+```
+17:10 - Campo de instrutor adicionado no cadastro de cursos.
+17:12 - Bloqueio de inscricao para criador e instrutor aplicado.
+```
 
 **Sessao:** revisao-gramatica-responsivo
 ```

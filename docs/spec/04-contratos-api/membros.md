@@ -1,7 +1,7 @@
 # 4.2 Membros
 
 **Versao:** 1.0.0
-**Ultima Atualizacao:** 2026-02-03
+**Ultima Atualizacao:** 2026-02-04
 
 ← [Voltar para Contratos de API](README.md)
 
@@ -21,7 +21,11 @@
     {
       "id": "uuid",
       "name": "string",
+      "last_name": "string",
       "email": "string",
+      "birth_date": "2026-01-10",
+      "region": "string",
+      "phone": "string",
       "role": "animador",
       "photo_url": "string"
     }
@@ -40,7 +44,11 @@
 ```json
 {
   "name": "string",
+  "last_name": "string",
   "email": "string",
+  "birth_date": "2026-01-10",
+  "region": "string",
+  "phone": "string",
   "role": "admin|animador|recreador",
   "password": "string (opcional)"
 }
@@ -53,7 +61,11 @@
   "data": {
     "id": "uuid",
     "name": "string",
+    "last_name": "string",
     "email": "string",
+    "birth_date": "2026-01-10",
+    "region": "string",
+    "phone": "string",
     "role": "recreador"
   }
 }
@@ -72,7 +84,11 @@
   "data": {
     "id": "uuid",
     "name": "string",
+    "last_name": "string",
     "email": "string",
+    "birth_date": "2026-01-10",
+    "region": "string",
+    "phone": "string",
     "role": "animador",
     "photo_url": "string",
     "courses": [],
@@ -105,7 +121,11 @@
 ```json
 {
   "name": "string",
+  "last_name": "string",
   "email": "string",
+  "birth_date": "2026-01-10",
+  "region": "string",
+  "phone": "string",
   "role": "animador",
   "photo_url": "string"
 }

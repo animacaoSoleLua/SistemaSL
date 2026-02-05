@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createMember,
@@ -15,7 +15,12 @@ import { getStoredUser, roleLabels, type Role, type StoredUser } from "../../lib
 interface Member {
   id: string;
   name: string;
+  last_name?: string | null;
+  cpf?: string | null;
   email: string;
+  birth_date?: string | null;
+  region?: string | null;
+  phone?: string | null;
   role: Role;
   photo_url?: string | null;
 }
@@ -28,6 +33,19 @@ interface MemberFeedback {
   contractor_name: string;
 }
 
+interface MemberCourse {
+  id: string;
+  title: string;
+  course_date: string;
+  status: "enrolled" | "attended" | "missed";
+}
+
+interface MemberSuspension {
+  status: "suspended" | "active";
+  start_date: string | null;
+  end_date: string | null;
+}
+
 interface MemberWarning {
   id: string;
   reason: string;
@@ -38,15 +56,26 @@ interface MemberWarning {
 interface MemberDetails {
   id: string;
   name: string;
+  last_name?: string | null;
+  cpf?: string | null;
   email: string;
+  birth_date?: string | null;
+  region?: string | null;
+  phone?: string | null;
   role: Role;
   photo_url?: string | null;
+  courses?: MemberCourse[];
   feedbacks?: MemberFeedback[];
+  suspension?: MemberSuspension;
   warnings?: MemberWarning[];
 }
 
 export default function UsuariosPage() {
   const router = useRouter();
+  const memberModalTitleId = useId();
+  const memberModalDescriptionId = useId();
+  const deleteModalTitleId = useId();
+  const deleteModalDescriptionId = useId();
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
   const [users, setUsers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +90,12 @@ export default function UsuariosPage() {
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
+    last_name: "",
+    cpf: "",
     email: "",
+    birth_date: "",
+    region: "",
+    phone: "",
     role: "animador" as Role,
     password: "",
   });
@@ -72,6 +106,32 @@ export default function UsuariosPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const isAdmin = currentUser?.role === "admin";
+
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+
+    if (digits.length <= 2) return digits ? `(${digits}` : "";
+    if (digits.length <= 6) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    }
+    if (digits.length <= 10) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    }
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
+
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) {
+      return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    }
+    if (digits.length <= 9) {
+      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    }
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
 
   const loadMembers = async () => {
     setLoading(true);
@@ -106,7 +166,17 @@ export default function UsuariosPage() {
 
   const openCreateModal = () => {
     setModalMode("create");
-    setFormData({ name: "", email: "", role: "animador", password: "" });
+    setFormData({
+      name: "",
+      last_name: "",
+      cpf: "",
+      email: "",
+      birth_date: "",
+      region: "",
+      phone: "",
+      role: "animador",
+      password: "",
+    });
     setEditingId(null);
     setActionError(null);
     setModalOpen(true);
@@ -114,7 +184,17 @@ export default function UsuariosPage() {
 
   const openEditModal = (member: Member) => {
     setModalMode("edit");
-    setFormData({ name: member.name, email: member.email, role: member.role, password: "" });
+    setFormData({
+      name: member.name,
+      last_name: member.last_name ?? "",
+      cpf: member.cpf ?? "",
+      email: member.email,
+      birth_date: member.birth_date ?? "",
+      region: member.region ?? "",
+      phone: member.phone ?? "",
+      role: member.role,
+      password: "",
+    });
     setEditingId(member.id);
     setActionError(null);
     setModalOpen(true);
@@ -138,14 +218,24 @@ export default function UsuariosPage() {
       if (modalMode === "create") {
         await createMember({
           name: formData.name.trim(),
+          last_name: formData.last_name.trim(),
+          cpf: formData.cpf.trim(),
           email: formData.email.trim(),
+          birth_date: formData.birth_date,
+          region: formData.region.trim(),
+          phone: formData.phone.trim(),
           role: formData.role,
           password: formData.password.trim(),
         });
       } else if (editingId) {
         await updateMember(editingId, {
           name: formData.name.trim(),
+          last_name: formData.last_name.trim(),
+          cpf: formData.cpf.trim() ? formData.cpf.trim() : undefined,
           email: formData.email.trim(),
+          birth_date: formData.birth_date,
+          region: formData.region.trim(),
+          phone: formData.phone.trim(),
           role: formData.role,
         });
       }
@@ -159,6 +249,10 @@ export default function UsuariosPage() {
   };
 
   const handleDelete = (member: Member) => {
+    if (currentUser?.id === member.id) {
+      setActionError("Você não pode se excluir.");
+      return;
+    }
     setActionError(null);
     setDeleteTarget(member);
   };
@@ -194,6 +288,7 @@ export default function UsuariosPage() {
     return users.filter(
       (user) =>
         user.name.toLowerCase().includes(search) ||
+        (user.last_name ?? "").toLowerCase().includes(search) ||
         user.email.toLowerCase().includes(search)
     );
   }, [users, searchTerm]);
@@ -251,6 +346,31 @@ export default function UsuariosPage() {
       .map((part) => part[0]?.toUpperCase())
       .join("");
 
+  const getDisplayName = (member: { name: string; last_name?: string | null }) =>
+    member.last_name ? `${member.name} ${member.last_name}` : member.name;
+
+  const getCourseStatusLabel = (status: MemberCourse["status"]) => {
+    switch (status) {
+      case "attended":
+        return "Participou";
+      case "missed":
+        return "Faltou";
+      default:
+        return "Inscrito";
+    }
+  };
+
+  const getCourseStatusClass = (status: MemberCourse["status"]) => {
+    switch (status) {
+      case "missed":
+        return "inactive";
+      case "attended":
+        return "active";
+      default:
+        return "active";
+    }
+  };
+
   const renderAvatar = (name: string, photoUrl?: string | null) => {
     const resolvedPhotoUrl = resolveApiAssetUrl(photoUrl);
     if (resolvedPhotoUrl) {
@@ -275,11 +395,14 @@ export default function UsuariosPage() {
   };
 
   const creatorNameById = useMemo(() => {
-    return new Map(users.map((user) => [user.id, user.name]));
+    return new Map(users.map((user) => [user.id, getDisplayName(user)]));
   }, [users]);
 
   const selectedMemberInfo = selectedMemberDetails ?? selectedMember;
   const warnings = selectedMemberDetails?.warnings ?? [];
+  const courses = selectedMemberDetails?.courses ?? [];
+  const feedbacks = selectedMemberDetails?.feedbacks ?? [];
+  const suspension = selectedMemberDetails?.suspension;
 
   return (
     <main className="app-page">
@@ -382,6 +505,7 @@ export default function UsuariosPage() {
                   placeholder="Buscar por nome ou e-mail..."
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
+                  aria-label="Buscar membro"
                 />
               </div>
             </div>
@@ -420,10 +544,12 @@ export default function UsuariosPage() {
                       }}
                     >
                       <div className="member-row-avatar" aria-hidden="true">
-                        {renderAvatar(user.name, user.photo_url)}
+                        {renderAvatar(getDisplayName(user), user.photo_url)}
                       </div>
                       <div className="member-row-info">
-                        <strong className="member-row-name">{user.name}</strong>
+                        <strong className="member-row-name">
+                          {getDisplayName(user)}
+                        </strong>
                         <span className="member-row-email">{user.email}</span>
                       </div>
                       <div className="member-row-right">
@@ -446,23 +572,25 @@ export default function UsuariosPage() {
                                 <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
                               </svg>
                             </button>
-                            <button
-                              className="icon-button danger"
-                              type="button"
-                              aria-label="Excluir membro"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                handleDelete(user);
-                              }}
-                            >
-                              <svg viewBox="0 0 24 24">
-                                <path d="M3 6h18" />
-                                <path d="M8 6V4h8v2" />
-                                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                <path d="M10 11v6" />
-                                <path d="M14 11v6" />
-                              </svg>
-                            </button>
+                            {currentUser?.id !== user.id && (
+                              <button
+                                className="icon-button danger"
+                                type="button"
+                                aria-label="Excluir membro"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleDelete(user);
+                                }}
+                              >
+                                <svg viewBox="0 0 24 24">
+                                  <path d="M3 6h18" />
+                                  <path d="M8 6V4h8v2" />
+                                  <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                                  <path d="M10 11v6" />
+                                  <path d="M14 11v6" />
+                                </svg>
+                              </button>
+                            )}
                           </div>
                         )}
                         </div>
@@ -501,12 +629,14 @@ export default function UsuariosPage() {
                   <div className="member-identity">
                     <div className="member-avatar" aria-hidden="true">
                       {renderAvatar(
-                        selectedMemberInfo.name,
+                        getDisplayName(selectedMemberInfo),
                         selectedMemberInfo.photo_url
                       )}
                     </div>
                     <div>
-                      <strong className="member-name">{selectedMemberInfo.name}</strong>
+                      <strong className="member-name">
+                        {getDisplayName(selectedMemberInfo)}
+                      </strong>
                       <span className="member-email">{selectedMemberInfo.email}</span>
                     </div>
                   </div>
@@ -520,41 +650,161 @@ export default function UsuariosPage() {
                         {roleLabels[selectedMemberInfo.role]}
                       </span>
                     </div>
+                    {suspension && (
+                      <div className="member-meta-item">
+                        <span className="member-meta-label">Situação</span>
+                        <span
+                          className={`status-pill ${
+                            suspension.status === "suspended" ? "inactive" : "active"
+                          }`}
+                        >
+                          {suspension.status === "suspended"
+                            ? "Suspenso"
+                            : "Ativo"}
+                        </span>
+                      </div>
+                    )}
+                    {suspension?.start_date && (
+                      <div className="member-meta-item">
+                        <span className="member-meta-label">Início suspensão</span>
+                        <span>{formatDateBR(suspension.start_date)}</span>
+                      </div>
+                    )}
+                    {suspension?.end_date && (
+                      <div className="member-meta-item">
+                        <span className="member-meta-label">Fim suspensão</span>
+                        <span>{formatDateBR(suspension.end_date)}</span>
+                      </div>
+                    )}
+                    {selectedMemberInfo.birth_date && (
+                      <div className="member-meta-item">
+                        <span className="member-meta-label">Nascimento</span>
+                        <span>{formatDateBR(selectedMemberInfo.birth_date)}</span>
+                      </div>
+                    )}
+                    {selectedMemberInfo.region && (
+                      <div className="member-meta-item">
+                        <span className="member-meta-label">Região</span>
+                        <span>{selectedMemberInfo.region}</span>
+                      </div>
+                    )}
+                    {selectedMemberInfo.phone && (
+                      <div className="member-meta-item">
+                        <span className="member-meta-label">Telefone</span>
+                        <span>{selectedMemberInfo.phone}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {isAdmin && (
-                  <div className="member-feedbacks">
-                    <div className="member-feedbacks-header">
-                      <h3 className="section-title">Advertências</h3>
-                      <span className="member-feedbacks-count">
-                        {warnings.length}
-                      </span>
+                  <>
+                    <div className="member-section">
+                      <div className="member-section-header">
+                        <h3 className="section-title">Cursos</h3>
+                        <span className="member-section-count">
+                          {courses.length}
+                        </span>
+                      </div>
+                      {detailsLoading ? (
+                        <p className="member-section-empty">Carregando cursos...</p>
+                      ) : detailsError ? (
+                        <p className="member-section-error">{detailsError}</p>
+                      ) : courses.length === 0 ? (
+                        <p className="member-section-empty">Nenhum curso registrado.</p>
+                      ) : (
+                        <ul className="member-section-list">
+                          {courses.map((course) => (
+                            <li className="member-section-item" key={course.id}>
+                              <div className="member-section-meta">
+                                <strong className="member-section-title">
+                                  {course.title}
+                                </strong>
+                                <span className="member-section-date">
+                                  {formatDateBR(course.course_date)}
+                                </span>
+                              </div>
+                              <span
+                                className={`status-pill ${getCourseStatusClass(
+                                  course.status
+                                )}`}
+                              >
+                                {getCourseStatusLabel(course.status)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                    {detailsLoading ? (
-                      <p className="member-feedbacks-empty">Carregando advertências...</p>
-                    ) : detailsError ? (
-                      <p className="member-feedbacks-error">{detailsError}</p>
-                    ) : warnings.length === 0 ? (
-                      <p className="member-feedbacks-empty">Nenhuma advertência registrada.</p>
-                    ) : (
-                      <ul className="member-feedbacks-list">
-                        {warnings.map((entry) => (
-                          <li className="member-feedbacks-item" key={entry.id}>
-                            <span className="member-feedbacks-date">
-                              {formatDateBR(entry.warning_date)}
-                            </span>
-                            <strong className="member-feedbacks-title">
-                              {creatorNameById.get(entry.created_by) ?? "Usuário"}
-                            </strong>
-                            <span className="member-feedbacks-text">
-                              {entry.reason}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+
+                    <div className="member-section">
+                      <div className="member-section-header">
+                        <h3 className="section-title">Advertências</h3>
+                        <span className="member-section-count">
+                          {warnings.length}
+                        </span>
+                      </div>
+                      {detailsLoading ? (
+                        <p className="member-section-empty">
+                          Carregando advertências...
+                        </p>
+                      ) : detailsError ? (
+                        <p className="member-section-error">{detailsError}</p>
+                      ) : warnings.length === 0 ? (
+                        <p className="member-section-empty">
+                          Nenhuma advertência registrada.
+                        </p>
+                      ) : (
+                        <ul className="member-section-list">
+                          {warnings.map((entry) => (
+                            <li className="member-section-item" key={entry.id}>
+                              <span className="member-section-date">
+                                {formatDateBR(entry.warning_date)}
+                              </span>
+                              <strong className="member-section-title">
+                                {creatorNameById.get(entry.created_by) ?? "Usuário"}
+                              </strong>
+                              <span className="member-section-text">
+                                {entry.reason}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* <div className="member-section">
+                      <div className="member-section-header">
+                        <h3 className="section-title">Feedbacks</h3>
+                        <span className="member-section-count">
+                          {feedbacks.length}
+                        </span>
+                      </div>
+                      {detailsLoading ? (
+                        <p className="member-section-empty">Carregando feedbacks...</p>
+                      ) : detailsError ? (
+                        <p className="member-section-error">{detailsError}</p>
+                      ) : feedbacks.length === 0 ? (
+                        <p className="member-section-empty">Nenhum feedback registrado.</p>
+                      ) : (
+                        <ul className="member-section-list">
+                          {feedbacks.map((entry) => (
+                            <li className="member-section-item" key={entry.id}>
+                              <span className="member-section-date">
+                                {formatDateBR(entry.event_date)}
+                              </span>
+                              <strong className="member-section-title">
+                                {entry.contractor_name}
+                              </strong>
+                              <span className="member-section-text">
+                                {entry.feedback}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div> */}
+                  </>
                 )}
               </div>
             )}
@@ -563,14 +813,26 @@ export default function UsuariosPage() {
       </section>
 
       {modalOpen && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true">
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={memberModalTitleId}
+          aria-describedby={memberModalDescriptionId}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeModal();
+            }
+          }}
+        >
           <div className="modal-card">
             <header className="modal-header">
               <div>
-                <h2 className="section-title">
+                <h2 className="section-title" id={memberModalTitleId}>
                   {modalMode === "create" ? "Novo membro" : "Editar membro"}
                 </h2>
-                <p>
+                <p id={memberModalDescriptionId}>
                   {modalMode === "create"
                     ? "Preencha os dados para criar um novo membro."
                     : "Atualize as informações do membro selecionado."}
@@ -605,6 +867,60 @@ export default function UsuariosPage() {
                   />
                 </label>
                 <label className="field">
+                  Sobrenome
+                  <input
+                    className="input"
+                    type="text"
+                    value={formData.last_name}
+                    onChange={(event) =>
+                      handleInputChange("last_name", event.target.value)
+                    }
+                    required
+                    disabled={saving}
+                  />
+                </label>
+                <label className="field">
+                  Data de nascimento
+                  <input
+                    className="input"
+                    type="date"
+                    value={formData.birth_date}
+                    onChange={(event) =>
+                      handleInputChange("birth_date", event.target.value)
+                    }
+                    required
+                    disabled={saving}
+                  />
+                </label>
+                <label className="field">
+                  Cidade / Região
+                  <input
+                    className="input"
+                    type="text"
+                    value={formData.region}
+                    onChange={(event) =>
+                      handleInputChange("region", event.target.value)
+                    }
+                    required
+                    disabled={saving}
+                  />
+                </label>
+                <label className="field">
+                  Telefone
+                  <input
+                    className="input"
+                    type="tel"
+                    placeholder="(61) 99999-9999"
+                    inputMode="numeric"
+                    value={formData.phone}
+                    onChange={(event) =>
+                      handleInputChange("phone", formatPhone(event.target.value))
+                    }
+                    required
+                    disabled={saving}
+                  />
+                </label>
+                <label className="field">
                   E-mail
                   <input
                     className="input"
@@ -614,6 +930,21 @@ export default function UsuariosPage() {
                       handleInputChange("email", event.target.value)
                     }
                     required
+                    disabled={saving}
+                  />
+                </label>
+                <label className="field">
+                  CPF
+                  <input
+                    className="input"
+                    type="text"
+                    placeholder="000.000.000-00"
+                    inputMode="numeric"
+                    value={formData.cpf}
+                    onChange={(event) =>
+                      handleInputChange("cpf", formatCpf(event.target.value))
+                    }
+                    required={modalMode === "create"}
                     disabled={saving}
                   />
                 </label>
@@ -668,12 +999,28 @@ export default function UsuariosPage() {
       )}
 
       {deleteTarget && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true">
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={deleteModalTitleId}
+          aria-describedby={deleteModalDescriptionId}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeDeleteModal();
+            }
+          }}
+        >
           <div className="modal-card confirm-modal">
             <header className="modal-header">
               <div>
-                <h2 className="section-title">Confirmar exclusão</h2>
-                <p>Esta ação remove o membro e seus registros relacionados.</p>
+                <h2 className="section-title" id={deleteModalTitleId}>
+                  Confirmar exclusão
+                </h2>
+                <p id={deleteModalDescriptionId}>
+                  Esta ação remove o membro e seus registros relacionados.
+                </p>
               </div>
               <button
                 className="icon-button"
@@ -699,7 +1046,7 @@ export default function UsuariosPage() {
               <div className="confirm-text">
                 <p>
                   Tem certeza que deseja excluir{" "}
-                  <strong>{deleteTarget.name}</strong>?
+                  <strong>{getDisplayName(deleteTarget)}</strong>?
                 </p>
                 <p className="confirm-muted">
                   Essa ação não poderá ser desfeita.

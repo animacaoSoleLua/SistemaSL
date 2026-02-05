@@ -76,6 +76,58 @@ describe("Auth (integration)", () => {
     expect(updated?.passwordHash).toMatch(/^scrypt\$/);
   });
 
+  it("registers new user with allowed role", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/register",
+      payload: {
+        name: "Joana",
+        last_name: "Silva",
+        cpf: "390.533.447-05",
+        email: "joana@sol-e-lua.com",
+        birth_date: "1998-05-12",
+        region: "Ceilândia",
+        phone: "(61) 98888-7777",
+        role: "recreador",
+        password: "segredo123",
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: {
+        email: "joana@sol-e-lua.com",
+        password: "segredo123",
+      },
+    });
+
+    expect(login.statusCode).toBe(200);
+    expect(login.json().data.user.role).toBe("recreador");
+  });
+
+  it("blocks admin role on public register", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/register",
+      payload: {
+        name: "Admin",
+        last_name: "Teste",
+        cpf: "529.982.247-25",
+        email: "admin-public@sol-e-lua.com",
+        birth_date: "1990-01-01",
+        region: "Gama",
+        phone: "(61) 90000-0000",
+        role: "admin",
+        password: "segredo123",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+  });
+
   it("protects routes without token", async () => {
     const response = await app.inject({
       method: "GET",

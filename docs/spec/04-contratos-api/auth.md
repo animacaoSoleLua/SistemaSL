@@ -1,7 +1,7 @@
 # 4.1 Auth
 
 **Versao:** 1.0.0
-**Ultima Atualizacao:** 2026-01-20
+**Ultima Atualizacao:** 2026-02-04
 
 ← [Voltar para Contratos de API](README.md)
 
@@ -31,6 +31,40 @@
       "name": "string",
       "role": "admin|animador|recreador"
     }
+  }
+}
+```
+
+---
+
+## POST /api/v1/auth/register
+
+**Descricao:** Cadastro publico (apenas animador/recreador).
+
+**Request Body:**
+
+```json
+{
+  "name": "string",
+  "last_name": "string",
+  "email": "string",
+  "birth_date": "2026-01-10",
+  "region": "string",
+  "phone": "string",
+  "role": "animador|recreador",
+  "password": "string"
+}
+```
+
+**Response 201 Created:**
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "string",
+    "last_name": "string",
+    "role": "recreador"
   }
 }
 ```

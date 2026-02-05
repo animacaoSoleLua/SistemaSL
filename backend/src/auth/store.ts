@@ -7,7 +7,12 @@ export type Role = "admin" | "animador" | "recreador";
 export interface UserRecord {
   id: string;
   name: string;
+  lastName?: string;
   email: string;
+  cpf?: string;
+  birthDate?: Date;
+  region?: string;
+  phone?: string;
   passwordHash: string;
   role: Role;
   photoUrl?: string;
@@ -22,7 +27,12 @@ function normalizeEmail(email: string): string {
 function toUserRecord(user: {
   id: string;
   name: string;
+  lastName: string | null;
   email: string;
+  cpf: string | null;
+  birthDate: Date | null;
+  region: string | null;
+  phone: string | null;
   passwordHash: string;
   role: Role;
   photoUrl: string | null;
@@ -30,7 +40,12 @@ function toUserRecord(user: {
   return {
     id: user.id,
     name: user.name,
+    lastName: user.lastName ?? undefined,
     email: user.email,
+    cpf: user.cpf ?? undefined,
+    birthDate: user.birthDate ?? undefined,
+    region: user.region ?? undefined,
+    phone: user.phone ?? undefined,
     passwordHash: user.passwordHash,
     role: user.role,
     photoUrl: user.photoUrl ?? undefined,
@@ -70,7 +85,12 @@ export async function listUsers(): Promise<UserRecord[]> {
 
 export async function createUser(input: {
   name: string;
+  lastName?: string;
   email: string;
+  cpf?: string;
+  birthDate?: Date | null;
+  region?: string;
+  phone?: string;
   role: Role;
   password?: string;
   photoUrl?: string;
@@ -86,7 +106,12 @@ export async function createUser(input: {
     data: {
       id: randomUUID(),
       name: input.name,
+      lastName: input.lastName ?? null,
       email,
+      cpf: input.cpf ?? null,
+      birthDate: input.birthDate ?? null,
+      region: input.region ?? null,
+      phone: input.phone ?? null,
       passwordHash,
       role: input.role,
       photoUrl: input.photoUrl,
@@ -109,7 +134,12 @@ export async function updateUser(
 
   const data: {
     name?: string;
+    lastName?: string | null;
     email?: string;
+    cpf?: string | null;
+    birthDate?: Date | null;
+    region?: string | null;
+    phone?: string | null;
     role?: Role;
     photoUrl?: string | null;
     passwordHash?: string;
@@ -118,8 +148,23 @@ export async function updateUser(
   if (updates.name !== undefined) {
     data.name = updates.name;
   }
+  if (updates.lastName !== undefined) {
+    data.lastName = updates.lastName ?? null;
+  }
   if (updates.email !== undefined) {
     data.email = normalizeEmail(updates.email);
+  }
+  if (updates.cpf !== undefined) {
+    data.cpf = updates.cpf ?? null;
+  }
+  if (updates.birthDate !== undefined) {
+    data.birthDate = updates.birthDate ?? null;
+  }
+  if (updates.region !== undefined) {
+    data.region = updates.region ?? null;
+  }
+  if (updates.phone !== undefined) {
+    data.phone = updates.phone ?? null;
   }
   if (updates.role !== undefined) {
     data.role = updates.role;

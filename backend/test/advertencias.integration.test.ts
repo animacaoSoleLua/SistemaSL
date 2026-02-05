@@ -88,6 +88,57 @@ describe("Advertencias (integration)", () => {
     expect(profileData.suspension.status).toBe("suspended");
   });
 
+  it("does not suspend if three warnings are not within one month", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: {
+        email: "admin@sol-e-lua.com",
+        password: "admin123",
+      },
+    });
+    const adminToken = loginAdmin.json().data.access_token;
+
+    const member = await getUserByEmail("recreador@sol-e-lua.com");
+
+    const warningDates = ["2026-01-01", "2026-01-15", "2026-02-16"];
+    for (const warningDate of warningDates) {
+      const createResponse = await app.inject({
+        method: "POST",
+        url: "/api/v1/advertencias",
+        headers: { authorization: `Bearer ${adminToken}` },
+        payload: {
+          member_id: member!.id,
+          reason: "Atraso",
+          warning_date: warningDate,
+        },
+      });
+
+      expect(createResponse.statusCode).toBe(201);
+    }
+
+    const loginMember = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: {
+        email: "recreador@sol-e-lua.com",
+        password: "recreador123",
+      },
+    });
+    const memberToken = loginMember.json().data.access_token;
+
+    const profile = await app.inject({
+      method: "GET",
+      url: `/api/v1/membros/${member!.id}`,
+      headers: { authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(profile.statusCode).toBe(200);
+    const profileData = profile.json().data;
+    expect(profileData.warnings_total).toBe(3);
+    expect(profileData.suspension.status).toBe("active");
+  });
+
   it("allows admin to delete a warning", async () => {
     const loginAdmin = await app.inject({
       method: "POST",

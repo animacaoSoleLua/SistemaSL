@@ -77,6 +77,7 @@ export default function RelatoriosPage() {
                 className="input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Buscar relatório"
               />
             </label>
           </div>

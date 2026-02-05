@@ -27,7 +27,12 @@ import { listFeedbacksForMember } from "../relatorios/store.js";
 
 interface MemberBody {
   name?: string;
+  last_name?: string;
+  cpf?: string;
   email?: string;
+  birth_date?: string;
+  region?: string;
+  phone?: string;
   role?: Role;
   photo_url?: string;
   password?: string;
@@ -61,6 +66,15 @@ function isValidRole(value: string | undefined): value is Role {
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function normalizeCpf(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
+function isValidCpf(value: string): boolean {
+  const digits = normalizeCpf(value);
+  return digits.length === 11;
 }
 
 function normalizeEmail(value: string): string {
@@ -133,6 +147,23 @@ function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+function parseDate(value: string | undefined): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return undefined;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+  if (formatDate(parsed) !== value) {
+    return undefined;
+  }
+  return parsed;
+}
+
 async function isEmailTaken(
   email: string,
   excludeId?: string
@@ -147,14 +178,22 @@ async function isEmailTaken(
 function toMemberSummary(user: {
   id: string;
   name: string;
+  lastName?: string;
   email: string;
+  birthDate?: Date;
+  region?: string;
+  phone?: string;
   role: Role;
   photoUrl?: string;
 }) {
   return {
     id: user.id,
     name: user.name,
+    last_name: user.lastName ?? null,
     email: user.email,
+    birth_date: user.birthDate ? formatDate(user.birthDate) : null,
+    region: user.region ?? null,
+    phone: user.phone ?? null,
     role: user.role,
     photo_url: user.photoUrl ?? null,
   };
@@ -226,12 +265,32 @@ export async function membrosRoutes(app: FastifyInstance) {
     "/api/v1/membros",
     { preHandler: requireRole(["admin"]) },
     async (request, reply) => {
-      const { name, email, role, password } = request.body as MemberBody;
+      const {
+        name,
+        last_name,
+        cpf,
+        email,
+        birth_date,
+        region,
+        phone,
+        role,
+        password,
+      } = request.body as MemberBody;
 
-      if (!name || !email || !role) {
+      if (
+        !name ||
+        !last_name ||
+        !cpf ||
+        !email ||
+        !birth_date ||
+        !region ||
+        !phone ||
+        !role
+      ) {
         return reply.status(400).send({
           error: "invalid_request",
-          message: "Nome, email e papel sao obrigatorios",
+          message:
+            "Nome, sobrenome, CPF, nascimento, regiao, telefone, email e papel sao obrigatorios",
         });
       }
 
@@ -256,6 +315,37 @@ export async function membrosRoutes(app: FastifyInstance) {
         });
       }
 
+      const parsedBirthDate = parseDate(birth_date);
+      if (!parsedBirthDate) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Data de nascimento invalida",
+        });
+      }
+
+      if (!region.trim()) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Regiao invalida",
+        });
+      }
+
+      if (!phone.trim()) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Telefone invalido",
+        });
+      }
+
+      if (!isValidCpf(cpf)) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "CPF invalido",
+        });
+      }
+
+      const normalizedCpf = normalizeCpf(cpf);
+
       if (await isEmailTaken(email)) {
         return reply.status(409).send({
           error: "email_exists",
@@ -263,7 +353,17 @@ export async function membrosRoutes(app: FastifyInstance) {
         });
       }
 
-      const member = await createUser({ name, email, role, password });
+      const member = await createUser({
+        name,
+        lastName: last_name,
+        email,
+        cpf: normalizedCpf,
+        birthDate: parsedBirthDate,
+        region: region.trim(),
+        phone: phone.trim(),
+        role,
+        password,
+      });
       if (!member) {
         return reply.status(409).send({
           error: "email_exists",
@@ -275,7 +375,11 @@ export async function membrosRoutes(app: FastifyInstance) {
         data: {
           id: member.id,
           name: member.name,
+          last_name: member.lastName ?? null,
           email: member.email,
+          birth_date: member.birthDate ? formatDate(member.birthDate) : null,
+          region: member.region ?? null,
+          phone: member.phone ?? null,
           role: member.role,
         },
       });
@@ -340,7 +444,11 @@ export async function membrosRoutes(app: FastifyInstance) {
       data: {
         id: member.id,
         name: member.name,
+        last_name: member.lastName ?? null,
         email: member.email,
+        birth_date: member.birthDate ? formatDate(member.birthDate) : null,
+        region: member.region ?? null,
+        phone: member.phone ?? null,
         role: member.role,
         photo_url: member.photoUrl ?? null,
         courses: (
@@ -431,11 +539,26 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
-    const { name, email, role, photo_url } = request.body as MemberBody;
+    const {
+      name,
+      last_name,
+      cpf,
+      email,
+      birth_date,
+      region,
+      phone,
+      role,
+      photo_url,
+    } = request.body as MemberBody;
 
     if (
       !name &&
+      !last_name &&
+      !cpf &&
       !email &&
+      !birth_date &&
+      !region &&
+      !phone &&
       !role &&
       photo_url === undefined
     ) {
@@ -449,6 +572,35 @@ export async function membrosRoutes(app: FastifyInstance) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Email invalido",
+      });
+    }
+
+    const parsedBirthDate = birth_date ? parseDate(birth_date) : undefined;
+    if (birth_date && !parsedBirthDate) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Data de nascimento invalida",
+      });
+    }
+
+    if (region !== undefined && !region.trim()) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Regiao invalida",
+      });
+    }
+
+    if (phone !== undefined && !phone.trim()) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Telefone invalido",
+      });
+    }
+
+    if (cpf !== undefined && (!cpf.trim() || !isValidCpf(cpf))) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "CPF invalido",
       });
     }
 
@@ -475,7 +627,12 @@ export async function membrosRoutes(app: FastifyInstance) {
 
     const updated = await updateUser(member.id, {
       name,
+      lastName: last_name,
       email,
+      cpf: cpf ? normalizeCpf(cpf) : undefined,
+      birthDate: parsedBirthDate,
+      region: region?.trim(),
+      phone: phone?.trim(),
       role: isAdmin ? role : undefined,
       photoUrl: photo_url,
     });

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useId, useState, useEffect } from "react";
 import logo from "../../assets/logo.png";
 import { getMember, resolveApiAssetUrl } from "../../lib/api";
 import { getStoredUser, roleLabels, type Role } from "../../lib/auth";
@@ -106,6 +106,7 @@ export default function SidebarNav() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [showLogout, setShowLogout] = useState(false);
+  const logoutMenuId = useId();
 
   useEffect(() => {
     const refreshUser = () => {
@@ -153,6 +154,17 @@ export default function SidebarNav() {
     router.push("/login");
   };
 
+  useEffect(() => {
+    if (!showLogout) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowLogout(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showLogout]);
+
   return (
     <header className="app-navbar">
       <div className="app-brand">
@@ -178,8 +190,13 @@ export default function SidebarNav() {
       {user ? (
         <div className="sidebar-footer-wrapper">
           {showLogout && (
-            <div className="logout-popup">
-              <button onClick={handleLogout} className="logout-button">
+            <div className="logout-popup" role="menu" id={logoutMenuId}>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="logout-button"
+                role="menuitem"
+              >
                 Sair
               </button>
             </div>
@@ -187,6 +204,10 @@ export default function SidebarNav() {
           <button
             className="sidebar-footer"
             onClick={() => setShowLogout(!showLogout)}
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={showLogout}
+            aria-controls={logoutMenuId}
           >
             {user.photo_url ? (
               <img
