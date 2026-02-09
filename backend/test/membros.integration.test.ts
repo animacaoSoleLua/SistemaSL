@@ -24,7 +24,7 @@ describe("Membros (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
@@ -94,7 +94,7 @@ describe("Membros (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });

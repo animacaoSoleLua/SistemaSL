@@ -1,7 +1,7 @@
 # 11. Seguranca
 
 **Versao:** 1.0.0
-**Ultima Atualizacao:** 2026-01-20
+**Ultima Atualizacao:** 2026-02-06
 
 ← [Voltar para SPEC](README.md)
 
@@ -10,7 +10,6 @@
 ## 11.1 Autenticacao
 
 - JWT com expiracao
-- Recuperacao de senha por email
 
 ## 11.2 Autorizacao (Roles)
 

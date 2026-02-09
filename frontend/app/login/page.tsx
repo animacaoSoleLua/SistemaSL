@@ -80,12 +80,12 @@ export default function LoginPage() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
-        <a className="login-link" href="#">
-          Esqueci minha senha
-        </a>
         <div className="login-links">
           <a className="login-link login-link--signup" href="/cadastro">
             Não possuo conta
+          </a>
+          <a className="login-link" href="/tela-recuperacao">
+            Esqueci minha senha
           </a>
         </div>
       </div>

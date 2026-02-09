@@ -69,7 +69,7 @@ describe("Relatorios (integration)", () => {
 
   it("lists only own reports for animador", async () => {
     const animador = await getUserByEmail("animador@sol-e-lua.com");
-    const admin = await getUserByEmail("admin@sol-e-lua.com");
+    const admin = await getUserByEmail("arthurssousa2004@gmail.com");
 
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-10"),
@@ -146,7 +146,7 @@ describe("Relatorios (integration)", () => {
 
   it("allows admin to filter by author and search", async () => {
     const animador = await getUserByEmail("animador@sol-e-lua.com");
-    const admin = await getUserByEmail("admin@sol-e-lua.com");
+    const admin = await getUserByEmail("arthurssousa2004@gmail.com");
 
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-10"),
@@ -171,7 +171,7 @@ describe("Relatorios (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });

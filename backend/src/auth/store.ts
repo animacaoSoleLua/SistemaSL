@@ -18,8 +18,6 @@ export interface UserRecord {
   photoUrl?: string;
 }
 
-const resetTokens = new Map<string, string>();
-
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -201,19 +199,4 @@ export async function deleteUser(id: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-export function createResetToken(userId: string): string {
-  const token = randomUUID();
-  resetTokens.set(token, userId);
-  return token;
-}
-
-export function consumeResetToken(token: string): string | undefined {
-  const userId = resetTokens.get(token);
-  if (!userId) {
-    return undefined;
-  }
-  resetTokens.delete(token);
-  return userId;
 }

@@ -42,7 +42,7 @@ describe("Dashboard (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
@@ -63,7 +63,7 @@ describe("Dashboard (integration)", () => {
 
   it("returns animadores ordered by events", async () => {
     const animador = await getUserByEmail("animador@sol-e-lua.com");
-    const admin = await getUserByEmail("admin@sol-e-lua.com");
+    const admin = await getUserByEmail("arthurssousa2004@gmail.com");
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-10"),
       contractorName: "Hotel Sol",
@@ -87,7 +87,7 @@ describe("Dashboard (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
@@ -125,7 +125,7 @@ describe("Dashboard (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
@@ -166,7 +166,7 @@ describe("Dashboard (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
@@ -207,7 +207,7 @@ describe("Dashboard (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
@@ -230,7 +230,7 @@ describe("Dashboard (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });

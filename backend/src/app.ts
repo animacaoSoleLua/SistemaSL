@@ -37,13 +37,41 @@ export function buildServer(): FastifyInstance {
     ignoreDuplicateSlashes: true,
   });
 
-  // Enable CORS for the frontend origin
-  const corsOrigins = process.env.CORS_ORIGINS
+  // Enable CORS for the frontend origin (and allow subdomains of solelua.cloud)
+  const envOrigins = process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
-    : ["http://localhost:3000", "https://solelua.cloud", "https://www.solelua.cloud"];
+    : [];
+  const defaultOrigins = [
+    "http://localhost:3000",
+    "https://solelua.cloud",
+    "https://www.solelua.cloud",
+  ];
+  const allowedOrigins = new Set([...defaultOrigins, ...envOrigins].filter(Boolean));
 
   app.register(cors, {
-    origin: corsOrigins,
+    origin: (origin, cb) => {
+      if (!origin) {
+        cb(null, true);
+        return;
+      }
+
+      if (allowedOrigins.has(origin)) {
+        cb(null, true);
+        return;
+      }
+
+      try {
+        const url = new URL(origin);
+        if (url.hostname === "solelua.cloud" || url.hostname.endsWith(".solelua.cloud")) {
+          cb(null, true);
+          return;
+        }
+      } catch {
+        // Ignore invalid origin values.
+      }
+
+      cb(null, false);
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   });

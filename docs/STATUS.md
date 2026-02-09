@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-02-05
+**Ultima Atualizacao:** 2026-02-06
 **Atualizado por:** Codex
 
 ---
@@ -15,30 +15,30 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 28/28 |
-| Ultima Tarefa | MELHORIA-043 |
+| Tarefas Completas | 35/35 |
+| Ultima Tarefa | MELHORIA-054 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-043: Editar e apagar cursos
+### MELHORIA-054: Ajuste visual do login + links
 
-**Epic:** Cursos
-**User Story:** US-014
-**API:** Cursos
+**Epic:** Autenticacao
+**User Story:** US-Login
+**API:** Auth
 
-**Descricao:** Permitir editar e apagar cursos cadastrados.
+**Descricao:** Melhorar o visual do login e reposicionar os links de ajuda.
 
 **O que mudou:**
-- Cursos podem ser editados.
-- Cursos podem ser apagados.
+- Visual do login ficou mais limpo e destacado.
+- Links "Nao possuo conta" e "Esqueci minha senha" invertidos (esquerda/direita).
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Banco e API com novos campos.
-- [x] Tela de cadastro disponivel no login.
+- [x] Layout do login atualizado.
+- [x] Links reposicionados conforme pedido.
 
 ---
 
@@ -92,8 +92,18 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-06 | MELHORIA-054 | Ajuste visual do login + links |
+| 2026-02-06 | MELHORIA-053 | Envio de token por email (Resend) |
+| 2026-02-06 | MELHORIA-052 | Novo fluxo de redefinicao de senha (email + token) |
+| 2026-02-06 | MELHORIA-051 | Remover recuperacao de senha (Resend) do backend |
+| 2026-02-06 | MELHORIA-050 | Link de redefinicao direto no frontend (fallback) |
+| 2026-02-05 | MELHORIA-049 | Fluxo por link na recuperacao de senha |
+| 2026-02-05 | MELHORIA-048 | Simplificar tela de redefinicao de senha |
+| 2026-02-05 | MELHORIA-047 | Link de redefinicao de senha no frontend |
+| 2026-02-05 | MELHORIA-046 | Integracao frontend recuperação de senha |
+| 2026-02-05 | MELHORIA-045 | Envio real de token por email |
+| 2026-02-05 | MELHORIA-044 | Fluxo de esqueci a senha no login |
 | 2026-02-05 | MELHORIA-043 | Editar e apagar cursos |
-| 2026-02-05 | MELHORIA-042 | CPF editavel no perfil + autocomplete |
 | 2026-02-05 | MELHORIA-041 | Acessibilidade geral (teclado e foco) |
 | 2026-02-05 | MELHORIA-040 | CPF no cadastro e novo membro |
 | 2026-02-04 | MELHORIA-039 | Ajustes na tela de usuarios |
@@ -162,12 +172,10 @@ Nenhum bloqueador no momento.
 
 ### Pontos que faltam ou estao incompletos
 
-1. Recuperacao de senha nao envia email de verdade (so retorna "email enviado").
-2. Scripts do projeto na raiz apontam para `apps/backend` e `apps/frontend`, mas as pastas reais sao `backend` e `frontend`.
+1. Scripts do projeto na raiz apontam para `apps/backend` e `apps/frontend`, mas as pastas reais sao `backend` e `frontend`.
 
 ### Melhorias recomendadas
 
-- Implementar envio de email para reset de senha (ex: Resend ou similar).
 - Implementar storage externo para uploads (S3/compatível), como descrito na SPEC.
 - Adicionar rate limiting e observabilidade (metricas e alertas).
 ---
@@ -190,7 +198,44 @@ Nenhum bloqueador no momento.
 
 ## Log de Atividades
 
+### 2026-02-06
+- MELHORIA-053: Envio do token por email usando Resend.
+- MELHORIA-052: Fluxo completo de redefinicao de senha com envio e validacao de token.
+
+**Sessao:** remover-reset-backend
+```
+10:30 - Backend de recuperacao de senha (Resend) removido para refazer do zero.
+```
+
+**Sessao:** reset-link-fallback
+```
+09:40 - Link de redefinicao passa a abrir direto no frontend quando email falha.
+```
+
 ### 2026-02-05
+
+**Sessao:** integracao-reset-frontend
+```
+19:10 - Frontend conectado ao envio de token e redefinicao de senha via API.
+19:40 - Tela de redefinicao de senha simplificada (sem navbar).
+20:10 - Fluxo de recuperacao por link no email e retorno ao login.
+```
+
+**Sessao:** reset-link-frontend
+```
+19:40 - Pagina de redefinicao criada para abrir link do email.
+19:42 - Formulario de nova senha conectado a API.
+```
+
+**Sessao:** esqueci-senha-email
+```
+18:05 - Envio de token por email configurado no backend.
+```
+
+**Sessao:** esqueci-senha-modais
+```
+17:40 - Fluxo de esqueci a senha com modais no login criado.
+```
 
 **Sessao:** cursos-formato-data
 ```

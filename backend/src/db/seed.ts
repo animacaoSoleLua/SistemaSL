@@ -7,7 +7,7 @@ export const baseUsers: Prisma.UserCreateManyInput[] = [
     id: "11111111-1111-1111-1111-111111111111",
     name: "Admin",
     lastName: "Sol",
-    email: "admin@sol-e-lua.com",
+    email: "arthurssousa2004@gmail.com",
     cpf: "11111111111",
     birthDate: new Date("1988-01-10"),
     region: "Plano Piloto",

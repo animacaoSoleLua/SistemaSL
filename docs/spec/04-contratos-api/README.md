@@ -1,7 +1,7 @@
 # 4. Contratos de API
 
 **Versao:** 1.0.0
-**Ultima Atualizacao:** 2026-01-20
+**Ultima Atualizacao:** 2026-02-06
 
 ← [Voltar para SPEC](../README.md)
 
@@ -34,8 +34,6 @@ Authorization: Bearer {jwt_token}
 | Metodo | Endpoint | Descricao |
 |--------|----------|-----------|
 | POST | `/auth/login` | Fazer login |
-| POST | `/auth/forgot-password` | Solicitar reset |
-| POST | `/auth/reset-password` | Resetar senha |
 
 ### Membros
 | Metodo | Endpoint | Descricao |

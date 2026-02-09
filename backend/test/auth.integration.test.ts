@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildServer } from "../src/app.js";
-import { createResetToken, getUserByEmail } from "../src/auth/store.js";
 import { disconnectDatabase, resetDatabase } from "./helpers/db.js";
 
 describe("Auth (integration)", () => {
@@ -24,7 +23,7 @@ describe("Auth (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
@@ -40,40 +39,12 @@ describe("Auth (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "wrong",
       },
     });
 
     expect(response.statusCode).toBe(401);
-  });
-
-  it("sends forgot password message", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/forgot-password",
-      payload: { email: "admin@sol-e-lua.com" },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ data: { message: "Email enviado" } });
-  });
-
-  it("resets password with valid token", async () => {
-    const user = await getUserByEmail("recreador@sol-e-lua.com");
-    const token = createResetToken(user!.id);
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/reset-password",
-      payload: { token, password: "nova123" },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ data: { message: "Senha atualizada" } });
-
-    const updated = await getUserByEmail("recreador@sol-e-lua.com");
-    expect(updated?.passwordHash).toMatch(/^scrypt\$/);
   });
 
   it("registers new user with allowed role", async () => {
@@ -106,6 +77,59 @@ describe("Auth (integration)", () => {
 
     expect(login.statusCode).toBe(200);
     expect(login.json().data.user.role).toBe("recreador");
+  });
+
+  it("resets password with email + token flow", async () => {
+    const requestToken = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/forgot-password",
+      payload: {
+        email: "animador@sol-e-lua.com",
+      },
+    });
+
+    const requestBody = requestToken.json();
+    expect(requestToken.statusCode).toBe(200);
+    expect(requestBody.data.sent).toBe(true);
+    expect(requestBody.data.debug_token).toBeTypeOf("string");
+
+    const token = requestBody.data.debug_token as string;
+
+    const verify = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/verify-reset-token",
+      payload: {
+        email: "animador@sol-e-lua.com",
+        token,
+      },
+    });
+
+    expect(verify.statusCode).toBe(200);
+    expect(verify.json().data.valid).toBe(true);
+
+    const reset = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/reset-password",
+      payload: {
+        email: "animador@sol-e-lua.com",
+        token,
+        novaSenha: "novaSenha123",
+        novaSenhaConfirmacao: "novaSenha123",
+      },
+    });
+
+    expect(reset.statusCode).toBe(200);
+
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: {
+        email: "animador@sol-e-lua.com",
+        password: "novaSenha123",
+      },
+    });
+
+    expect(login.statusCode).toBe(200);
   });
 
   it("blocks admin role on public register", async () => {
@@ -163,7 +187,7 @@ describe("Auth (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });

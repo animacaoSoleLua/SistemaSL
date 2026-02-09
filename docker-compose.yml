@@ -1,14 +1,13 @@
 services:
   postgres:
     image: postgres:16
-    container_name: sol-e-lua-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: slr
       POSTGRES_USER: slr
       POSTGRES_PASSWORD: admin
     ports:
-      - "5453:5432"
+      - "5453:5432"   # opcional (remova se não precisar acessar de fora)
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,29 +18,30 @@ services:
 
   redis:
     image: redis:7
-    container_name: sol-e-lua-redis
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6379:6379"   # opcional (remova se não precisar acessar de fora)
 
+  # Job one-shot para aplicar migrations (produção)
   migrate:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: sol-e-lua-migrate
     working_dir: /app
     environment:
       DATABASE_URL: postgres://slr:admin@postgres:5432/slr
+      NODE_ENV: production
     depends_on:
       postgres:
         condition: service_healthy
-    command: npx prisma db push
+    command: sh -c "npx prisma migrate deploy"
     restart: "no"
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: sol-e-lua-backend
+    working_dir: /app
     env_file:
       - ./backend/.env
     environment:
@@ -49,11 +49,16 @@ services:
       REDIS_URL: redis://redis:6379
       HOST: 0.0.0.0
       PORT: 3001
+      NODE_ENV: production
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM: ${RESEND_FROM}
     depends_on:
       postgres:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_started
     ports:
       - "3001:3001"
     restart: unless-stopped
@@ -62,7 +67,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: sol-e-lua-frontend
     depends_on:
       backend:
         condition: service_started

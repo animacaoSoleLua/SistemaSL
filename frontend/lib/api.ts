@@ -181,6 +181,32 @@ export async function login(email: string, password: string) {
   });
 }
 
+export async function requestPasswordReset(email: string) {
+  return request("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function verifyResetToken(input: { email: string; token: string }) {
+  return request("/auth/verify-reset-token", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function resetPassword(input: {
+  email: string;
+  token: string;
+  novaSenha: string;
+  novaSenhaConfirmacao: string;
+}) {
+  return request("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export async function registerUser(input: {
   name: string;
   last_name: string;

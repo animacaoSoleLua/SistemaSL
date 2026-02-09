@@ -5,7 +5,7 @@ export async function resetDatabase(): Promise<void> {
   await prisma.$executeRawUnsafe("SELECT pg_advisory_lock(2147483647)");
   try {
     await prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE "report_feedbacks", "report_media", "reports", "course_enrollments", "courses", "warnings", "suspensions", "users" RESTART IDENTITY CASCADE'
+      'TRUNCATE TABLE "report_feedbacks", "report_media", "reports", "course_enrollments", "courses", "warnings", "suspensions", "password_reset_tokens", "users" RESTART IDENTITY CASCADE'
     );
     await prisma.user.createMany({ data: baseUsers });
   } finally {

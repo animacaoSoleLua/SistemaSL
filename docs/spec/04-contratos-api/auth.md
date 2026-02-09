@@ -1,7 +1,7 @@
 # 4.1 Auth
 
 **Versao:** 1.0.0
-**Ultima Atualizacao:** 2026-02-04
+**Ultima Atualizacao:** 2026-02-06
 
 ← [Voltar para Contratos de API](README.md)
 
@@ -71,9 +71,11 @@
 
 ---
 
+---
+
 ## POST /api/v1/auth/forgot-password
 
-**Descricao:** Solicita reset de senha.
+**Descricao:** Envia token de redefinicao para o email do usuario.
 
 **Request Body:**
 
@@ -88,23 +90,23 @@
 ```json
 {
   "data": {
-    "message": "Email enviado"
+    "sent": true
   }
 }
 ```
 
 ---
 
-## POST /api/v1/auth/reset-password
+## POST /api/v1/auth/verify-reset-token
 
-**Descricao:** Redefine senha com token.
+**Descricao:** Verifica se o token informado ainda e valido.
 
 **Request Body:**
 
 ```json
 {
-  "token": "string",
-  "password": "string"
+  "email": "string",
+  "token": "string"
 }
 ```
 
@@ -113,7 +115,34 @@
 ```json
 {
   "data": {
-    "message": "Senha atualizada"
+    "valid": true
+  }
+}
+```
+
+---
+
+## POST /api/v1/auth/reset-password
+
+**Descricao:** Redefine a senha usando email + token validado.
+
+**Request Body:**
+
+```json
+{
+  "email": "string",
+  "token": "string",
+  "novaSenha": "string",
+  "novaSenhaConfirmacao": "string"
+}
+```
+
+**Response 200 OK:**
+
+```json
+{
+  "data": {
+    "updated": true
   }
 }
 ```

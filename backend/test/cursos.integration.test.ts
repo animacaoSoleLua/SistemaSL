@@ -24,12 +24,12 @@ describe("Cursos (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
     const adminToken = loginAdmin.json().data.access_token;
-    const adminUser = await getUserByEmail("admin@sol-e-lua.com");
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
 
     const createResponse = await app.inject({
       method: "POST",
@@ -137,7 +137,7 @@ describe("Cursos (integration)", () => {
       },
     });
     const memberToken = loginMember.json().data.access_token;
-    const adminUser = await getUserByEmail("admin@sol-e-lua.com");
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
 
     const createResponse = await app.inject({
       method: "POST",
@@ -161,12 +161,12 @@ describe("Cursos (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
     const adminToken = loginAdmin.json().data.access_token;
-    const adminUser = await getUserByEmail("admin@sol-e-lua.com");
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
 
     const createResponse = await app.inject({
       method: "POST",
@@ -262,7 +262,7 @@ describe("Cursos (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
@@ -298,12 +298,12 @@ describe("Cursos (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
     const adminToken = loginAdmin.json().data.access_token;
-    const adminUser = await getUserByEmail("admin@sol-e-lua.com");
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
 
     const createResponse = await app.inject({
       method: "POST",
@@ -363,12 +363,12 @@ describe("Cursos (integration)", () => {
       method: "POST",
       url: "/api/v1/auth/login",
       payload: {
-        email: "admin@sol-e-lua.com",
+        email: "arthurssousa2004@gmail.com",
         password: "admin123",
       },
     });
     const adminToken = loginAdmin.json().data.access_token;
-    const adminUser = await getUserByEmail("admin@sol-e-lua.com");
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
 
     const createResponse = await app.inject({
       method: "POST",

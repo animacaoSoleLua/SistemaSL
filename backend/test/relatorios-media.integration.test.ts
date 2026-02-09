@@ -175,7 +175,7 @@ describe("Relatorios media (integration)", () => {
   });
 
   it("blocks uploading to report from another user", async () => {
-    const admin = await getUserByEmail("admin@sol-e-lua.com");
+    const admin = await getUserByEmail("arthurssousa2004@gmail.com");
     const report = await createReport(admin!.id);
 
     const login = await app.inject({
