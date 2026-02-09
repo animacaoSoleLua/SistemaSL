@@ -15,13 +15,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-
-  redis:
-    image: redis:7
-    restart: unless-stopped
-    ports:
-      - "6379:6379"   # opcional (remova se não precisar acessar de fora)
-
+      
   # Job one-shot para aplicar migrations (produção)
   migrate:
     build:

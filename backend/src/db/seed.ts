@@ -12,7 +12,7 @@ export const baseUsers: Prisma.UserCreateManyInput[] = [
     birthDate: new Date("1988-01-10"),
     region: "Plano Piloto",
     phone: "(61) 99999-0001",
-    passwordHash: hashPassword("admin123"),
+    passwordHash: hashPassword("123456"),
     role: "admin",
   },
   {
