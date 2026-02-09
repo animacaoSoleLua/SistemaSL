@@ -40,7 +40,6 @@ services:
       - ./backend/.env
     environment:
       DATABASE_URL: postgres://slr:admin@postgres:5432/slr
-      REDIS_URL: redis://redis:6379
       HOST: 0.0.0.0
       PORT: 3001
       NODE_ENV: production
