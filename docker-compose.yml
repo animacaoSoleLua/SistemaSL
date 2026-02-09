@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16
+    image: postgres:18
     restart: unless-stopped
     environment:
       POSTGRES_DB: slr
@@ -15,7 +15,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-      
+
   # Job one-shot para aplicar migrations (produção)
   migrate:
     build:
