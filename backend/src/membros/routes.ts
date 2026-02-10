@@ -445,6 +445,7 @@ export async function membrosRoutes(app: FastifyInstance) {
         id: member.id,
         name: member.name,
         last_name: member.lastName ?? null,
+        cpf: member.cpf ?? null,
         email: member.email,
         birth_date: member.birthDate ? formatDate(member.birthDate) : null,
         region: member.region ?? null,

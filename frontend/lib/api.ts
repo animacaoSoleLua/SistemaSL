@@ -24,8 +24,9 @@ async function request(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(url, { ...options, headers });
 
   if (!response.ok) {
+    const isLoginRequest = endpoint.startsWith("/auth/login");
     // Se o token expirar (Unauthorized), redirecionar para o login
-    if (response.status === 401) {
+    if (response.status === 401 && !isLoginRequest) {
       localStorage.removeItem('authToken');
       // Idealmente, usar o router do Next.js aqui, mas window é um fallback
       window.location.href = '/login'; 

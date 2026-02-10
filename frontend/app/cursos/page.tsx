@@ -59,8 +59,13 @@ export default function CursosPage() {
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editingLoading, setEditingLoading] = useState(false);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [viewCourse, setViewCourse] = useState<Course | null>(null);
+  const [viewDetails, setViewDetails] = useState<CourseDetails | null>(null);
+  const [viewError, setViewError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [courseDate, setCourseDate] = useState("");
@@ -244,11 +249,36 @@ export default function CursosPage() {
     }
   };
 
+  const openViewModal = async (course: Course) => {
+    setViewCourse(course);
+    setViewDetails(null);
+    setViewError(null);
+    setViewModalOpen(true);
+    setViewLoading(true);
+    try {
+      const response = await getCourse(course.id);
+      const data = response.data as CourseDetails;
+      setViewDetails(data);
+    } catch (err: any) {
+      setViewError(err.message || "Não foi possível carregar os detalhes do curso.");
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
   const closeModal = () => {
     setModalOpen(false);
     setSaving(false);
     setFormError(null);
     setEditingCourseId(null);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    setViewCourse(null);
+    setViewDetails(null);
+    setViewError(null);
+    setViewLoading(false);
   };
 
   const handleCreateCourse = async (event: React.FormEvent) => {
@@ -348,12 +378,29 @@ export default function CursosPage() {
 
   const formatDateBR = (value: string) => {
     if (!value) return value;
-    const [datePart] = value.split("T");
+    const [datePartRaw] = value.split("T");
+    const datePart = datePartRaw.includes(" ")
+      ? datePartRaw.split(" ")[0]
+      : datePartRaw;
     const [year, month, day] = datePart.split("-");
     if (!year || !month || !day) {
       return value;
     }
     return `${day}/${month}/${year}`;
+  };
+
+  const formatTimeBR = (value: string) => {
+    if (!value) return value;
+    let timePart = "";
+    if (value.includes("T")) {
+      [, timePart] = value.split("T");
+    } else if (value.includes(" ")) {
+      [, timePart] = value.split(" ");
+    }
+    if (!timePart) return "";
+    const [hour, minute] = timePart.split(":");
+    if (!hour || !minute) return timePart;
+    return `${hour}:${minute}`;
   };
 
   const formatCourseStatus = (status: "enrolled" | "attended" | "missed") => {
@@ -472,7 +519,19 @@ export default function CursosPage() {
                     ? "Instrutor"
                     : null;
                 return (
-                  <article className="report-item" key={course.id}>
+                  <article
+                    className="report-item"
+                    key={course.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openViewModal(course)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openViewModal(course);
+                      }
+                    }}
+                  >
                     <div className="report-meta">
                       <strong className="report-name">{course.title}</strong>
                       <span className="report-date">
@@ -508,7 +567,10 @@ export default function CursosPage() {
                         <button
                           type="button"
                           className="button secondary"
-                          onClick={() => handleEnroll(course)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleEnroll(course);
+                          }}
                           disabled={
                             course.available_spots <= 0 ||
                             enrollingId === course.id ||
@@ -532,14 +594,20 @@ export default function CursosPage() {
                           <button
                             type="button"
                             className="button edit"
-                            onClick={() => openEditModal(course.id)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openEditModal(course.id);
+                            }}
                           >
                             Editar
                           </button>
                           <button
                             type="button"
                             className="button danger"
-                            onClick={() => handleDeleteCourse(course.id, course.title)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleDeleteCourse(course.id, course.title);
+                            }}
                             disabled={deletingId === course.id}
                           >
                             {deletingId === course.id ? "Apagando..." : "Apagar"}
@@ -623,6 +691,105 @@ export default function CursosPage() {
                 disabled={deletingId === deleteTarget.id}
               >
                 {deletingId === deleteTarget.id ? "Apagando..." : "Apagar curso"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewModalOpen && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={`${modalTitleId}-view`}
+          aria-describedby={`${modalDescriptionId}-view`}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeViewModal();
+            }
+          }}
+        >
+          <div className="modal-card">
+            <header className="modal-header">
+              <div>
+                <strong id={`${modalTitleId}-view`}>Detalhes do curso</strong>
+                <p className="helper" id={`${modalDescriptionId}-view`}>
+                  Visualização somente de leitura.
+                </p>
+              </div>
+              <button className="button secondary" type="button" onClick={closeViewModal}>
+                Fechar
+              </button>
+            </header>
+            <div className="modal-body">
+              {viewLoading ? (
+                <p>Carregando detalhes...</p>
+              ) : viewError ? (
+                <p className="text-red-500">{viewError}</p>
+              ) : (
+                <div className="form-grid">
+                  <div className="field full">
+                    <span>Título do curso</span>
+                    <p className="helper">{viewDetails?.title ?? viewCourse?.title}</p>
+                  </div>
+                  <div className="field full">
+                    <span>Descrição</span>
+                    <p className="helper">
+                      {viewDetails?.description || "Sem descrição informada."}
+                    </p>
+                  </div>
+                  <div className="field full">
+                    <span>Instrutor</span>
+                    <p className="helper">
+                      {viewDetails?.instructor?.name ??
+                        viewCourse?.instructor?.name ??
+                        "-"}
+                    </p>
+                  </div>
+                  <div className="field">
+                    <span>Data</span>
+                    <p className="helper">
+                      {formatDateBR(
+                        viewDetails?.course_date ?? viewCourse?.course_date ?? "",
+                      )}
+                    </p>
+                  </div>
+                  <div className="field">
+                    <span>Hora</span>
+                    <p className="helper">
+                      {formatTimeBR(
+                        viewDetails?.course_date ?? viewCourse?.course_date ?? "",
+                      ) || "-"}
+                    </p>
+                  </div>
+                  <div className="field">
+                    <span>Vagas</span>
+                    <p className="helper">
+                      {viewCourse
+                        ? `${viewCourse.enrolled_count}/${viewCourse.capacity}`
+                        : viewDetails?.capacity ?? "-"}
+                    </p>
+                  </div>
+                  <div className="field">
+                    <span>Disponíveis</span>
+                    <p className="helper">
+                      {viewCourse?.available_spots ?? "-"}
+                    </p>
+                  </div>
+                  <div className="field full">
+                    <span>Local</span>
+                    <p className="helper">
+                      {viewDetails?.location || "Local não informado."}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="button secondary" type="button" onClick={closeViewModal}>
+                Fechar
               </button>
             </div>
           </div>

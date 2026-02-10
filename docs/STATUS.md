@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-02-06
+**Ultima Atualizacao:** 2026-02-10
 **Atualizado por:** Codex
 
 ---
@@ -15,30 +15,29 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 35/35 |
-| Ultima Tarefa | MELHORIA-054 |
+| Tarefas Completas | 37/37 |
+| Ultima Tarefa | MELHORIA-060 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-054: Ajuste visual do login + links
+### MELHORIA-060: Hora do curso salva corretamente
 
-**Epic:** Autenticacao
-**User Story:** US-Login
-**API:** Auth
+**Epic:** Cursos
+**User Story:** US-Cursos
+**API:** Cursos
 
-**Descricao:** Melhorar o visual do login e reposicionar os links de ajuda.
+**Descricao:** Ajustar o banco para guardar a hora do curso junto com a data.
 
 **O que mudou:**
-- Visual do login ficou mais limpo e destacado.
-- Links "Nao possuo conta" e "Esqueci minha senha" invertidos (esquerda/direita).
+- Banco passa a guardar data e hora do curso.
+- Hora aparece correta no modal de detalhes.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Layout do login atualizado.
-- [x] Links reposicionados conforme pedido.
+- [x] Hora exibida no modal de detalhes.
 
 ---
 
@@ -92,6 +91,12 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-10 | MELHORIA-060 | Hora do curso salva corretamente |
+| 2026-02-10 | MELHORIA-059 | Hora do curso no modal de detalhes |
+| 2026-02-10 | MELHORIA-058 | Modal de leitura para detalhes do curso |
+| 2026-02-10 | MELHORIA-057 | Botao menor e mais bonito para adicionar foto |
+| 2026-02-10 | MELHORIA-056 | Login sem recarregar pagina ao errar |
+| 2026-02-10 | MELHORIA-055 | CPF no perfil + erro de login amigavel |
 | 2026-02-06 | MELHORIA-054 | Ajuste visual do login + links |
 | 2026-02-06 | MELHORIA-053 | Envio de token por email (Resend) |
 | 2026-02-06 | MELHORIA-052 | Novo fluxo de redefinicao de senha (email + token) |
@@ -197,6 +202,11 @@ Nenhum bloqueador no momento.
 ---
 
 ## Log de Atividades
+
+### 2026-02-10
+- MELHORIA-057: Botao menor e mais bonito para adicionar foto no perfil.
+- MELHORIA-056: Erro de login nao recarrega mais a pagina.
+- MELHORIA-055: CPF voltou a aparecer no perfil e erro de login fica visivel na tela.
 
 ### 2026-02-06
 - MELHORIA-053: Envio do token por email usando Resend.

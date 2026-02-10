@@ -335,20 +335,23 @@ export default function PerfilPage() {
                     </div>
                     <div className="profile-photo-meta">
                       <strong>Foto de perfil</strong>
-                      </div>
-                    <label className="field full" htmlFor="profilePhotoFile">
-                    <span>Enviar foto</span>
-                    <input
-                      id="profilePhotoFile"
-                      className="input"
-                      type="file"
-                      accept="image/*"
-                      key={photoInputKey}
-                      onChange={(event) =>
-                        setPhotoFile(event.target.files?.[0] ?? null)
-                      }
-                    />
-                  </label>
+                      <label
+                        className="profile-photo-upload"
+                        htmlFor="profilePhotoFile"
+                      >
+                        <span>Adicionar foto</span>
+                        <input
+                          id="profilePhotoFile"
+                          className="profile-photo-input"
+                          type="file"
+                          accept="image/*"
+                          key={photoInputKey}
+                          onChange={(event) =>
+                            setPhotoFile(event.target.files?.[0] ?? null)
+                          }
+                        />
+                      </label>
+                    </div>
                   </div>
                   <label className="field full" htmlFor="profileName">
                     <span>Nome</span>

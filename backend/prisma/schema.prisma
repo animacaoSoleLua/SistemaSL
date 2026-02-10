@@ -99,7 +99,7 @@ model Course {
   instructorId String            @map("instructor_id") @db.Uuid
   title       String             @db.VarChar(150)
   description String?            @db.Text
-  courseDate  DateTime           @map("course_date") @db.Date
+  courseDate  DateTime           @map("course_date")
   location    String?            @db.VarChar(150)
   capacity    Int?
   createdAt   DateTime           @default(now()) @map("created_at")

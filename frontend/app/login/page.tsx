@@ -27,7 +27,9 @@ export default function LoginPage() {
       const role = response.data.user.role as Role;
       router.push(getDefaultRoute(role));
     } catch (err: any) {
-      setError(err.message || "Erro ao fazer login. Verifique suas credenciais.");
+      setError("Credenciais invalidas.");
+      setEmail("");
+      setPassword("");
     } finally {
       setLoading(false);
     }

@@ -9,7 +9,7 @@ services:
     ports:
       - "5453:5432"   # opcional (remova se não precisar acessar de fora)
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U slr -d slr"]
       interval: 5s
