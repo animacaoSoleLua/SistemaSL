@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-slr}
       POSTGRES_USER: ${POSTGRES_USER:-slr}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-slrAdmin}
     ports:
       - "5453:5432"   # opcional (remova se não precisar acessar de fora)
     volumes:
@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile.prod
     working_dir: /backend
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgres://slr:admin@postgres:5432/slr}
+      DATABASE_URL: ${DATABASE_URL}
       NODE_ENV: ${NODE_ENV:-production}
     depends_on:
       postgres:
@@ -37,7 +37,7 @@ services:
       dockerfile: Dockerfile.prod
     working_dir: /backend
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgres://slr:admin@postgres:5432/slr}
+      DATABASE_URL: ${DATABASE_URL}
       HOST: ${HOST:-0.0.0.0}
       PORT: ${PORT:-3001}
       NODE_ENV: ${NODE_ENV:-production}
