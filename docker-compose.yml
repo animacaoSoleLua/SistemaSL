@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile.prod
     working_dir: /backend
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://slr:slrAdmin@sl-database-qj9s4k:5432/slr}
       NODE_ENV: ${NODE_ENV:-production}
     depends_on:
       postgres:
@@ -37,7 +37,7 @@ services:
       dockerfile: Dockerfile.prod
     working_dir: /backend
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://slr:slrAdmin@sl-database-qj9s4k:5432/slr}
       HOST: ${HOST:-0.0.0.0}
       PORT: ${PORT:-3001}
       NODE_ENV: ${NODE_ENV:-production}
