@@ -31,8 +31,26 @@ async function ensureUploadsWritable(root: string): Promise<void> {
 }
 
 export function buildServer(): FastifyInstance {
+  const isPrettyLogs =
+    process.env.LOG_FORMAT === "pretty" || process.env.NODE_ENV !== "production";
+  const logLevel = process.env.LOG_LEVEL ?? "info";
+  const logger = isPrettyLogs
+    ? {
+        level: logLevel,
+        transport: {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+            translateTime: "SYS:dd/mm/yy HH:MM:ss",
+            ignore: "pid,hostname",
+            singleLine: true,
+          },
+        },
+      }
+    : { level: logLevel };
+
   const app = Fastify({
-    logger: true,
+    logger,
     ignoreTrailingSlash: true,
     ignoreDuplicateSlashes: true,
   });

@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-02-10
+**Ultima Atualizacao:** 2026-02-11
 **Atualizado por:** Codex
 
 ---
@@ -16,28 +16,28 @@
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
 | Tarefas Completas | 37/37 |
-| Ultima Tarefa | MELHORIA-060 |
+| Ultima Tarefa | MELHORIA-061 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-060: Hora do curso salva corretamente
+### MELHORIA-061: Logs do backend mais legiveis
 
-**Epic:** Cursos
-**User Story:** US-Cursos
-**API:** Cursos
+**Epic:** Infraestrutura
+**User Story:** Observabilidade
+**API:** Backend
 
-**Descricao:** Ajustar o banco para guardar a hora do curso junto com a data.
+**Descricao:** Deixar os logs do backend mais faceis de ler.
 
 **O que mudou:**
-- Banco passa a guardar data e hora do curso.
-- Hora aparece correta no modal de detalhes.
+- Logs agora aparecem em formato mais legivel no ambiente de desenvolvimento.
+- Nivel de log pode ser ajustado por variavel de ambiente.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Hora exibida no modal de detalhes.
+- [x] Logs mais faceis de ler no console.
 
 ---
 
@@ -91,6 +91,7 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-11 | MELHORIA-061 | Logs do backend mais legiveis |
 | 2026-02-10 | MELHORIA-060 | Hora do curso salva corretamente |
 | 2026-02-10 | MELHORIA-059 | Hora do curso no modal de detalhes |
 | 2026-02-10 | MELHORIA-058 | Modal de leitura para detalhes do curso |
