@@ -15,30 +15,31 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 37/37 |
-| Ultima Tarefa | MELHORIA-063 |
+| Tarefas Completas | 38/38 |
+| Ultima Tarefa | MELHORIA-064 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-063: Separar Docker Compose de dev e produção
+### MELHORIA-064: Remover dependência de arquivo .env no deploy Dokploy
 
 **Epic:** Infraestrutura
 **User Story:** Observabilidade
 **API:** Backend
 
-**Descricao:** Criar um compose de desenvolvimento e deixar o compose de produção pronto para deploy.
+**Descricao:** Ajustar compose de produção para usar variáveis do Environment e não exigir `backend/.env`.
 
 **O que mudou:**
-- Criado um `docker-compose.dev.yml` para uso local.
-- Compose de produção ajustado para usar imagens e comandos corretos.
+- Removido `env_file` do serviço `backend` no `docker-compose.yml`.
+- Variáveis de ambiente do Postgres, migrate e backend passaram a aceitar `${VAR}` (com fallback).
+- Deploy no Dokploy não depende mais de `backend/.env` no repositório.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Compose de dev separado.
-- [x] Compose de produção ajustado.
+- [x] Compose de produção sem `env_file`.
+- [x] Variáveis vindas do Environment do Dokploy.
 
 ---
 
@@ -92,6 +93,7 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-11 | MELHORIA-064 | Compose de produção sem dependência de backend/.env |
 | 2026-02-11 | MELHORIA-063 | Separar Docker Compose de dev e produção |
 | 2026-02-11 | MELHORIA-062 | Corrigir pasta de trabalho do backend no Docker |
 | 2026-02-11 | MELHORIA-061 | Logs do backend mais legiveis |
