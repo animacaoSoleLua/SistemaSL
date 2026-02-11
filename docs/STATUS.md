@@ -16,28 +16,29 @@
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
 | Tarefas Completas | 37/37 |
-| Ultima Tarefa | MELHORIA-061 |
+| Ultima Tarefa | MELHORIA-063 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-061: Logs do backend mais legiveis
+### MELHORIA-063: Separar Docker Compose de dev e produção
 
 **Epic:** Infraestrutura
 **User Story:** Observabilidade
 **API:** Backend
 
-**Descricao:** Deixar os logs do backend mais faceis de ler.
+**Descricao:** Criar um compose de desenvolvimento e deixar o compose de produção pronto para deploy.
 
 **O que mudou:**
-- Logs agora aparecem em formato mais legivel no ambiente de desenvolvimento.
-- Nivel de log pode ser ajustado por variavel de ambiente.
+- Criado um `docker-compose.dev.yml` para uso local.
+- Compose de produção ajustado para usar imagens e comandos corretos.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Logs mais faceis de ler no console.
+- [x] Compose de dev separado.
+- [x] Compose de produção ajustado.
 
 ---
 
@@ -91,6 +92,8 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-11 | MELHORIA-063 | Separar Docker Compose de dev e produção |
+| 2026-02-11 | MELHORIA-062 | Corrigir pasta de trabalho do backend no Docker |
 | 2026-02-11 | MELHORIA-061 | Logs do backend mais legiveis |
 | 2026-02-10 | MELHORIA-060 | Hora do curso salva corretamente |
 | 2026-02-10 | MELHORIA-059 | Hora do curso no modal de detalhes |
