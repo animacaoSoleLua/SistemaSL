@@ -104,6 +104,11 @@ export default function UsuariosPage() {
   const [selectedMemberDetails, setSelectedMemberDetails] =
     useState<MemberDetails | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [cpfModalOpen, setCpfModalOpen] = useState(false);
+  const [cpfSearchTerm, setCpfSearchTerm] = useState("");
+  const [cpfSelectedMembers, setCpfSelectedMembers] = useState<Member[]>([]);
+  const [cpfGenerating, setCpfGenerating] = useState(false);
+  const [cpfActionError, setCpfActionError] = useState<string | null>(null);
 
   const isAdmin = currentUser?.role === "admin";
 
@@ -131,6 +136,11 @@ export default function UsuariosPage() {
       return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
     }
     return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
+
+  const formatCpfDisplay = (value?: string | null) => {
+    if (!value) return "CPF não informado";
+    return formatCpf(value);
   };
 
   const loadMembers = async () => {
@@ -404,6 +414,152 @@ export default function UsuariosPage() {
   const feedbacks = selectedMemberDetails?.feedbacks ?? [];
   const suspension = selectedMemberDetails?.suspension;
 
+  const cpfSelectedIds = useMemo(
+    () => new Set(cpfSelectedMembers.map((member) => member.id)),
+    [cpfSelectedMembers]
+  );
+
+  const cpfSearchResults = useMemo(() => {
+    const search = cpfSearchTerm.trim().toLowerCase();
+    if (!search) {
+      return [];
+    }
+    return users.filter((member) => {
+      return (
+        member.name.toLowerCase().includes(search) ||
+        (member.last_name ?? "").toLowerCase().includes(search) ||
+        member.email.toLowerCase().includes(search)
+      );
+    });
+  }, [cpfSearchTerm, users]);
+
+  const openCpfModal = () => {
+    setCpfSearchTerm("");
+    setCpfActionError(null);
+    setCpfModalOpen(true);
+  };
+
+  const closeCpfModal = () => {
+    if (cpfGenerating) return;
+    setCpfModalOpen(false);
+    setCpfSearchTerm("");
+    setCpfActionError(null);
+    setCpfSelectedMembers([]);
+  };
+
+  const handleSelectCpfMember = (member: Member) => {
+    if (cpfSelectedIds.has(member.id)) return;
+    setCpfSelectedMembers((prev) => [...prev, member]);
+  };
+
+  const handleRemoveCpfMember = (memberId: string) => {
+    setCpfSelectedMembers((prev) => prev.filter((member) => member.id !== memberId));
+  };
+
+  const escapePdfText = (value: string) =>
+    value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+
+  const normalizePdfText = (value: string) => {
+    return value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\x20-\x7E]/g, "?");
+  };
+
+  const buildPdfDocument = (lines: string[]) => {
+    const sanitized = lines.map((line) =>
+      escapePdfText(normalizePdfText(line.trim()))
+    );
+    const contentLines = sanitized.length ? sanitized : ["Listagem de CPF"];
+    let content = "BT\n/F1 12 Tf\n72 720 Td\n";
+    content += `(${contentLines[0]}) Tj\n`;
+
+    for (const line of contentLines.slice(1)) {
+      content += "0 -16 Td\n";
+      content += `(${line}) Tj\n`;
+    }
+
+    content += "ET";
+    const encoder = new TextEncoder();
+    const contentLength = encoder.encode(content).length;
+    const objects = [
+      "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+      "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n",
+      "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n",
+      "4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
+      `5 0 obj\n<< /Length ${contentLength} >>\nstream\n${content}\nendstream\nendobj\n`,
+    ];
+
+    let pdf = "%PDF-1.4\n";
+    const offsets: number[] = [0];
+
+    for (const object of objects) {
+      offsets.push(encoder.encode(pdf).length);
+      pdf += object;
+    }
+
+    const xrefOffset = encoder.encode(pdf).length;
+    pdf += "xref\n0 6\n";
+    pdf += "0000000000 65535 f \n";
+    for (const offset of offsets.slice(1)) {
+      pdf += `${offset.toString().padStart(10, "0")} 00000 n \n`;
+    }
+    pdf += "trailer\n<< /Size 6 /Root 1 0 R >>\n";
+    pdf += `startxref\n${xrefOffset}\n%%EOF\n`;
+
+    return new Blob([encoder.encode(pdf)], { type: "application/pdf" });
+  };
+
+  const handleGenerateCpfPdf = async () => {
+    if (cpfSelectedMembers.length === 0) {
+      setCpfActionError("Selecione pelo menos um membro.");
+      return;
+    }
+    setCpfGenerating(true);
+    setCpfActionError(null);
+
+    try {
+      const enriched = await Promise.all(
+        cpfSelectedMembers.map(async (member) => {
+          if (member.cpf) return member;
+          const response = await getMember(member.id);
+          const details = response.data as MemberDetails;
+          return {
+            ...member,
+            name: details.name,
+            last_name: details.last_name ?? member.last_name ?? null,
+            cpf: details.cpf ?? null,
+          };
+        })
+      );
+
+      const today = new Date().toISOString().slice(0, 10);
+      const lines = [
+        "Lista de CPF - Membros Sol e Lua",
+        `Total de pessoas: ${enriched.length}`,
+        "",
+        ...enriched.map((member) => {
+          const name = getDisplayName(member);
+          return `${name} - ${formatCpfDisplay(member.cpf)}`;
+        }),
+      ];
+
+      const pdfBlob = buildPdfDocument(lines);
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `listagem-cpf-${today}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setCpfActionError(err.message || "Não foi possível gerar o PDF.");
+    } finally {
+      setCpfGenerating(false);
+    }
+  };
+
   return (
     <main className="app-page">
       <section className="shell reveal">
@@ -417,21 +573,30 @@ export default function UsuariosPage() {
             </p>
           </div>
           {isAdmin && (
-            <button
-              className="button user-action-primary"
-              type="button"
-              onClick={openCreateModal}
-            >
-              <span className="button-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M19 8v6" />
-                  <path d="M22 11h-6" />
-                </svg>
-              </span>
-              Novo Membro
-            </button>
+            <div className="page-header-actions">
+              <button
+                className="button user-action-primary"
+                type="button"
+                onClick={openCreateModal}
+              >
+                <span className="button-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M19 8v6" />
+                    <path d="M22 11h-6" />
+                  </svg>
+                </span>
+                Novo Membro
+              </button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={openCpfModal}
+              >
+                Listagem de CPF
+              </button>
+            </div>
           )}
         </header>
 
@@ -498,15 +663,17 @@ export default function UsuariosPage() {
                 <h2 className="section-title">Membros Sol e Lua</h2>
                 <p>Lista de todos os membros.</p>
               </div>
-              <div className="members-search">
-                <input
-                  className="input"
-                  type="search"
-                  placeholder="Buscar por nome ou e-mail..."
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  aria-label="Buscar membro"
-                />
+              <div className="members-actions">
+                <div className="members-search">
+                  <input
+                    className="input"
+                    type="search"
+                    placeholder="Buscar por nome ou e-mail..."
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    aria-label="Buscar membro"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1070,6 +1237,141 @@ export default function UsuariosPage() {
                 disabled={deleting}
               >
                 {deleting ? "Excluindo..." : "Excluir membro"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cpfModalOpen && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cpf-modal-title"
+          aria-describedby="cpf-modal-description"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeCpfModal();
+            }
+          }}
+        >
+          <div className="modal-card cpf-modal">
+            <header className="modal-header">
+              <div>
+                <h2 className="section-title" id="cpf-modal-title">
+                  Listagem de CPF
+                </h2>
+                <p id="cpf-modal-description">
+                  Busque, selecione e gere um PDF com nomes e CPFs.
+                </p>
+              </div>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Fechar"
+                onClick={closeCpfModal}
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M18 6L6 18" />
+                  <path d="M6 6l12 12" />
+                </svg>
+              </button>
+            </header>
+
+            <div className="modal-body">
+              <label className="field">
+                Buscar membro
+                <input
+                  className="input"
+                  type="search"
+                  placeholder="Digite o nome ou e-mail..."
+                  value={cpfSearchTerm}
+                  onChange={(event) => setCpfSearchTerm(event.target.value)}
+                />
+              </label>
+
+              {cpfSearchTerm.trim().length > 0 && (
+                <div className="member-autocomplete" aria-label="Resultados da busca">
+                  {cpfSearchResults.length === 0 ? (
+                    <div className="member-autocomplete-empty">
+                      Nenhum membro encontrado.
+                    </div>
+                  ) : (
+                    cpfSearchResults.map((member) => {
+                      const isSelected = cpfSelectedIds.has(member.id);
+                      return (
+                        <button
+                          key={member.id}
+                          type="button"
+                          className={`member-autocomplete-item ${
+                            isSelected ? "selected" : ""
+                          }`}
+                          aria-selected={isSelected}
+                          onClick={() => handleSelectCpfMember(member)}
+                        >
+                          {getDisplayName(member)}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              <div className="cpf-selected">
+                <div className="cpf-selected-header">
+                  <h3 className="section-title">Selecionados</h3>
+                  <span className="cpf-selected-count">
+                    {cpfSelectedMembers.length}
+                  </span>
+                </div>
+                {cpfSelectedMembers.length === 0 ? (
+                  <p className="cpf-selected-empty">
+                    Nenhum membro selecionado.
+                  </p>
+                ) : (
+                  <div className="cpf-selected-list">
+                    {cpfSelectedMembers.map((member) => (
+                      <button
+                        key={member.id}
+                        type="button"
+                        className="cpf-selected-item"
+                        onClick={() => handleRemoveCpfMember(member.id)}
+                      >
+                        <span className="cpf-selected-name">
+                          {getDisplayName(member)}
+                        </span>
+                        <span className="cpf-selected-remove">
+                          Clique para remover
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {cpfActionError && (
+                <p className="text-red-500">{cpfActionError}</p>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="button secondary"
+                type="button"
+                onClick={closeCpfModal}
+                disabled={cpfGenerating}
+              >
+                Fechar
+              </button>
+              <button
+                className="button"
+                type="button"
+                onClick={handleGenerateCpfPdf}
+                disabled={cpfGenerating || cpfSelectedMembers.length === 0}
+              >
+                {cpfGenerating ? "Gerando..." : "Gerar PDF"}
               </button>
             </div>
           </div>

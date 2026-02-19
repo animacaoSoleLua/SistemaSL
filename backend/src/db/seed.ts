@@ -24,7 +24,7 @@ export const baseUsers: Prisma.UserCreateManyInput[] = [
     birthDate: new Date("1992-04-20"),
     region: "Ceilândia",
     phone: "(61) 99999-0002",
-    passwordHash: hashPassword("animador123"),
+    passwordHash: hashPassword("123456"),
     role: "animador",
   },
   {
@@ -36,7 +36,7 @@ export const baseUsers: Prisma.UserCreateManyInput[] = [
     birthDate: new Date("1995-08-15"),
     region: "Gama",
     phone: "(61) 99999-0003",
-    passwordHash: hashPassword("recreador123"),
+    passwordHash: hashPassword("123456"),
     role: "recreador",
   },
 ];

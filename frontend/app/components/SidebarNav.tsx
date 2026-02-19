@@ -106,7 +106,9 @@ export default function SidebarNav() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [showLogout, setShowLogout] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const logoutMenuId = useId();
+  const mobileMenuId = useId();
 
   useEffect(() => {
     const refreshUser = () => {
@@ -165,70 +167,181 @@ export default function SidebarNav() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showLogout]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   return (
-    <header className="app-navbar">
-      <div className="app-brand">
-        <Image src={logo} alt="Sol e Lua Animação" className="app-logo" priority />
-      </div>
-      <nav className="app-nav" aria-label="Navegação principal">
-        {navItems
-          .filter((item) => (user ? item.roles.includes(user.role) : false))
-          .map((item) => {
-            const active = isActive(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`nav-link${active ? " active" : ""}`}
-              >
-                <span className="nav-icon">{item.icon}</span>
-                {item.label}
-              </Link>
-            );
-          })}
-      </nav>
-      {user ? (
-        <div className="sidebar-footer-wrapper">
-          {showLogout && (
-            <div className="logout-popup" role="menu" id={logoutMenuId}>
+    <>
+      <header className="app-navbar">
+        <button
+          type="button"
+          className="menu-toggle"
+          aria-label="Abrir menu"
+          aria-haspopup="dialog"
+          aria-expanded={menuOpen}
+          aria-controls={mobileMenuId}
+          onClick={() => setMenuOpen(true)}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+        <div className="app-brand">
+          <Image src={logo} alt="Sol e Lua Animação" className="app-logo" priority />
+        </div>
+        <nav className="app-nav" aria-label="Navegação principal">
+          {navItems
+            .filter((item) => (user ? item.roles.includes(user.role) : false))
+            .map((item) => {
+              const active = isActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`nav-link${active ? " active" : ""}`}
+                >
+                  <span className="nav-icon">{item.icon}</span>
+                  {item.label}
+                </Link>
+              );
+            })}
+        </nav>
+        {user ? (
+          <div className="sidebar-footer-wrapper">
+            {showLogout && (
+              <div className="logout-popup" role="menu" id={logoutMenuId}>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="logout-button"
+                  role="menuitem"
+                >
+                  Sair
+                </button>
+              </div>
+            )}
+            <button
+              className="sidebar-footer"
+              onClick={() => setShowLogout(!showLogout)}
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={showLogout}
+              aria-controls={logoutMenuId}
+            >
+              {user.photo_url ? (
+                <img
+                  className="user-avatar avatar-image"
+                  src={resolveApiAssetUrl(user.photo_url)}
+                  alt={`Foto de ${user.name}`}
+                />
+              ) : (
+                <span className="user-avatar">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <div className="user-meta">
+                <strong>{user.name}</strong>
+                <span>{roleLabels[user.role]}</span>
+              </div>
+            </button>
+          </div>
+        ) : (
+          <div className="sidebar-footer-wrapper" />
+        )}
+      </header>
+      {menuOpen ? (
+        <div
+          className="mobile-menu-overlay"
+          role="presentation"
+          onClick={() => setMenuOpen(false)}
+        >
+          <aside
+            className="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu principal"
+            id={mobileMenuId}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mobile-menu-header">
+              <Image src={logo} alt="Sol e Lua Animação" className="app-logo" priority />
               <button
                 type="button"
-                onClick={handleLogout}
-                className="logout-button"
-                role="menuitem"
+                className="mobile-menu-close"
+                aria-label="Fechar menu"
+                onClick={() => setMenuOpen(false)}
               >
-                Sair
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6l-12 12" />
+                </svg>
               </button>
             </div>
-          )}
-          <button
-            className="sidebar-footer"
-            onClick={() => setShowLogout(!showLogout)}
-            type="button"
-            aria-haspopup="menu"
-            aria-expanded={showLogout}
-            aria-controls={logoutMenuId}
-          >
-            {user.photo_url ? (
-              <img
-                className="user-avatar avatar-image"
-                src={resolveApiAssetUrl(user.photo_url)}
-                alt={`Foto de ${user.name}`}
-              />
-            ) : (
-              <span className="user-avatar">
-                {user.name.charAt(0).toUpperCase()}
-              </span>
-            )}
-            <div className="user-meta">
-              <strong>{user.name}</strong>
-              <span>{roleLabels[user.role]}</span>
-            </div>
-          </button>
+            <nav className="mobile-nav" aria-label="Navegação principal">
+              {navItems
+                .filter((item) => (user ? item.roles.includes(user.role) : false))
+                .map((item) => {
+                  const active = isActive(pathname, item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`nav-link mobile-nav-link${active ? " active" : ""}`}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <span className="nav-icon">{item.icon}</span>
+                      {item.label}
+                    </Link>
+                  );
+                })}
+            </nav>
+            {user ? (
+              <div className="mobile-user-area">
+                <div className="mobile-user">
+                  {user.photo_url ? (
+                    <img
+                      className="user-avatar avatar-image"
+                      src={resolveApiAssetUrl(user.photo_url)}
+                      alt={`Foto de ${user.name}`}
+                    />
+                  ) : (
+                    <span className="user-avatar">
+                      {user.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <div className="user-meta">
+                    <strong>{user.name}</strong>
+                    <span>{roleLabels[user.role]}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="mobile-logout"
+                  onClick={handleLogout}
+                >
+                  Sair
+                </button>
+              </div>
+            ) : null}
+          </aside>
         </div>
-      ) : (
-        <div className="sidebar-footer-wrapper" />
-      )}
-    </header>
+      ) : null}
+    </>
   );
 }

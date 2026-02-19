@@ -207,6 +207,33 @@ p {
   z-index: 20;
 }
 
+.menu-toggle {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(111, 76, 255, 0.16);
+  background: #f7f3ff;
+  color: var(--accent-strong);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.menu-toggle svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.menu-toggle:focus-visible {
+  outline: 3px solid rgba(111, 76, 255, 0.45);
+  outline-offset: 3px;
+}
+
 .app-brand {
   display: flex;
   align-items: center;
@@ -258,6 +285,90 @@ p {
   color: var(--accent);
   border: 1px solid rgba(111, 76, 255, 0.25);
   box-shadow: 0 10px 24px rgba(111, 76, 255, 0.18);
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(25, 18, 38, 0.55);
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  z-index: 60;
+}
+
+.mobile-menu {
+  width: min(320px, 84vw);
+  background: #ffffff;
+  padding: 18px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 24px 0 42px rgba(28, 20, 48, 0.2);
+  border-radius: 0 18px 18px 0;
+}
+
+.mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobile-menu-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(111, 76, 255, 0.16);
+  background: #f7f3ff;
+  color: var(--accent-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mobile-menu-close svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.mobile-nav {
+  display: grid;
+  gap: 10px;
+}
+
+.mobile-nav-link {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.mobile-user-area {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(111, 76, 255, 0.12);
+  display: grid;
+  gap: 12px;
+}
+
+.mobile-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-logout {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(111, 76, 255, 0.16);
+  background: rgba(111, 76, 255, 0.08);
+  font-weight: 600;
+  color: var(--accent-strong);
+  cursor: pointer;
 }
 
 .nav-icon {
@@ -782,6 +893,13 @@ p {
   flex-wrap: wrap;
 }
 
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .page-header.centered {
   justify-content: center;
   text-align: center;
@@ -1008,8 +1126,17 @@ p {
   gap: 12px;
 }
 
+.members-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .members-search {
   width: 100%;
+  min-width: 220px;
+  flex: 1 1 240px;
 }
 
 .members-search .input {
@@ -1037,6 +1164,10 @@ p {
   padding: 24px;
 }
 
+.cpf-modal {
+  width: min(720px, 100%);
+}
+
 .modal-header {
   display: flex;
   align-items: flex-start;
@@ -1047,6 +1178,70 @@ p {
 .modal-body {
   display: grid;
   gap: 18px;
+}
+
+.cpf-selected {
+  display: grid;
+  gap: 10px;
+}
+
+.cpf-selected-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cpf-selected-count {
+  min-width: 32px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(111, 76, 255, 0.12);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 0 10px;
+}
+
+.cpf-selected-empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.cpf-selected-list {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.cpf-selected-item {
+  border: 1px solid rgba(111, 76, 255, 0.12);
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.96);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+}
+
+.cpf-selected-item:hover,
+.cpf-selected-item:focus {
+  background: rgba(111, 76, 255, 0.08);
+}
+
+.cpf-selected-name {
+  font-weight: 600;
+}
+
+.cpf-selected-remove {
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .member-autocomplete {
@@ -2319,17 +2514,19 @@ p {
 
   .app-navbar {
     position: static;
-    grid-template-columns: 1fr;
-    justify-items: center;
-    padding: 16px 18px;
+    grid-template-columns: auto;
+    justify-items: start;
+    padding: 12px;
   }
 
-  .app-nav {
-    justify-content: center;
+  .menu-toggle {
+    display: inline-flex;
   }
 
+  .app-brand,
+  .app-nav,
   .sidebar-footer-wrapper {
-    justify-self: center;
+    display: none;
   }
 
   .login-shell {

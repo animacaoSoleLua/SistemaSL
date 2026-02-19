@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-02-11
+**Ultima Atualizacao:** 2026-02-19
 **Atualizado por:** Codex
 
 ---
@@ -15,31 +15,30 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 38/38 |
-| Ultima Tarefa | MELHORIA-064 |
+| Tarefas Completas | 39/39 |
+| Ultima Tarefa | MELHORIA-067 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-064: Remover dependência de arquivo .env no deploy Dokploy
+### MELHORIA-067: Menu lateral no celular com botão de abrir
 
-**Epic:** Infraestrutura
-**User Story:** Observabilidade
-**API:** Backend
+**Epic:** Navegacao e usabilidade
+**User Story:** Menu responsivo
+**API:** Frontend
 
-**Descricao:** Ajustar compose de produção para usar variáveis do Environment e não exigir `backend/.env`.
+**Descricao:** No celular, a barra do topo vira apenas o ícone de abrir e o menu aparece na lateral ao clicar.
 
 **O que mudou:**
-- Removido `env_file` do serviço `backend` no `docker-compose.yml`.
-- Variáveis de ambiente do Postgres, migrate e backend passaram a aceitar `${VAR}` (com fallback).
-- Deploy no Dokploy não depende mais de `backend/.env` no repositório.
+- Barra superior mostra apenas o ícone de menu no celular.
+- Menu abre na lateral com as opções e dados do usuário.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Compose de produção sem `env_file`.
-- [x] Variáveis vindas do Environment do Dokploy.
+- [x] Icone de menu visivel no celular.
+- [x] Menu lateral abre e fecha corretamente.
 
 ---
 
@@ -93,6 +92,9 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-02-19 | MELHORIA-067 | Menu lateral no celular com botão de abrir |
+| 2026-02-19 | MELHORIA-066 | Botão de listagem de CPF só para admin e ao lado do novo membro |
+| 2026-02-19 | MELHORIA-065 | Listagem de CPF em PDF na tela de membros |
 | 2026-02-11 | MELHORIA-064 | Compose de produção sem dependência de backend/.env |
 | 2026-02-11 | MELHORIA-063 | Separar Docker Compose de dev e produção |
 | 2026-02-11 | MELHORIA-062 | Corrigir pasta de trabalho do backend no Docker |
