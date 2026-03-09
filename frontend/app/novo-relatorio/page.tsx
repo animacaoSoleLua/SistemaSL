@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDefaultRoute, getStoredUser, isRoleAllowed } from "../../lib/auth";
@@ -212,7 +212,7 @@ function MediaUploadField(props: {
   );
 }
 
-export default function NovoRelatorioPage() {
+function NovoRelatorioContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reportIdToEdit = searchParams.get("editar");
@@ -1034,5 +1034,13 @@ export default function NovoRelatorioPage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function NovoRelatorioPage() {
+  return (
+    <Suspense>
+      <NovoRelatorioContent />
+    </Suspense>
   );
 }
