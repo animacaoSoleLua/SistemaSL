@@ -63,6 +63,96 @@ export async function getReports() {
   return request('/relatorios', { method: 'GET' });
 }
 
+export async function getDashboardSummary(params: {
+  period_start?: string;
+  period_end?: string;
+} = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.period_start) searchParams.set("period_start", params.period_start);
+  if (params.period_end) searchParams.set("period_end", params.period_end);
+  const query = searchParams.toString();
+  const endpoint = query ? `/dashboard/resumo?${query}` : "/dashboard/resumo";
+  return request(endpoint, { method: "GET" });
+}
+
+export async function getDashboardQuality(params: {
+  period_start?: string;
+  period_end?: string;
+} = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.period_start) searchParams.set("period_start", params.period_start);
+  if (params.period_end) searchParams.set("period_end", params.period_end);
+  const query = searchParams.toString();
+  const endpoint = query ? `/dashboard/qualidade?${query}` : "/dashboard/qualidade";
+  return request(endpoint, { method: "GET" });
+}
+
+export async function getReportById(id: string) {
+  return request(`/relatorios/${id}`, { method: "GET" });
+}
+
+export async function deleteReport(id: string) {
+  return request(`/relatorios/${id}`, { method: "DELETE" });
+}
+
+type ReportPayload = {
+  event_date: string;
+  contractor_name: string;
+  location: string;
+  title_schedule?: string;
+  transport_type?: string;
+  uber_go_value?: number;
+  uber_return_value?: number;
+  other_car_responsible?: string;
+  has_extra_hours?: boolean;
+  extra_hours_details?: string;
+  outside_brasilia?: boolean;
+  exclusive_event?: boolean;
+  team_summary: string;
+  team_general_description?: string;
+  team_general_score?: number;
+  event_difficulties?: string;
+  event_difficulty_score?: number;
+  event_quality_score?: number;
+  quality_sound?: number;
+  quality_microphone?: number;
+  speaker_number?: number;
+  electronics_notes?: string;
+  notes?: string;
+  feedbacks?: Array<{ member_id: string; feedback: string }>;
+};
+
+export async function createReport(input: ReportPayload) {
+  return request("/relatorios", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateReport(id: string, input: ReportPayload) {
+  return request(`/relatorios/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function uploadReportMedia(reportId: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const mimeType = (file.type || "").toLowerCase();
+  if (mimeType.startsWith("image/")) {
+    formData.append("media_type", "image");
+  } else if (mimeType.startsWith("video/")) {
+    formData.append("media_type", "video");
+  }
+
+  return request(`/relatorios/${reportId}/media`, {
+    method: "POST",
+    body: formData,
+  });
+}
+
 export async function getWarnings(params: {
   member_id?: string;
   created_by?: string;

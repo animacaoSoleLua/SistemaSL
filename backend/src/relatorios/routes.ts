@@ -9,9 +9,11 @@ import { pipeline } from "node:stream/promises";
 import {
   addMediaToReport,
   createReport,
+  deleteReport,
   getReportById,
   listReports,
   MediaType,
+  updateReport,
 } from "./store.js";
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -42,9 +44,25 @@ interface ReportBody {
   event_date?: string;
   contractor_name?: string;
   location?: string;
+  title_schedule?: string;
+  transport_type?: string;
+  uber_go_value?: number;
+  uber_return_value?: number;
+  other_car_responsible?: string;
+  has_extra_hours?: boolean;
+  extra_hours_details?: string;
+  outside_brasilia?: boolean;
+  exclusive_event?: boolean;
   team_summary?: string;
+  team_general_description?: string;
+  team_general_score?: number;
+  event_difficulties?: string;
+  event_difficulty_score?: number;
+  event_quality_score?: number;
   quality_sound?: number;
   quality_microphone?: number;
+  speaker_number?: number;
+  electronics_notes?: string;
   notes?: string;
   feedbacks?: Array<{
     member_id?: string;
@@ -166,6 +184,41 @@ function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+function normalizeExtraHours(input: {
+  hasExtraHours?: boolean;
+  extraHoursDetails?: string;
+}): { hasExtraHours?: boolean; extraHoursDetails?: string } {
+  const details = input.extraHoursDetails?.trim();
+  if (input.hasExtraHours === false) {
+    return { hasExtraHours: false, extraHoursDetails: undefined };
+  }
+  if (input.hasExtraHours === true) {
+    return { hasExtraHours: true, extraHoursDetails: details };
+  }
+  if (details) {
+    return { hasExtraHours: true, extraHoursDetails: details };
+  }
+  return { hasExtraHours: undefined, extraHoursDetails: undefined };
+}
+
+function resolveStoragePathFromPublicUrl(url: string): string | undefined {
+  if (!url.startsWith("/uploads/")) {
+    return undefined;
+  }
+
+  const relative = url.slice("/uploads/".length);
+  const storagePath = resolve(uploadsRoot, relative);
+
+  if (
+    storagePath !== uploadsRoot &&
+    !storagePath.startsWith(`${uploadsRoot}${sep}`)
+  ) {
+    return undefined;
+  }
+
+  return storagePath;
+}
+
 function normalizePdfText(value: string): string {
   const ascii = value
     .normalize("NFD")
@@ -229,7 +282,7 @@ function buildPdfDocument(lines: string[]): Buffer {
 }
 
 function isValidRating(value: number): boolean {
-  return Number.isFinite(value) && value >= 1 && value <= 5;
+  return Number.isInteger(value) && value >= 0 && value <= 5;
 }
 
 function parsePositiveInt(value: string | undefined): number | undefined {
@@ -241,6 +294,10 @@ function parsePositiveInt(value: string | undefined): number | undefined {
     return undefined;
   }
   return parsed;
+}
+
+function isValidOptionalMoney(value: number | undefined): boolean {
+  return value === undefined || (Number.isFinite(value) && value >= 0);
 }
 
 export async function relatoriosRoutes(app: FastifyInstance) {
@@ -310,9 +367,14 @@ export async function relatoriosRoutes(app: FastifyInstance) {
     if (search) {
       reports = reports.filter((report) => {
         return (
+          report.authorName.toLowerCase().includes(search) ||
           report.contractorName.toLowerCase().includes(search) ||
           report.location.toLowerCase().includes(search) ||
+          (report.titleSchedule?.toLowerCase().includes(search) ?? false) ||
           report.teamSummary.toLowerCase().includes(search) ||
+          (report.teamGeneralDescription?.toLowerCase().includes(search) ?? false) ||
+          (report.eventDifficulties?.toLowerCase().includes(search) ?? false) ||
+          (report.electronicsNotes?.toLowerCase().includes(search) ?? false) ||
           (report.notes?.toLowerCase().includes(search) ?? false)
         );
       });
@@ -333,7 +395,15 @@ export async function relatoriosRoutes(app: FastifyInstance) {
         id: report.id,
         event_date: formatDate(report.eventDate),
         contractor_name: report.contractorName,
+        title_schedule: report.titleSchedule,
         author_id: report.authorId,
+        author_name: report.authorName,
+        media: report.media.map((media) => ({
+          id: media.id,
+          url: media.url,
+          media_type: media.type,
+          size_bytes: media.sizeBytes,
+        })),
       })),
     });
   });
@@ -350,9 +420,25 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       event_date,
       contractor_name,
       location,
+      title_schedule,
+      transport_type,
+      uber_go_value,
+      uber_return_value,
+      other_car_responsible,
+      has_extra_hours,
+      extra_hours_details,
+      outside_brasilia,
+      exclusive_event,
       team_summary,
+      team_general_description,
+      team_general_score,
+      event_difficulties,
+      event_difficulty_score,
+      event_quality_score,
       quality_sound,
       quality_microphone,
+      speaker_number,
+      electronics_notes,
       notes,
       feedbacks,
     } = request.body as ReportBody;
@@ -373,13 +459,38 @@ export async function relatoriosRoutes(app: FastifyInstance) {
     }
 
     if (
+      (team_general_score !== undefined && !isValidRating(team_general_score)) ||
+      (event_difficulty_score !== undefined &&
+        !isValidRating(event_difficulty_score)) ||
+      (event_quality_score !== undefined &&
+        !isValidRating(event_quality_score)) ||
       (quality_sound !== undefined && !isValidRating(quality_sound)) ||
       (quality_microphone !== undefined &&
         !isValidRating(quality_microphone))
     ) {
       return reply.status(400).send({
         error: "invalid_request",
-        message: "Qualidade informada invalida",
+        message: "Nota informada invalida",
+      });
+    }
+
+    if (
+      !isValidOptionalMoney(uber_go_value) ||
+      !isValidOptionalMoney(uber_return_value)
+    ) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Valor de locomoção invalido",
+      });
+    }
+
+    if (
+      speaker_number !== undefined &&
+      (!Number.isInteger(speaker_number) || speaker_number < 0)
+    ) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Numero da caixa invalido",
       });
     }
 
@@ -407,13 +518,34 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
+    const normalizedExtraHours = normalizeExtraHours({
+      hasExtraHours: has_extra_hours,
+      extraHoursDetails: extra_hours_details,
+    });
+
     const report = await createReport(request.user.id, {
       eventDate,
       contractorName: contractor_name,
       location,
+      titleSchedule: title_schedule,
+      transportType: transport_type,
+      uberGoValue: uber_go_value,
+      uberReturnValue: uber_return_value,
+      otherCarResponsible: other_car_responsible,
+      hasExtraHours: normalizedExtraHours.hasExtraHours,
+      extraHoursDetails: normalizedExtraHours.extraHoursDetails,
+      outsideBrasilia: outside_brasilia ?? false,
+      exclusiveEvent: exclusive_event ?? false,
       teamSummary: team_summary,
+      teamGeneralDescription: team_general_description,
+      teamGeneralScore: team_general_score,
+      eventDifficulties: event_difficulties,
+      eventDifficultyScore: event_difficulty_score,
+      eventQualityScore: event_quality_score,
       qualitySound: quality_sound,
       qualityMicrophone: quality_microphone,
+      speakerNumber: speaker_number,
+      electronicsNotes: electronics_notes,
       notes,
       feedbacks: parsedFeedbacks,
     });
@@ -462,11 +594,29 @@ export async function relatoriosRoutes(app: FastifyInstance) {
         event_date: formatDate(report.eventDate),
         contractor_name: report.contractorName,
         location: report.location,
+        title_schedule: report.titleSchedule,
+        transport_type: report.transportType,
+        uber_go_value: report.uberGoValue,
+        uber_return_value: report.uberReturnValue,
+        other_car_responsible: report.otherCarResponsible,
+        has_extra_hours: report.hasExtraHours,
+        extra_hours_details: report.extraHoursDetails,
+        outside_brasilia: report.outsideBrasilia,
+        exclusive_event: report.exclusiveEvent,
         team_summary: report.teamSummary,
+        team_general_description: report.teamGeneralDescription,
+        team_general_score: report.teamGeneralScore,
+        event_difficulties: report.eventDifficulties,
+        event_difficulty_score: report.eventDifficultyScore,
+        event_quality_score: report.eventQualityScore,
         quality_sound: report.qualitySound,
         quality_microphone: report.qualityMicrophone,
+        speaker_number: report.speakerNumber,
+        electronics_notes: report.electronicsNotes,
         notes: report.notes,
         author_id: report.authorId,
+        author_name: report.authorName,
+        created_at: report.createdAt.toISOString(),
         media: report.media.map((media) => ({
           id: media.id,
           url: media.url,
@@ -475,10 +625,238 @@ export async function relatoriosRoutes(app: FastifyInstance) {
         })),
         feedbacks: report.feedbacks.map((feedback) => ({
           member_id: feedback.memberId,
+          member_name: feedback.memberName,
           feedback: feedback.feedback,
         })),
       },
     });
+  });
+
+  app.patch("/api/v1/relatorios/:id", async (request, reply) => {
+    const reportId = request.params as { id?: string };
+    if (!reportId.id) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Relatorio invalido",
+      });
+    }
+
+    const report = await getReportById(reportId.id);
+    if (!report) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Relatorio nao encontrado",
+      });
+    }
+
+    if (!request.user) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Token ausente",
+      });
+    }
+
+    if (request.user.role !== "admin" && request.user.id !== report.authorId) {
+      return reply.status(403).send({
+        error: "forbidden",
+        message: "Acesso negado",
+      });
+    }
+
+    const {
+      event_date,
+      contractor_name,
+      location,
+      title_schedule,
+      transport_type,
+      uber_go_value,
+      uber_return_value,
+      other_car_responsible,
+      has_extra_hours,
+      extra_hours_details,
+      outside_brasilia,
+      exclusive_event,
+      team_summary,
+      team_general_description,
+      team_general_score,
+      event_difficulties,
+      event_difficulty_score,
+      event_quality_score,
+      quality_sound,
+      quality_microphone,
+      speaker_number,
+      electronics_notes,
+      notes,
+      feedbacks,
+    } = request.body as ReportBody;
+
+    if (!event_date || !contractor_name || !location || !team_summary) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Campos obrigatorios ausentes",
+      });
+    }
+
+    const eventDate = parseDate(event_date);
+    if (!eventDate) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Data do evento invalida",
+      });
+    }
+
+    if (
+      (team_general_score !== undefined && !isValidRating(team_general_score)) ||
+      (event_difficulty_score !== undefined &&
+        !isValidRating(event_difficulty_score)) ||
+      (event_quality_score !== undefined &&
+        !isValidRating(event_quality_score)) ||
+      (quality_sound !== undefined && !isValidRating(quality_sound)) ||
+      (quality_microphone !== undefined &&
+        !isValidRating(quality_microphone))
+    ) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Nota informada invalida",
+      });
+    }
+
+    if (
+      !isValidOptionalMoney(uber_go_value) ||
+      !isValidOptionalMoney(uber_return_value)
+    ) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Valor de locomoção invalido",
+      });
+    }
+
+    if (
+      speaker_number !== undefined &&
+      (!Number.isInteger(speaker_number) || speaker_number < 0)
+    ) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Numero da caixa invalido",
+      });
+    }
+
+    if (feedbacks && !Array.isArray(feedbacks)) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Feedbacks invalidos",
+      });
+    }
+
+    const parsedFeedbacks =
+      feedbacks?.map((entry) => ({
+        memberId: entry.member_id ?? "",
+        feedback: entry.feedback ?? "",
+      })) ?? [];
+
+    if (parsedFeedbacks.some((entry) => !entry.memberId || !entry.feedback)) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Feedbacks invalidos",
+      });
+    }
+
+    const normalizedExtraHours = normalizeExtraHours({
+      hasExtraHours: has_extra_hours,
+      extraHoursDetails: extra_hours_details,
+    });
+
+    const updated = await updateReport(report.id, {
+      eventDate,
+      contractorName: contractor_name,
+      location,
+      titleSchedule: title_schedule,
+      transportType: transport_type,
+      uberGoValue: uber_go_value,
+      uberReturnValue: uber_return_value,
+      otherCarResponsible: other_car_responsible,
+      hasExtraHours: normalizedExtraHours.hasExtraHours,
+      extraHoursDetails: normalizedExtraHours.extraHoursDetails,
+      outsideBrasilia: outside_brasilia ?? false,
+      exclusiveEvent: exclusive_event ?? false,
+      teamSummary: team_summary,
+      teamGeneralDescription: team_general_description,
+      teamGeneralScore: team_general_score,
+      eventDifficulties: event_difficulties,
+      eventDifficultyScore: event_difficulty_score,
+      eventQualityScore: event_quality_score,
+      qualitySound: quality_sound,
+      qualityMicrophone: quality_microphone,
+      speakerNumber: speaker_number,
+      electronicsNotes: electronics_notes,
+      notes,
+      feedbacks: parsedFeedbacks,
+    });
+
+    if (!updated) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Relatorio nao encontrado",
+      });
+    }
+
+    return reply.status(200).send({
+      data: {
+        id: updated.id,
+      },
+    });
+  });
+
+  app.delete("/api/v1/relatorios/:id", async (request, reply) => {
+    const reportId = request.params as { id?: string };
+    if (!reportId.id) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Relatorio invalido",
+      });
+    }
+
+    const report = await getReportById(reportId.id);
+    if (!report) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Relatorio nao encontrado",
+      });
+    }
+
+    if (!request.user) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Token ausente",
+      });
+    }
+
+    if (request.user.role !== "admin" && request.user.id !== report.authorId) {
+      return reply.status(403).send({
+        error: "forbidden",
+        message: "Acesso negado",
+      });
+    }
+
+    const removed = await deleteReport(report.id);
+    if (!removed) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Relatorio nao encontrado",
+      });
+    }
+
+    await Promise.all(
+      report.media.map(async (media) => {
+        const storagePath = resolveStoragePathFromPublicUrl(media.url);
+        if (!storagePath) {
+          return;
+        }
+        await safeUnlink(storagePath);
+      })
+    );
+
+    return reply.status(204).send();
   });
 
   app.get("/api/v1/relatorios/:id/pdf", async (request, reply) => {
@@ -517,9 +895,18 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       `Data: ${formatDate(report.eventDate)}`,
       `Contratante: ${report.contractorName}`,
       `Local: ${report.location}`,
+      `Titulo/Cronograma: ${report.titleSchedule ?? "-"}`,
+      `Locomocao: ${report.transportType ?? "-"}`,
       `Resumo: ${report.teamSummary}`,
+      `Descricao da equipe: ${report.teamGeneralDescription ?? "-"}`,
+      `Nota geral da equipe: ${report.teamGeneralScore ?? "N/A"}`,
+      `Dificuldades do evento: ${report.eventDifficulties ?? "-"}`,
+      `Nota de dificuldade: ${report.eventDifficultyScore ?? "N/A"}`,
+      `Nota de qualidade do evento: ${report.eventQualityScore ?? "N/A"}`,
       `Qualidade som: ${report.qualitySound ?? "N/A"}`,
       `Qualidade microfone: ${report.qualityMicrophone ?? "N/A"}`,
+      `Numero da caixa: ${report.speakerNumber ?? "-"}`,
+      `Observacoes eletronicos: ${report.electronicsNotes ?? "-"}`,
       `Observacoes: ${report.notes ?? "-"}`,
       `Midias: ${report.media.length}`,
       `Feedbacks: ${report.feedbacks.length}`,

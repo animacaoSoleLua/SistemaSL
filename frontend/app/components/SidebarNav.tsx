@@ -4,77 +4,56 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useId, useState, useEffect } from "react";
+import {
+  FiAlertTriangle,
+  FiBookOpen,
+  FiFileText,
+  FiGrid,
+  FiMenu,
+  FiUser,
+  FiUsers,
+  FiX,
+} from "react-icons/fi";
 import logo from "../../assets/logo.png";
 import { getMember, resolveApiAssetUrl } from "../../lib/api";
 import { getStoredUser, roleLabels, type Role } from "../../lib/auth";
 
 const navItems = [
-  // {
-  //   label: "Dashboard",
-  //   href: "/",
-  //   roles: ["admin"],
-  //   icon: (
-  //     <svg viewBox="0 0 20 20" aria-hidden="true">
-  //       <rect x="3" y="3" width="6" height="6" rx="1.5" />
-  //       <rect x="11" y="3" width="6" height="6" rx="1.5" />
-  //       <rect x="3" y="11" width="6" height="6" rx="1.5" />
-  //       <rect x="11" y="11" width="6" height="6" rx="1.5" />
-  //     </svg>
-  //   )
-  // },
-  // {
-  //   label: "Relatorios",
-  //   href: "/relatorios",
-  //   roles: ["admin", "animador"],
-  //   icon: (
-  //     <svg viewBox="0 0 20 20" aria-hidden="true">
-  //       <path d="M5 3.5h7l3 3V16a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 16V5A1.5 1.5 0 0 1 5.5 3.5z" />
-  //       <path d="M12 3.5V7h3" />
-  //     </svg>
-  //   )
-  // },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    roles: ["admin"],
+    icon: <FiGrid aria-hidden="true" />
+  },
+  {
+    label: "Relatorios",
+    href: "/relatorios",
+    roles: ["admin", "animador"],
+    icon: <FiFileText aria-hidden="true" />
+  },
   {
     label: "Cursos",
     href: "/cursos",
     roles: ["admin", "animador", "recreador"],
-    icon: (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <circle cx="10" cy="10" r="7" />
-        <path d="M10 7v6M7 10h6" />
-      </svg>
-    )
+    icon: <FiBookOpen aria-hidden="true" />
   },
   {
     label: "Advertências",
     href: "/advertencias",
     roles: ["admin", "animador"],
-    icon: (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="M10 3L3 17h14L10 3zm-1 8h2v5h-2v-5zm0-4h2v2h-2V7z" />
-      </svg>
-    )
+    icon: <FiAlertTriangle aria-hidden="true" />
   },
   {
     label: "Membros",
     href: "/usuarios",
     roles: ["admin", "animador", "recreador"],
-    icon: (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <circle cx="10" cy="7.5" r="3.2" />
-        <path d="M4.5 16c1-2.5 3.1-4 5.5-4s4.5 1.5 5.5 4" />
-      </svg>
-    )
+    icon: <FiUsers aria-hidden="true" />
   },
   {
     label: "Perfil",
     href: "/perfil",
     roles: ["admin", "animador", "recreador"],
-    icon: (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <circle cx="10" cy="7.5" r="3.2" />
-        <path d="M4.5 16c1-2.5 3.1-4 5.5-4s4.5 1.5 5.5 4" />
-      </svg>
-    )
+    icon: <FiUser aria-hidden="true" />
   },
 ];
 
@@ -199,9 +178,7 @@ export default function SidebarNav() {
           aria-controls={mobileMenuId}
           onClick={() => setMenuOpen(true)}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
+          <FiMenu aria-hidden="true" />
         </button>
         <div className="app-brand">
           <Image src={logo} alt="Sol e Lua Animação" className="app-logo" priority />
@@ -288,9 +265,7 @@ export default function SidebarNav() {
                 aria-label="Fechar menu"
                 onClick={() => setMenuOpen(false)}
               >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M6 6l12 12M18 6l-12 12" />
-                </svg>
+                <FiX aria-hidden="true" />
               </button>
             </div>
             <nav className="mobile-nav" aria-label="Navegação principal">

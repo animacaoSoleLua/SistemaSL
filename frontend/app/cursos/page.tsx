@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { FiArchive, FiInfo } from "react-icons/fi";
 import {
   createCourse,
   deleteCourse,
@@ -476,9 +477,7 @@ export default function CursosPage() {
           {notice && (
             <div className={`alert-card ${notice.type}`}>
               <span className="alert-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a1.2 1.2 0 1 1 0 2.4A1.2 1.2 0 0 1 12 7zm1.5 10h-3v-2h1v-3h-1V10h3v5h1v2z" />
-                </svg>
+                <FiInfo />
               </span>
               <div>
                 <strong className="alert-title">
@@ -622,9 +621,7 @@ export default function CursosPage() {
           ) : (
             <div className="empty-state">
               <span className="empty-state-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M7 4h10l2 4v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8l2-4zm0 0h10" />
-                </svg>
+                <FiArchive />
               </span>
               <p>Nenhum curso encontrado</p>
               <p className="helper">Crie a primeira turma para aparecer aqui.</p>

@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-02-19
+**Ultima Atualizacao:** 2026-03-05
 **Atualizado por:** Codex
 
 ---
@@ -15,30 +15,32 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 39/39 |
-| Ultima Tarefa | MELHORIA-067 |
+| Tarefas Completas | 65/65 |
+| Ultima Tarefa | MELHORIA-097 |
 
 ---
 
 ## Tarefa Atual
 
-### MELHORIA-067: Menu lateral no celular com botão de abrir
+### MELHORIA-097: Visualizar foto selecionada no formulário (sem miniatura na listagem)
 
-**Epic:** Navegacao e usabilidade
-**User Story:** Menu responsivo
-**API:** Frontend
+**Epic:** Relatórios de eventos
+**User Story:** Permitir visualizar uma imagem no momento da criação do relatório antes de salvar
+**API:** Frontend (formulário de novo relatório)
 
-**Descricao:** No celular, a barra do topo vira apenas o ícone de abrir e o menu aparece na lateral ao clicar.
+**Descricao:** Ajustada a experiência de upload para permitir visualização da imagem selecionada no formulário e removida a miniatura da listagem de relatórios.
 
 **O que mudou:**
-- Barra superior mostra apenas o ícone de menu no celular.
-- Menu abre na lateral com as opções e dados do usuário.
+- Cada foto selecionada no formulário agora mostra botão "Visualizar".
+- O botão abre a imagem em nova aba para conferência rápida antes de salvar.
+- A miniatura de fotos foi removida dos cards da listagem de relatórios.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Icone de menu visivel no celular.
-- [x] Menu lateral abre e fecha corretamente.
+- [x] Usuário consegue visualizar imagem selecionada durante o preenchimento.
+- [x] Visualização acontece por botão direto em cada item da lista de arquivos.
+- [x] Listagem de relatórios não mostra mais miniaturas no card.
 
 ---
 
@@ -92,6 +94,36 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-03-05 | MELHORIA-097 | Formulário de relatório agora tem botão para visualizar imagem selecionada e listagem não mostra miniaturas |
+| 2026-03-05 | MELHORIA-096 | Listagem de relatórios agora exibe miniaturas das fotos anexadas em cada card |
+| 2026-03-05 | MELHORIA-095 | Novo relatório agora adiciona fotos uma por vez e mostra lista individual com remoção por item |
+| 2026-03-05 | MELHORIA-094 | Criação de relatório agora limita em 5 imagens por tópico na seção "Fotos do Evento" |
+| 2026-03-05 | MELHORIA-093 | Hora extra do relatório normalizada no backend e exibida no frontend mesmo com flag ausente |
+| 2026-03-05 | MELHORIA-092 | Frontend em Docker dev reinstala dependências ao iniciar para evitar erro "Module not found" |
+| 2026-03-05 | MELHORIA-091 | Ícones da interface migrados para biblioteca react-icons (menu, dashboard, membros, cursos, relatórios e advertências) |
+| 2026-03-04 | MELHORIA-090 | Exclusão de relatório com modal de confirmação melhor e botão de ação mais claro |
+| 2026-03-04 | MELHORIA-089 | Dashboard com novo card de eventos fora de Brasília |
+| 2026-03-04 | MELHORIA-088 | Dashboard com dois novos cards: média da qualidade do evento e média da dificuldade do evento |
+| 2026-03-04 | MELHORIA-087 | Card "Avaliação Média da Equipe" corrigido para calcular média pela nota geral da equipe |
+| 2026-03-04 | MELHORIA-086 | Dashboard com cards de estatísticas reais e listagem simplificada de relatórios recentes |
+| 2026-03-04 | MELHORIA-085 | Listagem de relatórios mostra rótulo sem negrito e deixa em negrito apenas o nome |
+| 2026-03-04 | MELHORIA-084 | Listagem de relatórios mostra o rótulo "Aniversariante/Contratante:" antes do nome |
+| 2026-03-04 | MELHORIA-083 | Barra de pesquisa de relatórios agora busca por contratante, título/cronograma e autor |
+| 2026-03-04 | MELHORIA-082 | API de listagem de relatórios corrigida para retornar título/cronograma |
+| 2026-03-04 | MELHORIA-081 | Listagem de relatórios com nome, título/cronograma, criador e data do evento no card |
+| 2026-03-03 | MELHORIA-080 | Formulário com `form-card` em bloco e espaçamento vertical corrigido entre seções (incluindo locomoção e toggles) |
+| 2026-03-03 | MELHORIA-079 | Ajuste do espaço do título "Feedback da Equipe" e reorganização visual do bloco de descrição |
+| 2026-03-03 | MELHORIA-078 | Correção do título da seção de feedback da equipe no formulário de relatório |
+| 2026-03-03 | MELHORIA-077 | Ajuste visual da seção de feedback com bloco geral alinhado à esquerda e aba individual mais abaixo |
+| 2026-03-03 | MELHORIA-076 | Seção "Feedback da Equipe" com descrição e avaliação abaixo do título e sem subtítulo |
+| 2026-03-03 | MELHORIA-075 | Ajuste visual da seção de feedback da equipe e padronização do botão de adicionar mídia com o estilo do botão de foto do perfil |
+| 2026-03-02 | MELHORIA-074 | Animador edita relatório existente e modal mostra locomoção com nomes amigáveis (Uber/99, Outro, Carro da Empresa) |
+| 2026-03-02 | MELHORIA-073 | Modal de relatório mostra só respostas aplicáveis + data de criação + nome nos feedbacks individuais |
+| 2026-03-02 | MELHORIA-072 | Botão de excluir relatório na listagem + modal mostra nome do autor |
+| 2026-03-02 | MELHORIA-071 | Upload real de imagens/vídeos no relatório + rolagem no modal de detalhes |
+| 2026-03-02 | MELHORIA-070 | Botão "Ver" dos relatórios abre modal com todos os dados completos |
+| 2026-03-02 | MELHORIA-069 | Backend e banco atualizados com os campos novos + notas em estrelas (0 a 5) no formulário |
+| 2026-03-02 | MELHORIA-068 | Novo formulário de relatório com seções completas e campos condicionais |
 | 2026-02-19 | MELHORIA-067 | Menu lateral no celular com botão de abrir |
 | 2026-02-19 | MELHORIA-066 | Botão de listagem de CPF só para admin e ao lado do novo membro |
 | 2026-02-19 | MELHORIA-065 | Listagem de CPF em PDF na tela de membros |
@@ -211,10 +243,17 @@ Nenhum bloqueador no momento.
 
 ## Log de Atividades
 
+### 2026-03-05
+- MELHORIA-094: Limite de 5 imagens por tópico adicionado nas fotos do evento na criação de relatório.
+- MELHORIA-091: Padronização dos ícones da interface usando biblioteca react-icons.
+
 ### 2026-02-10
 - MELHORIA-057: Botao menor e mais bonito para adicionar foto no perfil.
 - MELHORIA-056: Erro de login nao recarrega mais a pagina.
 - MELHORIA-055: CPF voltou a aparecer no perfil e erro de login fica visivel na tela.
+
+### 2026-03-02
+- MELHORIA-068: Tela de novo relatorio refeita com seções completas, regras condicionais e uploads por categoria.
 
 ### 2026-02-06
 - MELHORIA-053: Envio do token por email usando Resend.

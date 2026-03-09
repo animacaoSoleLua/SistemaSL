@@ -72,14 +72,10 @@ export async function dashboardRoutes(app: FastifyInstance) {
 
       const reports = result.reports;
       const qualityValues = reports.flatMap((report) => {
-        const values: number[] = [];
-        if (report.qualitySound !== undefined) {
-          values.push(report.qualitySound);
+        if (report.teamGeneralScore === undefined) {
+          return [];
         }
-        if (report.qualityMicrophone !== undefined) {
-          values.push(report.qualityMicrophone);
-        }
-        return values;
+        return [report.teamGeneralScore];
       });
 
       return reply.status(200).send({
@@ -87,6 +83,8 @@ export async function dashboardRoutes(app: FastifyInstance) {
           total_events: reports.length,
           total_reports: reports.length,
           avg_quality: average(qualityValues),
+          outside_brasilia_events: reports.filter((report) => report.outsideBrasilia)
+            .length,
         },
       });
     }
@@ -143,6 +141,8 @@ export async function dashboardRoutes(app: FastifyInstance) {
 
       const soundValues: number[] = [];
       const micValues: number[] = [];
+      const eventQualityValues: number[] = [];
+      const eventDifficultyValues: number[] = [];
 
       result.reports.forEach((report) => {
         if (report.qualitySound !== undefined) {
@@ -151,12 +151,20 @@ export async function dashboardRoutes(app: FastifyInstance) {
         if (report.qualityMicrophone !== undefined) {
           micValues.push(report.qualityMicrophone);
         }
+        if (report.eventQualityScore !== undefined) {
+          eventQualityValues.push(report.eventQualityScore);
+        }
+        if (report.eventDifficultyScore !== undefined) {
+          eventDifficultyValues.push(report.eventDifficultyScore);
+        }
       });
 
       return reply.status(200).send({
         data: {
           sound: average(soundValues),
           microphone: average(micValues),
+          event_quality: average(eventQualityValues),
+          event_difficulty: average(eventDifficultyValues),
         },
       });
     }

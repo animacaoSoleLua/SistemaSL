@@ -16,6 +16,18 @@ export const baseUsers: Prisma.UserCreateManyInput[] = [
     role: "admin",
   },
   {
+    id: "11111111-1111-0000-1111-111111111111",
+    name: "Suporte",
+    lastName: "SoleLua",
+    email: "suporte@gmail.com",
+    cpf: "11111111111",
+    birthDate: new Date("2026-01-01"),
+    region: "DF",
+    phone: "(61) 00000-0000",
+    passwordHash: hashPassword("123456"),
+    role: "admin",
+  },
+  {
     id: "22222222-2222-2222-2222-222222222222",
     name: "Animador",
     lastName: "Lua",

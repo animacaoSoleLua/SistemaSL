@@ -22,7 +22,17 @@
       "id": "uuid",
       "event_date": "2026-01-10",
       "contractor_name": "string",
-      "author_id": "uuid"
+      "title_schedule": "string",
+      "author_id": "uuid",
+      "author_name": "string",
+      "media": [
+        {
+          "id": "uuid",
+          "url": "string",
+          "media_type": "image|video",
+          "size_bytes": 123456
+        }
+      ]
     }
   ]
 }
@@ -41,9 +51,25 @@
   "event_date": "2026-01-10",
   "contractor_name": "string",
   "location": "string",
+  "title_schedule": "string",
+  "transport_type": "uber99|carro_empresa|outro",
+  "uber_go_value": 12.5,
+  "uber_return_value": 12.5,
+  "other_car_responsible": "string",
+  "has_extra_hours": true,
+  "extra_hours_details": "string",
+  "outside_brasilia": false,
+  "exclusive_event": true,
   "team_summary": "string",
+  "team_general_description": "string",
+  "team_general_score": 4,
+  "event_difficulties": "string",
+  "event_difficulty_score": 2,
+  "event_quality_score": 5,
   "quality_sound": 4,
   "quality_microphone": 4,
+  "speaker_number": 7,
+  "electronics_notes": "string",
   "notes": "string",
   "feedbacks": [
     { "member_id": "uuid", "feedback": "string" }
@@ -73,11 +99,25 @@
 {
   "data": {
     "id": "uuid",
+    "author_name": "string",
     "media": [],
     "feedbacks": []
   }
 }
 ```
+
+---
+
+## DELETE /api/v1/relatorios/:id
+
+**Descricao:** Exclui relatorio (admin ou autor).
+
+**Response 204 No Content**
+
+**Erros:**
+- 401 Token ausente
+- 403 Acesso negado
+- 404 Relatorio nao encontrado
 
 ---
 

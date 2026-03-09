@@ -27,8 +27,10 @@ describe("Dashboard (integration)", () => {
       contractorName: "Hotel Sol",
       location: "Brasilia",
       teamSummary: "Equipe A",
+      teamGeneralScore: 3,
       qualitySound: 4,
       qualityMicrophone: 5,
+      outsideBrasilia: true,
     });
     await createReport(animador!.id, {
       eventDate: new Date("2026-02-10"),
@@ -58,7 +60,8 @@ describe("Dashboard (integration)", () => {
     const body = response.json();
     expect(body.data.total_events).toBe(1);
     expect(body.data.total_reports).toBe(1);
-    expect(body.data.avg_quality).toBe(4.5);
+    expect(body.data.avg_quality).toBe(3);
+    expect(body.data.outside_brasilia_events).toBe(1);
   });
 
   it("returns animadores ordered by events", async () => {
@@ -150,6 +153,8 @@ describe("Dashboard (integration)", () => {
       contractorName: "Hotel Sol",
       location: "Brasilia",
       teamSummary: "Equipe A",
+      eventQualityScore: 4,
+      eventDifficultyScore: 2,
       qualitySound: 4,
       qualityMicrophone: 3,
     });
@@ -158,6 +163,8 @@ describe("Dashboard (integration)", () => {
       contractorName: "Clube Lua",
       location: "Goiania",
       teamSummary: "Equipe B",
+      eventQualityScore: 2,
+      eventDifficultyScore: 4,
       qualitySound: 2,
       qualityMicrophone: 5,
     });
@@ -182,6 +189,8 @@ describe("Dashboard (integration)", () => {
     const body = response.json();
     expect(body.data.sound).toBe(3);
     expect(body.data.microphone).toBe(4);
+    expect(body.data.event_quality).toBe(3);
+    expect(body.data.event_difficulty).toBe(3);
   });
 
   it("filters qualidade by period", async () => {
@@ -191,6 +200,8 @@ describe("Dashboard (integration)", () => {
       contractorName: "Hotel Sol",
       location: "Brasilia",
       teamSummary: "Equipe A",
+      eventQualityScore: 5,
+      eventDifficultyScore: 1,
       qualitySound: 4,
       qualityMicrophone: 3,
     });
@@ -199,6 +210,8 @@ describe("Dashboard (integration)", () => {
       contractorName: "Clube Lua",
       location: "Goiania",
       teamSummary: "Equipe B",
+      eventQualityScore: 2,
+      eventDifficultyScore: 4,
       qualitySound: 2,
       qualityMicrophone: 5,
     });
@@ -223,6 +236,8 @@ describe("Dashboard (integration)", () => {
     const body = response.json();
     expect(body.data.sound).toBe(4);
     expect(body.data.microphone).toBe(3);
+    expect(body.data.event_quality).toBe(5);
+    expect(body.data.event_difficulty).toBe(1);
   });
 
   it("rejects invalid period range", async () => {

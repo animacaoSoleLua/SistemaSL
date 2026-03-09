@@ -3,6 +3,17 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  FiAlertTriangle,
+  FiEdit2,
+  FiShield,
+  FiStar,
+  FiTrash2,
+  FiUser,
+  FiUserPlus,
+  FiUsers,
+  FiX,
+} from "react-icons/fi";
+import {
   createMember,
   deleteMember,
   getMember,
@@ -580,12 +591,7 @@ export default function UsuariosPage() {
                 onClick={openCreateModal}
               >
                 <span className="button-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M19 8v6" />
-                    <path d="M22 11h-6" />
-                  </svg>
+                  <FiUserPlus />
                 </span>
                 Novo Membro
               </button>
@@ -605,12 +611,7 @@ export default function UsuariosPage() {
             <div className="summary-head">
               <span className="summary-label">Total de Membros</span>
               <span className="summary-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                  <path d="M16 3.13a4 4 0 010 7.75" />
-                </svg>
+                <FiUsers />
               </span>
             </div>
             <strong className="summary-value">{totalUsers}</strong>
@@ -620,9 +621,7 @@ export default function UsuariosPage() {
             <div className="summary-head">
               <span className="summary-label">Administradores</span>
               <span className="summary-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6z" />
-                </svg>
+                <FiShield />
               </span>
             </div>
             <strong className="summary-value">{totalAdmins}</strong>
@@ -632,9 +631,7 @@ export default function UsuariosPage() {
             <div className="summary-head">
               <span className="summary-label">Animadores</span>
               <span className="summary-icon gold" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 2l2.4 4.9L20 8l-4 3.8L17 18l-5-2.6L7 18l1-6.2L4 8l5.6-1.1z" />
-                </svg>
+                <FiStar />
               </span>
             </div>
             <strong className="summary-value">{totalAnimadores}</strong>
@@ -644,12 +641,7 @@ export default function UsuariosPage() {
             <div className="summary-head">
               <span className="summary-label">Recreadores</span>
               <span className="summary-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M16 11c1.7 0 3-1.8 3-4s-1.3-4-3-4-3 1.8-3 4 1.3 4 3 4z" />
-                  <path d="M8 12c2.2 0 4-2.2 4-5S10.2 2 8 2 4 4.2 4 7s1.8 5 4 5z" />
-                  <path d="M2 22v-2c0-2.9 2.4-5.2 5.3-5.2h1.5c2 0 3.8.9 4.7 2.4" />
-                  <path d="M14 22v-2c0-2.4 1.9-4.4 4.3-4.4h1.4c2.4 0 4.3 2 4.3 4.4v2" />
-                </svg>
+                <FiUsers />
               </span>
             </div>
             <strong className="summary-value">{totalRecreadores}</strong>
@@ -734,10 +726,7 @@ export default function UsuariosPage() {
                                 openEditModal(user);
                               }}
                             >
-                              <svg viewBox="0 0 24 24">
-                                <path d="M12 20h9" />
-                                <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
-                              </svg>
+                              <FiEdit2 />
                             </button>
                             {currentUser?.id !== user.id && (
                               <button
@@ -749,13 +738,7 @@ export default function UsuariosPage() {
                                   handleDelete(user);
                                 }}
                               >
-                                <svg viewBox="0 0 24 24">
-                                  <path d="M3 6h18" />
-                                  <path d="M8 6V4h8v2" />
-                                  <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                  <path d="M10 11v6" />
-                                  <path d="M14 11v6" />
-                                </svg>
+                                <FiTrash2 />
                               </button>
                             )}
                           </div>
@@ -783,10 +766,7 @@ export default function UsuariosPage() {
             {!selectedMember ? (
               <div className="member-panel-empty">
                 <span className="member-panel-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 20c0-4.2 3.6-7 8-7s8 2.8 8 7" />
-                  </svg>
+                  <FiUser />
                 </span>
                 <p>Selecione um membro para ver detalhes.</p>
               </div>
@@ -1011,10 +991,7 @@ export default function UsuariosPage() {
                 aria-label="Fechar"
                 onClick={closeModal}
               >
-                <svg viewBox="0 0 24 24">
-                  <path d="M18 6L6 18" />
-                  <path d="M6 6l12 12" />
-                </svg>
+                <FiX />
               </button>
             </header>
 
@@ -1195,20 +1172,13 @@ export default function UsuariosPage() {
                 aria-label="Fechar"
                 onClick={closeDeleteModal}
               >
-                <svg viewBox="0 0 24 24">
-                  <path d="M18 6L6 18" />
-                  <path d="M6 6l12 12" />
-                </svg>
+                <FiX />
               </button>
             </header>
 
             <div className="modal-body confirm-body">
               <div className="confirm-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 9v4" />
-                  <path d="M12 17h.01" />
-                  <path d="M10.3 3.3l-7 12.1a2 2 0 001.7 3h14a2 2 0 001.7-3l-7-12.1a2 2 0 00-3.4 0z" />
-                </svg>
+                <FiAlertTriangle />
               </div>
               <div className="confirm-text">
                 <p>
@@ -1273,10 +1243,7 @@ export default function UsuariosPage() {
                 aria-label="Fechar"
                 onClick={closeCpfModal}
               >
-                <svg viewBox="0 0 24 24">
-                  <path d="M18 6L6 18" />
-                  <path d="M6 6l12 12" />
-                </svg>
+                <FiX />
               </button>
             </header>
 

@@ -52,6 +52,7 @@ Authorization: Bearer {jwt_token}
 | GET | `/relatorios/:id` | Detalhe do relatorio |
 | GET | `/relatorios/:id/pdf` | Exportar relatorio em PDF |
 | POST | `/relatorios/:id/media` | Anexar midia |
+| DELETE | `/relatorios/:id` | Excluir relatorio |
 
 ### Cursos
 | Metodo | Endpoint | Descricao |

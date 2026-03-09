@@ -25,45 +25,61 @@ enum EnrollmentStatus {
 }
 
 model User {
-  id           String             @id @default(uuid()) @db.Uuid
-  name         String             @db.VarChar(100)
-  lastName     String?            @map("last_name") @db.VarChar(120)
-  email        String             @unique(map: "idx_users_email") @db.VarChar(255)
-  cpf          String?            @map("cpf") @db.VarChar(20)
-  birthDate    DateTime?          @map("birth_date") @db.Date
-  region       String?            @map("region") @db.VarChar(100)
-  phone        String?            @map("phone") @db.VarChar(40)
-  passwordHash String             @map("password_hash") @db.VarChar(255)
-  role         UserRole
-  photoUrl     String?            @map("photo_url") @db.Text
-  createdAt    DateTime           @default(now()) @map("created_at")
-  updatedAt    DateTime           @updatedAt @map("updated_at")
-  reports      Report[]           @relation("ReportsByAuthor")
-  reportNotes  ReportFeedback[]   @relation("FeedbacksForMember")
-  courses      Course[]           @relation("CoursesByCreator")
-  instructedCourses Course[]      @relation("CoursesByInstructor")
-  enrollments  CourseEnrollment[] @relation("EnrollmentsByMember")
-  warnings     Warning[]          @relation("WarningsForMember")
-  warningsMade Warning[]          @relation("WarningsByCreator")
-  suspensions  Suspension[]
+  id                String             @id @default(uuid()) @db.Uuid
+  name              String             @db.VarChar(100)
+  lastName          String?            @map("last_name") @db.VarChar(120)
+  email             String             @unique(map: "idx_users_email") @db.VarChar(255)
+  cpf               String?            @map("cpf") @db.VarChar(20)
+  birthDate         DateTime?          @map("birth_date") @db.Date
+  region            String?            @map("region") @db.VarChar(100)
+  phone             String?            @map("phone") @db.VarChar(40)
+  passwordHash      String             @map("password_hash") @db.VarChar(255)
+  role              UserRole
+  photoUrl          String?            @map("photo_url") @db.Text
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  reports           Report[]           @relation("ReportsByAuthor")
+  reportNotes       ReportFeedback[]   @relation("FeedbacksForMember")
+  courses           Course[]           @relation("CoursesByCreator")
+  instructedCourses Course[]           @relation("CoursesByInstructor")
+  enrollments       CourseEnrollment[] @relation("EnrollmentsByMember")
+  warnings          Warning[]          @relation("WarningsForMember")
+  warningsMade      Warning[]          @relation("WarningsByCreator")
+  suspensions       Suspension[]
 
   @@map("users")
 }
 
 model Report {
-  id               String           @id @default(uuid()) @db.Uuid
-  authorId         String           @map("author_id") @db.Uuid
-  eventDate        DateTime         @map("event_date") @db.Date
-  contractorName   String           @map("contractor_name") @db.VarChar(150)
-  location         String           @db.VarChar(150)
-  teamSummary      String?          @map("team_summary") @db.VarChar(200)
-  qualitySound     Int?             @map("quality_sound")
-  qualityMicrophone Int?            @map("quality_microphone")
-  notes            String?          @db.Text
-  createdAt        DateTime         @default(now()) @map("created_at")
-  author           User             @relation("ReportsByAuthor", fields: [authorId], references: [id])
-  media            ReportMedia[]
-  feedbacks        ReportFeedback[]
+  id                     String           @id @default(uuid()) @db.Uuid
+  authorId               String           @map("author_id") @db.Uuid
+  eventDate              DateTime         @map("event_date") @db.Date
+  contractorName         String           @map("contractor_name") @db.VarChar(150)
+  location               String           @db.VarChar(150)
+  titleSchedule          String?          @map("title_schedule") @db.VarChar(200)
+  transportType          String?          @map("transport_type") @db.VarChar(30)
+  uberGoValue            Float?           @map("uber_go_value")
+  uberReturnValue        Float?           @map("uber_return_value")
+  otherCarResponsible    String?          @map("other_car_responsible") @db.VarChar(150)
+  hasExtraHours          Boolean?         @map("has_extra_hours")
+  extraHoursDetails      String?          @map("extra_hours_details") @db.VarChar(120)
+  outsideBrasilia        Boolean          @default(false) @map("outside_brasilia")
+  exclusiveEvent         Boolean          @default(false) @map("exclusive_event")
+  teamSummary            String?          @map("team_summary") @db.VarChar(200)
+  teamGeneralDescription String?          @map("team_general_description") @db.Text
+  teamGeneralScore       Int?             @map("team_general_score")
+  eventDifficulties      String?          @map("event_difficulties") @db.Text
+  eventDifficultyScore   Int?             @map("event_difficulty_score")
+  eventQualityScore      Int?             @map("event_quality_score")
+  qualitySound           Int?             @map("quality_sound")
+  qualityMicrophone      Int?             @map("quality_microphone")
+  speakerNumber          Int?             @map("speaker_number")
+  electronicsNotes       String?          @map("electronics_notes") @db.Text
+  notes                  String?          @db.Text
+  createdAt              DateTime         @default(now()) @map("created_at")
+  author                 User             @relation("ReportsByAuthor", fields: [authorId], references: [id])
+  media                  ReportMedia[]
+  feedbacks              ReportFeedback[]
 
   @@index([authorId], map: "idx_reports_author")
   @@map("reports")
@@ -94,18 +110,18 @@ model ReportFeedback {
 }
 
 model Course {
-  id          String             @id @default(uuid()) @db.Uuid
-  createdBy   String             @map("created_by") @db.Uuid
-  instructorId String            @map("instructor_id") @db.Uuid
-  title       String             @db.VarChar(150)
-  description String?            @db.Text
-  courseDate  DateTime           @map("course_date")
-  location    String?            @db.VarChar(150)
-  capacity    Int?
-  createdAt   DateTime           @default(now()) @map("created_at")
-  creator     User               @relation("CoursesByCreator", fields: [createdBy], references: [id])
-  instructor  User               @relation("CoursesByInstructor", fields: [instructorId], references: [id])
-  enrollments CourseEnrollment[]
+  id           String             @id @default(uuid()) @db.Uuid
+  createdBy    String             @map("created_by") @db.Uuid
+  instructorId String             @map("instructor_id") @db.Uuid
+  title        String             @db.VarChar(150)
+  description  String?            @db.Text
+  courseDate   DateTime           @map("course_date")
+  location     String?            @db.VarChar(150)
+  capacity     Int?
+  createdAt    DateTime           @default(now()) @map("created_at")
+  creator      User               @relation("CoursesByCreator", fields: [createdBy], references: [id])
+  instructor   User               @relation("CoursesByInstructor", fields: [instructorId], references: [id])
+  enrollments  CourseEnrollment[]
 
   @@map("courses")
 }
@@ -124,15 +140,15 @@ model CourseEnrollment {
 }
 
 model Warning {
-  id          String   @id @default(uuid()) @db.Uuid
-  memberId    String   @map("member_id") @db.Uuid
-  createdBy   String   @map("created_by") @db.Uuid
-  reason      String   @db.Text
-  warningDate DateTime @map("warning_date") @db.Date
+  id          String    @id @default(uuid()) @db.Uuid
+  memberId    String    @map("member_id") @db.Uuid
+  createdBy   String    @map("created_by") @db.Uuid
+  reason      String    @db.Text
+  warningDate DateTime  @map("warning_date") @db.Date
   deletedAt   DateTime? @map("deleted_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  member      User     @relation("WarningsForMember", fields: [memberId], references: [id])
-  creator     User     @relation("WarningsByCreator", fields: [createdBy], references: [id])
+  createdAt   DateTime  @default(now()) @map("created_at")
+  member      User      @relation("WarningsForMember", fields: [memberId], references: [id])
+  creator     User      @relation("WarningsByCreator", fields: [createdBy], references: [id])
 
   @@index([memberId], map: "idx_warnings_member")
   @@map("warnings")

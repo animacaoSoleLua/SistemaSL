@@ -20,7 +20,8 @@
   "data": {
     "total_events": 10,
     "total_reports": 10,
-    "avg_quality": 4.2
+    "avg_quality": 4.2,
+    "outside_brasilia_events": 3
   }
 }
 ```

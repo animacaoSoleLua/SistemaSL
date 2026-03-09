@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { FiAlertTriangle, FiX } from "react-icons/fi";
 import {
   createWarning,
   deleteWarning,
@@ -405,9 +406,7 @@ export default function WarningsPage() {
           ) : (
             <div className="empty-state">
               <span className="empty-state-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 9v4m0 4h.01M10.29 3.86l-7.4 13.03A2 2 0 004.62 20h14.76a2 2 0 001.73-3.11l-7.4-13.03a2 2 0 00-3.42 0z" />
-                </svg>
+                <FiAlertTriangle />
               </span>
               <p>Nenhuma advertência encontrada</p>
               <p className="helper">
@@ -453,10 +452,7 @@ export default function WarningsPage() {
                 aria-label="Fechar"
                 onClick={closeEditModal}
               >
-                <svg viewBox="0 0 24 24">
-                  <path d="M18 6L6 18" />
-                  <path d="M6 6l12 12" />
-                </svg>
+                <FiX />
               </button>
             </header>
 

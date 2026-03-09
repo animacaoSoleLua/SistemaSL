@@ -1,0 +1,17 @@
+ALTER TABLE "reports"
+  ADD COLUMN "title_schedule" VARCHAR(200),
+  ADD COLUMN "transport_type" VARCHAR(30),
+  ADD COLUMN "uber_go_value" DOUBLE PRECISION,
+  ADD COLUMN "uber_return_value" DOUBLE PRECISION,
+  ADD COLUMN "other_car_responsible" VARCHAR(150),
+  ADD COLUMN "has_extra_hours" BOOLEAN,
+  ADD COLUMN "extra_hours_details" VARCHAR(120),
+  ADD COLUMN "outside_brasilia" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "exclusive_event" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "team_general_description" TEXT,
+  ADD COLUMN "team_general_score" INTEGER,
+  ADD COLUMN "event_difficulties" TEXT,
+  ADD COLUMN "event_difficulty_score" INTEGER,
+  ADD COLUMN "event_quality_score" INTEGER,
+  ADD COLUMN "speaker_number" INTEGER,
+  ADD COLUMN "electronics_notes" TEXT;
