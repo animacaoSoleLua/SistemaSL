@@ -42,6 +42,8 @@ coverage/
 .cache/
 .parcel-cache/
 .turbo/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Temporary files
 tmp/
