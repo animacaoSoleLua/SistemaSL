@@ -1,3 +1,4 @@
+import "@fastify/cookie";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Role } from "./store.js";
 import { verifyAccessToken } from "./token.js";
@@ -28,16 +29,18 @@ export async function authGuard(
     return;
   }
 
+  // Preferir cookie httpOnly (mais seguro); Authorization header como fallback
+  const cookieToken = request.cookies?.["auth_token"];
   const header = request.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
+  const token = cookieToken ?? (header?.startsWith("Bearer ") ? header.slice("Bearer ".length) : undefined);
+
+  if (!token) {
     reply.status(401).send({
       error: "unauthorized",
       message: "Token ausente",
     });
     return;
   }
-
-  const token = header.slice("Bearer ".length);
   const payload = verifyAccessToken(token);
   if (!payload) {
     reply.status(401).send({

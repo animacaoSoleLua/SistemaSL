@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import './page.css';
+import { useEffect, useId, useMemo, useReducer, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   FiAlertTriangle,
@@ -22,6 +24,54 @@ import {
   updateMember,
 } from "../../lib/api";
 import { getStoredUser, roleLabels, type Role, type StoredUser } from "../../lib/auth";
+import { useFocusTrap } from "../../lib/useFocusTrap";
+
+// ── Reducer: formulário de membro ───────────────────────────────────────────
+
+interface MemberFormState {
+  name: string;
+  last_name: string;
+  cpf: string;
+  email: string;
+  birth_date: string;
+  region: string;
+  phone: string;
+  role: Role;
+  password: string;
+}
+
+type MemberFormAction =
+  | { type: "SET_FIELD"; field: keyof MemberFormState; value: string }
+  | { type: "RESET" }
+  | { type: "LOAD"; payload: MemberFormState };
+
+const memberFormInitial: MemberFormState = {
+  name: "",
+  last_name: "",
+  cpf: "",
+  email: "",
+  birth_date: "",
+  region: "",
+  phone: "",
+  role: "animador",
+  password: "",
+};
+
+function memberFormReducer(
+  state: MemberFormState,
+  action: MemberFormAction
+): MemberFormState {
+  switch (action.type) {
+    case "SET_FIELD":
+      return { ...state, [action.field]: action.value } as MemberFormState;
+    case "RESET":
+      return memberFormInitial;
+    case "LOAD":
+      return action.payload;
+    default:
+      return state;
+  }
+}
 
 interface Member {
   id: string;
@@ -99,17 +149,7 @@ export default function UsuariosPage() {
   const [deleting, setDeleting] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    last_name: "",
-    cpf: "",
-    email: "",
-    birth_date: "",
-    region: "",
-    phone: "",
-    role: "animador" as Role,
-    password: "",
-  });
+  const [formData, dispatchForm] = useReducer(memberFormReducer, memberFormInitial);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [selectedMemberDetails, setSelectedMemberDetails] =
@@ -120,6 +160,10 @@ export default function UsuariosPage() {
   const [cpfSelectedMembers, setCpfSelectedMembers] = useState<Member[]>([]);
   const [cpfGenerating, setCpfGenerating] = useState(false);
   const [cpfActionError, setCpfActionError] = useState<string | null>(null);
+
+  const memberModalTrapRef = useFocusTrap(modalOpen);
+  const deleteTrapRef = useFocusTrap(!!deleteTarget);
+  const cpfTrapRef = useFocusTrap(cpfModalOpen);
 
   const isAdmin = currentUser?.role === "admin";
 
@@ -187,17 +231,7 @@ export default function UsuariosPage() {
 
   const openCreateModal = () => {
     setModalMode("create");
-    setFormData({
-      name: "",
-      last_name: "",
-      cpf: "",
-      email: "",
-      birth_date: "",
-      region: "",
-      phone: "",
-      role: "animador",
-      password: "",
-    });
+    dispatchForm({ type: "RESET" });
     setEditingId(null);
     setActionError(null);
     setModalOpen(true);
@@ -205,16 +239,19 @@ export default function UsuariosPage() {
 
   const openEditModal = (member: Member) => {
     setModalMode("edit");
-    setFormData({
-      name: member.name,
-      last_name: member.last_name ?? "",
-      cpf: member.cpf ?? "",
-      email: member.email,
-      birth_date: member.birth_date ?? "",
-      region: member.region ?? "",
-      phone: member.phone ?? "",
-      role: member.role,
-      password: "",
+    dispatchForm({
+      type: "LOAD",
+      payload: {
+        name: member.name,
+        last_name: member.last_name ?? "",
+        cpf: member.cpf ? formatCpf(member.cpf) : "",
+        email: member.email,
+        birth_date: member.birth_date ?? "",
+        region: member.region ?? "",
+        phone: member.phone ?? "",
+        role: member.role,
+        password: "",
+      },
     });
     setEditingId(member.id);
     setActionError(null);
@@ -226,8 +263,8 @@ export default function UsuariosPage() {
     setModalOpen(false);
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: keyof MemberFormState, value: string) => {
+    dispatchForm({ type: "SET_FIELD", field, value });
   };
 
   const handleSave = async (event: React.FormEvent) => {
@@ -396,11 +433,12 @@ export default function UsuariosPage() {
     const resolvedPhotoUrl = resolveApiAssetUrl(photoUrl);
     if (resolvedPhotoUrl) {
       return (
-        <img
+        <Image
           className="avatar-image"
           src={resolvedPhotoUrl}
           alt={`Foto de ${name}`}
-          loading="lazy"
+          width={54}
+          height={54}
         />
       );
     }
@@ -670,12 +708,22 @@ export default function UsuariosPage() {
             </div>
 
             {loading ? (
-              <div className="empty-state">
-                <p>Carregando membros...</p>
+              <div className="members-list" aria-hidden="true">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="member-row">
+                    <div className="member-info">
+                      <div className="member-avatar skeleton" />
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <div className="skeleton" style={{ width: 140, height: 16 }} />
+                        <div className="skeleton" style={{ width: 100, height: 13 }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : error ? (
               <div className="empty-state">
-                <p className="text-red-500">Erro ao carregar membros: {error}</p>
+                <p className="text-red-500" role="alert" aria-live="polite">Erro ao carregar membros: {error}</p>
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="empty-state">
@@ -726,7 +774,7 @@ export default function UsuariosPage() {
                                 openEditModal(user);
                               }}
                             >
-                              <FiEdit2 />
+                              <FiEdit2 aria-hidden="true" />
                             </button>
                             {currentUser?.id !== user.id && (
                               <button
@@ -738,7 +786,7 @@ export default function UsuariosPage() {
                                   handleDelete(user);
                                 }}
                               >
-                                <FiTrash2 />
+                                <FiTrash2 aria-hidden="true" />
                               </button>
                             )}
                           </div>
@@ -752,7 +800,7 @@ export default function UsuariosPage() {
 
             {actionError && (
               <div className="empty-state">
-                <p className="text-red-500">{actionError}</p>
+                <p className="text-red-500" role="alert" aria-live="polite">{actionError}</p>
               </div>
             )}
           </div>
@@ -973,7 +1021,7 @@ export default function UsuariosPage() {
             }
           }}
         >
-          <div className="modal-card">
+          <div className="modal-card" ref={memberModalTrapRef}>
             <header className="modal-header">
               <div>
                 <h2 className="section-title" id={memberModalTitleId}>
@@ -988,18 +1036,19 @@ export default function UsuariosPage() {
               <button
                 className="icon-button"
                 type="button"
-                aria-label="Fechar"
+                aria-label="Fechar modal de membro"
                 onClick={closeModal}
               >
-                <FiX />
+                <FiX aria-hidden="true" />
               </button>
             </header>
 
             <form className="modal-body" onSubmit={handleSave}>
               <div className="form-grid">
-                <label className="field">
+                <label className="field" htmlFor="member-name">
                   Nome
                   <input
+                    id="member-name"
                     className="input"
                     type="text"
                     value={formData.name}
@@ -1007,12 +1056,14 @@ export default function UsuariosPage() {
                       handleInputChange("name", event.target.value)
                     }
                     required
+                    aria-required="true"
                     disabled={saving}
                   />
                 </label>
-                <label className="field">
+                <label className="field" htmlFor="member-last-name">
                   Sobrenome
                   <input
+                    id="member-last-name"
                     className="input"
                     type="text"
                     value={formData.last_name}
@@ -1020,12 +1071,14 @@ export default function UsuariosPage() {
                       handleInputChange("last_name", event.target.value)
                     }
                     required
+                    aria-required="true"
                     disabled={saving}
                   />
                 </label>
-                <label className="field">
+                <label className="field" htmlFor="member-birth-date">
                   Data de nascimento
                   <input
+                    id="member-birth-date"
                     className="input"
                     type="date"
                     value={formData.birth_date}
@@ -1033,12 +1086,14 @@ export default function UsuariosPage() {
                       handleInputChange("birth_date", event.target.value)
                     }
                     required
+                    aria-required="true"
                     disabled={saving}
                   />
                 </label>
-                <label className="field">
+                <label className="field" htmlFor="member-region">
                   Cidade / Região
                   <input
+                    id="member-region"
                     className="input"
                     type="text"
                     value={formData.region}
@@ -1046,12 +1101,14 @@ export default function UsuariosPage() {
                       handleInputChange("region", event.target.value)
                     }
                     required
+                    aria-required="true"
                     disabled={saving}
                   />
                 </label>
-                <label className="field">
+                <label className="field" htmlFor="member-phone">
                   Telefone
                   <input
+                    id="member-phone"
                     className="input"
                     type="tel"
                     placeholder="(61) 99999-9999"
@@ -1061,12 +1118,14 @@ export default function UsuariosPage() {
                       handleInputChange("phone", formatPhone(event.target.value))
                     }
                     required
+                    aria-required="true"
                     disabled={saving}
                   />
                 </label>
-                <label className="field">
+                <label className="field" htmlFor="member-email">
                   E-mail
                   <input
+                    id="member-email"
                     className="input"
                     type="email"
                     value={formData.email}
@@ -1074,12 +1133,14 @@ export default function UsuariosPage() {
                       handleInputChange("email", event.target.value)
                     }
                     required
+                    aria-required="true"
                     disabled={saving}
                   />
                 </label>
-                <label className="field">
+                <label className="field" htmlFor="member-cpf">
                   CPF
                   <input
+                    id="member-cpf"
                     className="input"
                     type="text"
                     placeholder="000.000.000-00"
@@ -1089,13 +1150,15 @@ export default function UsuariosPage() {
                       handleInputChange("cpf", formatCpf(event.target.value))
                     }
                     required={modalMode === "create"}
+                    aria-required={modalMode === "create"}
                     disabled={saving}
                   />
                 </label>
                 {modalMode === "create" && (
-                  <label className="field full">
+                  <label className="field full" htmlFor="member-password">
                     Senha
                     <input
+                      id="member-password"
                       className="input"
                       type="password"
                       value={formData.password}
@@ -1103,13 +1166,15 @@ export default function UsuariosPage() {
                         handleInputChange("password", event.target.value)
                       }
                       required
+                      aria-required="true"
                       disabled={saving}
                     />
                   </label>
                 )}
-                <label className="field full">
+                <label className="field full" htmlFor="member-role">
                   Função
                   <select
+                    id="member-role"
                     className="input"
                     value={formData.role}
                     onChange={(event) =>
@@ -1156,7 +1221,7 @@ export default function UsuariosPage() {
             }
           }}
         >
-          <div className="modal-card confirm-modal">
+          <div className="modal-card confirm-modal" ref={deleteTrapRef}>
             <header className="modal-header">
               <div>
                 <h2 className="section-title" id={deleteModalTitleId}>
@@ -1169,10 +1234,10 @@ export default function UsuariosPage() {
               <button
                 className="icon-button"
                 type="button"
-                aria-label="Fechar"
+                aria-label="Fechar modal de exclusão de membro"
                 onClick={closeDeleteModal}
               >
-                <FiX />
+                <FiX aria-hidden="true" />
               </button>
             </header>
 
@@ -1227,7 +1292,7 @@ export default function UsuariosPage() {
             }
           }}
         >
-          <div className="modal-card cpf-modal">
+          <div className="modal-card cpf-modal" ref={cpfTrapRef}>
             <header className="modal-header">
               <div>
                 <h2 className="section-title" id="cpf-modal-title">
@@ -1240,17 +1305,18 @@ export default function UsuariosPage() {
               <button
                 className="icon-button"
                 type="button"
-                aria-label="Fechar"
+                aria-label="Fechar modal de listagem de CPF"
                 onClick={closeCpfModal}
               >
-                <FiX />
+                <FiX aria-hidden="true" />
               </button>
             </header>
 
             <div className="modal-body">
-              <label className="field">
+              <label className="field" htmlFor="cpf-search-member">
                 Buscar membro
                 <input
+                  id="cpf-search-member"
                   className="input"
                   type="search"
                   placeholder="Digite o nome ou e-mail..."
@@ -1319,7 +1385,7 @@ export default function UsuariosPage() {
               </div>
 
               {cpfActionError && (
-                <p className="text-red-500">{cpfActionError}</p>
+                <p className="text-red-500" role="alert" aria-live="polite">{cpfActionError}</p>
               )}
             </div>
 
@@ -1327,6 +1393,7 @@ export default function UsuariosPage() {
               <button
                 className="button secondary"
                 type="button"
+                aria-label="Fechar modal de listagem de CPF"
                 onClick={closeCpfModal}
                 disabled={cpfGenerating}
               >

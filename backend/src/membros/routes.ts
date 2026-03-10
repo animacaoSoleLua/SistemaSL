@@ -5,7 +5,10 @@ import { randomUUID } from "node:crypto";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { Transform } from "node:stream";
+import { z } from "zod";
 import { requireRole } from "../auth/guard.js";
+import { auditLog } from "../lib/audit.js";
+import { isValidCPF, validateUpload } from "../lib/validators.js";
 import {
   createUser,
   deleteUser,
@@ -25,25 +28,36 @@ import {
 } from "../cursos/store.js";
 import { listFeedbacksForMember } from "../relatorios/store.js";
 
-interface MemberBody {
-  name?: string;
-  last_name?: string;
-  cpf?: string;
-  email?: string;
-  birth_date?: string;
-  region?: string;
-  phone?: string;
-  role?: Role;
-  photo_url?: string;
-  password?: string;
-}
-
 interface MemberQuery {
   search?: string;
   role?: string;
   page?: string;
   limit?: string;
 }
+
+const CreateMemberSchema = z.object({
+  name: z.string().min(1, "Nome obrigatorio"),
+  last_name: z.string().min(1, "Sobrenome obrigatorio"),
+  cpf: z.string().refine(isValidCPF, { message: "CPF invalido" }),
+  email: z.string().email("Email invalido"),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data de nascimento invalida"),
+  region: z.string().min(1, "Regiao invalida"),
+  phone: z.string().min(1, "Telefone invalido"),
+  role: z.enum(["admin", "animador", "recreador"] as const, { message: "Papel invalido" }),
+  password: z.string().min(1).optional(),
+});
+
+const UpdateMemberSchema = z.object({
+  name: z.string().min(1).optional(),
+  last_name: z.string().min(1).optional(),
+  cpf: z.string().refine(isValidCPF, { message: "CPF invalido" }).optional(),
+  email: z.string().email("Email invalido").optional(),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  region: z.string().min(1).optional(),
+  phone: z.string().min(1).optional(),
+  role: z.enum(["admin", "animador", "recreador"] as const).optional(),
+  photo_url: z.string().optional(),
+});
 
 const uploadsRoot = process.env.UPLOADS_DIR
   ? resolve(process.env.UPLOADS_DIR)
@@ -70,11 +84,6 @@ function isValidEmail(value: string): boolean {
 
 function normalizeCpf(value: string): string {
   return value.replace(/\D/g, "");
-}
-
-function isValidCpf(value: string): boolean {
-  const digits = normalizeCpf(value);
-  return digits.length === 11;
 }
 
 function normalizeEmail(value: string): string {
@@ -179,6 +188,7 @@ function toMemberSummary(user: {
   id: string;
   name: string;
   lastName?: string;
+  cpf?: string;
   email: string;
   birthDate?: Date;
   region?: string;
@@ -190,6 +200,7 @@ function toMemberSummary(user: {
     id: user.id,
     name: user.name,
     last_name: user.lastName ?? null,
+    cpf: user.cpf ?? null,
     email: user.email,
     birth_date: user.birthDate ? formatDate(user.birthDate) : null,
     region: user.region ?? null,
@@ -265,6 +276,14 @@ export async function membrosRoutes(app: FastifyInstance) {
     "/api/v1/membros",
     { preHandler: requireRole(["admin"]) },
     async (request, reply) => {
+      const parsedBody = CreateMemberSchema.safeParse(request.body);
+      if (!parsedBody.success) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: parsedBody.error.issues[0].message,
+        });
+      }
+
       const {
         name,
         last_name,
@@ -275,72 +294,13 @@ export async function membrosRoutes(app: FastifyInstance) {
         phone,
         role,
         password,
-      } = request.body as MemberBody;
-
-      if (
-        !name ||
-        !last_name ||
-        !cpf ||
-        !email ||
-        !birth_date ||
-        !region ||
-        !phone ||
-        !role
-      ) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message:
-            "Nome, sobrenome, CPF, nascimento, regiao, telefone, email e papel sao obrigatorios",
-        });
-      }
-
-      if (password !== undefined && password.trim().length === 0) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message: "Senha invalida",
-        });
-      }
-
-      if (!isValidEmail(email)) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message: "Email invalido",
-        });
-      }
-
-      if (!isValidRole(role)) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message: "Papel invalido",
-        });
-      }
+      } = parsedBody.data;
 
       const parsedBirthDate = parseDate(birth_date);
       if (!parsedBirthDate) {
         return reply.status(400).send({
           error: "invalid_request",
           message: "Data de nascimento invalida",
-        });
-      }
-
-      if (!region.trim()) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message: "Regiao invalida",
-        });
-      }
-
-      if (!phone.trim()) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message: "Telefone invalido",
-        });
-      }
-
-      if (!isValidCpf(cpf)) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message: "CPF invalido",
         });
       }
 
@@ -370,6 +330,11 @@ export async function membrosRoutes(app: FastifyInstance) {
           message: "Email ja cadastrado",
         });
       }
+
+      auditLog(request.log, "MEMBER_CREATED", request.user!.id, {
+        targetId: member.id,
+        ip: request.ip ?? "unknown",
+      });
 
       return reply.status(201).send({
         data: {
@@ -540,6 +505,14 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
+    const parsedBody = UpdateMemberSchema.safeParse(request.body);
+    if (!parsedBody.success) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: parsedBody.error.issues[0].message,
+      });
+    }
+
     const {
       name,
       last_name,
@@ -550,7 +523,7 @@ export async function membrosRoutes(app: FastifyInstance) {
       phone,
       role,
       photo_url,
-    } = request.body as MemberBody;
+    } = parsedBody.data;
 
     if (
       !name &&
@@ -569,46 +542,11 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
-    if (email && !isValidEmail(email)) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Email invalido",
-      });
-    }
-
     const parsedBirthDate = birth_date ? parseDate(birth_date) : undefined;
     if (birth_date && !parsedBirthDate) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Data de nascimento invalida",
-      });
-    }
-
-    if (region !== undefined && !region.trim()) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Regiao invalida",
-      });
-    }
-
-    if (phone !== undefined && !phone.trim()) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Telefone invalido",
-      });
-    }
-
-    if (cpf !== undefined && (!cpf.trim() || !isValidCpf(cpf))) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "CPF invalido",
-      });
-    }
-
-    if (role && !isValidRole(role)) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Papel invalido",
       });
     }
 
@@ -644,6 +582,11 @@ export async function membrosRoutes(app: FastifyInstance) {
         message: "Membro nao encontrado",
       });
     }
+
+    auditLog(request.log, "MEMBER_UPDATED", request.user.id, {
+      targetId: member.id,
+      ip: request.ip ?? "unknown",
+    });
 
     return reply.status(200).send({
       data: {
@@ -699,10 +642,11 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
-    if (!fileData.mimetype?.startsWith("image/")) {
+    const mimeError = validateUpload(fileData.mimetype ?? "", 0, false);
+    if (mimeError) {
       return reply.status(400).send({
         error: "invalid_media_type",
-        message: "Apenas imagens sao permitidas",
+        message: mimeError,
       });
     }
 
@@ -786,6 +730,11 @@ export async function membrosRoutes(app: FastifyInstance) {
           message: "Membro nao encontrado",
         });
       }
+
+      auditLog(request.log, "MEMBER_DELETED", request.user!.id, {
+        targetId: params.id,
+        ip: request.ip ?? "unknown",
+      });
 
       return reply.status(204).send();
     }

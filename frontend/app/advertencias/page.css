@@ -1,0 +1,120 @@
+/* Advertências Page — lista de advertências, cards de membro, floating notice */
+
+.warning-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.warning-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.floating-notice {
+  position: fixed;
+  top: 88px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  max-width: 360px;
+  width: calc(100% - 48px);
+  pointer-events: none;
+}
+
+.floating-notice-content {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(235, 87, 87, 0.25);
+  box-shadow: 0 18px 36px rgba(29, 17, 59, 0.18);
+  padding: 14px 16px;
+  display: grid;
+  gap: 6px;
+  position: relative;
+  pointer-events: auto;
+  animation: noticeIn 0.28s ease;
+}
+
+.floating-notice.is-hiding .floating-notice-content {
+  animation: noticeOut 0.24s ease forwards;
+}
+
+.floating-notice-title {
+  font-weight: 700;
+  color: #d64545;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.floating-notice-text {
+  color: #3f2b2b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.floating-notice-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: #c25151;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.floating-notice-close:focus-visible {
+  outline: 3px solid rgba(208, 75, 75, 0.45);
+  outline-offset: 2px;
+}
+
+@keyframes noticeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes noticeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@media (max-width: 640px) {
+  .floating-notice {
+    left: 50%;
+    right: auto;
+    width: calc(100% - 32px);
+  }
+}
+
+/* AUD-M6-06 — advertências em mobile */
+@media (max-width: 480px) {
+  .warning-row {
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .warning-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .warning-date {
+    font-size: 12px;
+  }
+}

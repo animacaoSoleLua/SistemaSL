@@ -225,9 +225,17 @@ Nenhum bloqueador no momento.
 - Adicionar rate limiting e observabilidade (metricas e alertas).
 ---
 
-## Melhorias Sugeridas
+## Auditoria de Qualidade (2026-03-09)
 
-- Nenhuma no momento
+Score atual: **58/100** — ver [docs/auditoria/README.md](auditoria/README.md)
+
+| Sprint | Tema | Status |
+|--------|------|--------|
+| Sprint 1 | Segurança (JWT cookie, helmet, rate limit) | Concluída |
+| Sprint 2 | Validação (Zod, CPF, upload) | Concluída |
+| Sprint 3 | Acessibilidade (WCAG AA) | Pendente |
+| Sprint 4 | Performance (queries SQL, SWR, compressão) | Pendente |
+| Sprint 5 | Refatoração (componentes, useReducer) | Pendente |
 
 ---
 

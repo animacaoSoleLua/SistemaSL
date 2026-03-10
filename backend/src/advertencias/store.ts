@@ -135,69 +135,72 @@ export async function createWarning(
   };
 }
 
-export async function listWarnings(options?: {
+export interface ListWarningsParams {
+  memberId?: string;
+  createdBy?: string;
+  page?: number;
+  limit?: number;
   includeDeleted?: boolean;
-}): Promise<WarningRecord[]> {
-  const includeDeleted = options?.includeDeleted ?? false;
-  const warnings = await prisma.warning.findMany({
-    where: includeDeleted ? undefined : { deletedAt: null },
-  });
-
-  return warnings.map((warning) => ({
-    id: warning.id,
-    memberId: warning.memberId,
-    createdBy: warning.createdBy,
-    reason: warning.reason,
-    warningDate: warning.warningDate,
-    createdAt: warning.createdAt,
-    deletedAt: warning.deletedAt ?? undefined,
-  }));
 }
 
+export interface ListWarningsResult {
+  warnings: WarningRecord[];
+  total: number;
+  pages: number;
+}
+
+export async function listWarnings(params: ListWarningsParams = {}): Promise<ListWarningsResult> {
+  const { memberId, createdBy, includeDeleted = false } = params;
+  const page = params.page ?? 1;
+  const limit = params.limit ?? 20;
+
+  const where = {
+    ...(includeDeleted ? {} : { deletedAt: null }),
+    ...(memberId ? { memberId } : {}),
+    ...(createdBy ? { createdBy } : {}),
+  };
+
+  const [rows, total] = await prisma.$transaction([
+    prisma.warning.findMany({
+      where,
+      orderBy: [{ warningDate: "desc" }, { createdAt: "desc" }],
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.warning.count({ where }),
+  ]);
+
+  return {
+    warnings: rows.map((warning) => ({
+      id: warning.id,
+      memberId: warning.memberId,
+      createdBy: warning.createdBy,
+      reason: warning.reason,
+      warningDate: warning.warningDate,
+      createdAt: warning.createdAt,
+      deletedAt: warning.deletedAt ?? undefined,
+    })),
+    total,
+    pages: Math.ceil(total / limit),
+  };
+}
+
+/** @deprecated Use listWarnings({ memberId }) */
 export async function listWarningsForMember(
   memberId: string,
   options?: { includeDeleted?: boolean }
 ): Promise<WarningRecord[]> {
-  const includeDeleted = options?.includeDeleted ?? false;
-  const warnings = await prisma.warning.findMany({
-    where: {
-      memberId,
-      deletedAt: includeDeleted ? undefined : null,
-    },
-  });
-
-  return warnings.map((warning) => ({
-    id: warning.id,
-    memberId: warning.memberId,
-    createdBy: warning.createdBy,
-    reason: warning.reason,
-    warningDate: warning.warningDate,
-    createdAt: warning.createdAt,
-    deletedAt: warning.deletedAt ?? undefined,
-  }));
+  const result = await listWarnings({ memberId, includeDeleted: options?.includeDeleted });
+  return result.warnings;
 }
 
+/** @deprecated Use listWarnings({ createdBy }) */
 export async function listWarningsByCreator(
   creatorId: string,
   options?: { includeDeleted?: boolean }
 ): Promise<WarningRecord[]> {
-  const includeDeleted = options?.includeDeleted ?? false;
-  const warnings = await prisma.warning.findMany({
-    where: {
-      createdBy: creatorId,
-      deletedAt: includeDeleted ? undefined : null,
-    },
-  });
-
-  return warnings.map((warning) => ({
-    id: warning.id,
-    memberId: warning.memberId,
-    createdBy: warning.createdBy,
-    reason: warning.reason,
-    warningDate: warning.warningDate,
-    createdAt: warning.createdAt,
-    deletedAt: warning.deletedAt ?? undefined,
-  }));
+  const result = await listWarnings({ createdBy: creatorId, includeDeleted: options?.includeDeleted });
+  return result.warnings;
 }
 
 export async function getWarningById(

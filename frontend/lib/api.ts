@@ -7,7 +7,12 @@ const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1$/, "");
 async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const token = localStorage.getItem('authToken');
+  // Usa sessionStorage (limpo ao fechar a aba) como fallback para ambientes
+  // sem HTTPS onde o cookie httpOnly não trafega automaticamente.
+  const token =
+    typeof sessionStorage !== "undefined"
+      ? sessionStorage.getItem("authToken")
+      : null;
 
   const headers = new Headers(options.headers);
   const isFormData =
@@ -18,21 +23,23 @@ async function request(endpoint: string, options: RequestInit = {}) {
   }
 
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: "include", // envia cookie httpOnly automaticamente
+  });
 
   if (!response.ok) {
     const isLoginRequest = endpoint.startsWith("/auth/login");
-    // Se o token expirar (Unauthorized), redirecionar para o login
     if (response.status === 401 && !isLoginRequest) {
-      localStorage.removeItem('authToken');
-      // Idealmente, usar o router do Next.js aqui, mas window é um fallback
-      window.location.href = '/login'; 
+      sessionStorage.removeItem("authToken");
+      window.location.href = "/login";
     }
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Erro na requisição à API');
+    throw new Error(errorData.message || "Erro na requisição à API");
   }
 
   // Para requisições que não retornam conteúdo (ex: DELETE)
@@ -266,10 +273,19 @@ export async function deleteMember(id: string) {
 }
 
 export async function login(email: string, password: string) {
-  return request('/auth/login', {
-    method: 'POST',
+  return request("/auth/login", {
+    method: "POST",
     body: JSON.stringify({ email, password }),
   });
+}
+
+export async function logout() {
+  try {
+    await request("/auth/logout", { method: "POST" });
+  } finally {
+    sessionStorage.removeItem("authToken");
+    sessionStorage.removeItem("user");
+  }
 }
 
 export async function requestPasswordReset(email: string) {
@@ -316,7 +332,7 @@ export async function registerUser(input: {
 }
 
 export async function getCourses(params: {
-  status?: "available" | "full" | "all";
+  status?: "available" | "full" | "all" | "archived";
   page?: number;
   limit?: number;
 } = {}) {
@@ -335,7 +351,7 @@ export async function createCourse(input: {
   description?: string;
   course_date: string;
   location?: string;
-  capacity: number;
+  capacity?: number;
   instructor_id: string;
 }) {
   return request("/cursos", {
@@ -355,7 +371,7 @@ export async function updateCourse(
     description?: string;
     course_date?: string;
     location?: string;
-    capacity?: number;
+    capacity?: number | null;
     instructor_id?: string;
   }
 ) {
@@ -376,4 +392,23 @@ export async function enrollInCourse(courseId: string, memberId: string) {
   });
 }
 
-// Adicionaremos mais funções aqui (ex: createReport, etc.)
+export async function updateEnrollmentStatus(
+  courseId: string,
+  enrollmentId: string,
+  status: "attended" | "missed"
+) {
+  return request(`/cursos/${courseId}/inscricoes/${enrollmentId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function finalizeCourse(
+  courseId: string,
+  enrollments: Array<{ enrollment_id: string; status: "attended" | "missed" }>
+) {
+  return request(`/cursos/${courseId}/finalizar`, {
+    method: "POST",
+    body: JSON.stringify({ enrollments }),
+  });
+}

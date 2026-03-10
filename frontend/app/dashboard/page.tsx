@@ -1,5 +1,6 @@
 "use client";
 
+import './page.css';
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiCalendar, FiFileText, FiMapPin, FiStar } from "react-icons/fi";
@@ -132,6 +133,20 @@ export default function DashboardPage() {
           </div>
         </header>
 
+        {loading ? (
+          <section className="dashboard-grid" aria-hidden="true">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <article key={i} className="summary-card">
+                <div className="summary-head">
+                  <span className="skeleton" style={{ width: "60%", height: 14 }} />
+                  <span className="skeleton" style={{ width: 28, height: 28, borderRadius: "50%" }} />
+                </div>
+                <div className="skeleton" style={{ width: "40%", height: 36, marginTop: 8 }} />
+                <div className="skeleton" style={{ width: "70%", height: 12, marginTop: 8 }} />
+              </article>
+            ))}
+          </section>
+        ) : (
         <section className="dashboard-grid">
           <article className="summary-card">
             <div className="summary-head">
@@ -140,10 +155,8 @@ export default function DashboardPage() {
                 <FiFileText aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">{loading ? "..." : summary.total_reports}</strong>
-            <p className="summary-note">
-              {loading ? "Carregando..." : `${summary.total_reports} cadastrados`}
-            </p>
+            <strong className="summary-value">{summary.total_reports}</strong>
+            <p className="summary-note">{summary.total_reports} cadastrados</p>
           </article>
           <article className="summary-card">
             <div className="summary-head">
@@ -152,7 +165,7 @@ export default function DashboardPage() {
                 <FiCalendar aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">{loading ? "..." : monthlyReports}</strong>
+            <strong className="summary-value">{monthlyReports}</strong>
             <p className="summary-note">Eventos realizados no mês atual</p>
           </article>
 
@@ -163,9 +176,7 @@ export default function DashboardPage() {
                 <FiMapPin aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">
-              {loading ? "..." : summary.outside_brasilia_events}
-            </strong>
+            <strong className="summary-value">{summary.outside_brasilia_events}</strong>
             <p className="summary-note">Quantidade de eventos marcados fora de Brasília</p>
           </article>
 
@@ -176,9 +187,7 @@ export default function DashboardPage() {
                 <FiStar aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">
-              {loading ? "..." : formatScore(summary.avg_quality)}
-            </strong>
+            <strong className="summary-value">{formatScore(summary.avg_quality)}</strong>
           </article>
 
           <article className="summary-card">
@@ -188,9 +197,7 @@ export default function DashboardPage() {
                 <FiStar aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">
-              {loading ? "..." : formatScore(quality.sound)}
-            </strong>
+            <strong className="summary-value">{formatScore(quality.sound)}</strong>
             <p className="summary-note">Avaliação do som nos eventos</p>
           </article>
 
@@ -201,9 +208,7 @@ export default function DashboardPage() {
                 <FiStar aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">
-              {loading ? "..." : formatScore(quality.microphone)}
-            </strong>
+            <strong className="summary-value">{formatScore(quality.microphone)}</strong>
             <p className="summary-note">Avaliação do microfone nos eventos</p>
           </article>
 
@@ -214,9 +219,7 @@ export default function DashboardPage() {
                 <FiStar aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">
-              {loading ? "..." : formatScore(quality.event_quality)}
-            </strong>
+            <strong className="summary-value">{formatScore(quality.event_quality)}</strong>
             <p className="summary-note">Nota média de qualidade geral do evento</p>
           </article>
           <article className="summary-card">
@@ -226,13 +229,11 @@ export default function DashboardPage() {
                 <FiStar aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">
-              {loading ? "..." : formatScore(quality.event_difficulty)}
-            </strong>
+            <strong className="summary-value">{formatScore(quality.event_difficulty)}</strong>
             <p className="summary-note">Nota média de dificuldade dos eventos</p>
           </article>
-          
         </section>
+        )}
 
         <section className="report-panel">
           <div className="report-header">
@@ -243,9 +244,14 @@ export default function DashboardPage() {
           </div>
 
           {loading ? (
-            <div className="empty-state">
-              <p>Carregando relatórios...</p>
-            </div>
+            <ul aria-hidden="true" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <li key={i} style={{ padding: "12px 0", display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div className="skeleton" style={{ width: "45%", height: 16 }} />
+                  <div className="skeleton" style={{ width: "25%", height: 12 }} />
+                </li>
+              ))}
+            </ul>
           ) : error ? (
             <div className="empty-state">
               <p className="text-red-500">Erro ao carregar dados: {error}</p>

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import './page.css';
+import { useEffect, useMemo, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiAlertTriangle, FiX } from "react-icons/fi";
+import { FiAlertTriangle } from "react-icons/fi";
+import { Modal } from "../../components/Modal";
 import {
   createWarning,
   deleteWarning,
@@ -24,12 +26,69 @@ interface MemberSummary {
   name: string;
 }
 
+// ── Reducer: formulário de criação ──────────────────────────────────────────
+
+interface CreateFormState {
+  memberId: string;
+  reason: string;
+  date: string;
+  memberSearch: string;
+}
+
+type CreateFormAction =
+  | { type: "SET_FIELD"; field: keyof CreateFormState; value: string }
+  | { type: "RESET" };
+
+const createFormInitial: CreateFormState = {
+  memberId: "",
+  reason: "",
+  date: "",
+  memberSearch: "",
+};
+
+function createFormReducer(
+  state: CreateFormState,
+  action: CreateFormAction
+): CreateFormState {
+  switch (action.type) {
+    case "SET_FIELD":
+      return { ...state, [action.field]: action.value };
+    case "RESET":
+      return createFormInitial;
+    default:
+      return state;
+  }
+}
+
+// ── Reducer: formulário de edição ───────────────────────────────────────────
+
+interface EditFormState {
+  reason: string;
+  date: string;
+}
+
+type EditFormAction =
+  | { type: "SET_FIELD"; field: keyof EditFormState; value: string }
+  | { type: "RESET" };
+
+const editFormInitial: EditFormState = { reason: "", date: "" };
+
+function editFormReducer(
+  state: EditFormState,
+  action: EditFormAction
+): EditFormState {
+  switch (action.type) {
+    case "SET_FIELD":
+      return { ...state, [action.field]: action.value };
+    case "RESET":
+      return editFormInitial;
+    default:
+      return state;
+  }
+}
+
 export default function WarningsPage() {
   const router = useRouter();
-  const editModalTitleId = useId();
-  const editModalDescriptionId = useId();
-  const createModalTitleId = useId();
-  const createModalDescriptionId = useId();
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [warnings, setWarnings] = useState<Warning[]>([]);
@@ -39,17 +98,16 @@ export default function WarningsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingWarning, setEditingWarning] = useState<Warning | null>(null);
   const [creatingWarning, setCreatingWarning] = useState(false);
-  const [newMemberId, setNewMemberId] = useState("");
-  const [newReason, setNewReason] = useState("");
-  const [newDate, setNewDate] = useState("");
-  const [memberSearch, setMemberSearch] = useState("");
-  const [editReason, setEditReason] = useState("");
-  const [editDate, setEditDate] = useState("");
+  const [createForm, dispatchCreate] = useReducer(createFormReducer, createFormInitial);
+  const { memberId: newMemberId, reason: newReason, date: newDate, memberSearch } = createForm;
+  const [editForm, dispatchEdit] = useReducer(editFormReducer, editFormInitial);
+  const { reason: editReason, date: editDate } = editForm;
   const [createError, setCreateError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [noticeVisible, setNoticeVisible] = useState(false);
+  const todayDate = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const user = getStoredUser();
@@ -128,22 +186,18 @@ export default function WarningsPage() {
 
   const openEditModal = (warning: Warning) => {
     setEditingWarning(warning);
-    setEditReason(warning.reason);
-    setEditDate(warning.warning_date);
+    dispatchEdit({ type: "SET_FIELD", field: "reason", value: warning.reason });
+    dispatchEdit({ type: "SET_FIELD", field: "date", value: warning.warning_date });
     setActionError(null);
   };
 
   const closeEditModal = () => {
     setEditingWarning(null);
-    setEditReason("");
-    setEditDate("");
+    dispatchEdit({ type: "RESET" });
   };
 
   const openCreateModal = () => {
-    setNewMemberId("");
-    setNewReason("");
-    setNewDate("");
-    setMemberSearch("");
+    dispatchCreate({ type: "RESET" });
     setCreateError(null);
     setNotice(null);
     setCreatingWarning(true);
@@ -151,10 +205,7 @@ export default function WarningsPage() {
 
   const closeCreateModal = () => {
     setCreatingWarning(false);
-    setNewMemberId("");
-    setNewReason("");
-    setNewDate("");
-    setMemberSearch("");
+    dispatchCreate({ type: "RESET" });
     setCreateError(null);
   };
 
@@ -169,6 +220,14 @@ export default function WarningsPage() {
     const trimmedReason = editReason.trim();
     if (!trimmedReason || !editDate) {
       setActionError("Preencha a descrição e a data.");
+      return;
+    }
+    if (trimmedReason.length < 5) {
+      setActionError("A descrição deve ter ao menos 5 caracteres.");
+      return;
+    }
+    if (editDate > todayDate) {
+      setActionError("A data da advertência não pode ser no futuro.");
       return;
     }
     setActionLoadingId(editingWarning.id);
@@ -216,6 +275,14 @@ export default function WarningsPage() {
       setCreateError("Preencha membro, descrição e data.");
       return;
     }
+    if (newReason.trim().length < 5) {
+      setCreateError("A descrição deve ter ao menos 5 caracteres.");
+      return;
+    }
+    if (newDate > todayDate) {
+      setCreateError("A data da advertência não pode ser no futuro.");
+      return;
+    }
     setCreateError(null);
     setActionLoadingId("new");
     try {
@@ -255,14 +322,14 @@ export default function WarningsPage() {
   }, [memberSearch, members]);
 
   const handleMemberSearchChange = (value: string) => {
-    setMemberSearch(value);
-    setNewMemberId("");
+    dispatchCreate({ type: "SET_FIELD", field: "memberSearch", value });
+    dispatchCreate({ type: "SET_FIELD", field: "memberId", value: "" });
     setCreateError(null);
   };
 
   const handleSelectMember = (member: MemberSummary) => {
-    setNewMemberId(member.id);
-    setMemberSearch(member.name);
+    dispatchCreate({ type: "SET_FIELD", field: "memberId", value: member.id });
+    dispatchCreate({ type: "SET_FIELD", field: "memberSearch", value: member.name });
     setCreateError(null);
   };
 
@@ -422,200 +489,168 @@ export default function WarningsPage() {
         </section>
       </section>
 
-      {editingWarning && (
-        <div
-          className="modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={editModalTitleId}
-          aria-describedby={editModalDescriptionId}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              event.stopPropagation();
-              closeEditModal();
-            }
-          }}
-        >
-          <div className="modal-card">
-            <header className="modal-header">
-              <div>
-                <h2 className="section-title" id={editModalTitleId}>
-                  Editar advertência
-                </h2>
-                <p id={editModalDescriptionId}>
-                  Atualize a descrição e a data da ocorrência.
-                </p>
-              </div>
+      <Modal
+        isOpen={!!editingWarning}
+        onClose={closeEditModal}
+        title="Editar advertência"
+        description="Atualize a descrição e a data da ocorrência."
+      >
+        <form onSubmit={handleEditSubmit}>
+          <div className="form-grid">
+            <label className="field full" htmlFor="edit-reason">
+              <span>Descrição</span>
+              <textarea
+                id="edit-reason"
+                className="input"
+                rows={5}
+                value={editReason}
+                onChange={(event) => dispatchEdit({ type: "SET_FIELD", field: "reason", value: event.target.value })}
+                required
+                aria-required="true"
+                disabled={actionLoadingId === editingWarning?.id}
+              />
+            </label>
+            <label className="field" htmlFor="edit-date">
+              <span>Data da ocorrência</span>
+              <input
+                id="edit-date"
+                type="date"
+                className="input"
+                value={editDate}
+                max={todayDate}
+                onChange={(event) => dispatchEdit({ type: "SET_FIELD", field: "date", value: event.target.value })}
+                required
+                aria-required="true"
+                disabled={actionLoadingId === editingWarning?.id}
+              />
+            </label>
+          </div>
+          <div className="form-actions">
+            <p className="helper">Revise antes de salvar.</p>
+            <div className="form-buttons">
               <button
-                className="icon-button"
                 type="button"
-                aria-label="Fechar"
+                className="button secondary"
                 onClick={closeEditModal}
+                disabled={actionLoadingId === editingWarning?.id}
               >
-                <FiX />
+                Cancelar
               </button>
-            </header>
-
-            <form className="modal-body" onSubmit={handleEditSubmit}>
-              <div className="form-grid">
-                <label className="field full">
-                  <span>Descrição</span>
-                  <textarea
-                    className="input"
-                    rows={5}
-                    value={editReason}
-                    onChange={(event) => setEditReason(event.target.value)}
-                    required
-                    disabled={actionLoadingId === editingWarning.id}
-                  />
-                </label>
-                <label className="field">
-                  <span>Data da ocorrência</span>
-                  <input
-                    type="date"
-                    className="input"
-                    value={editDate}
-                    onChange={(event) => setEditDate(event.target.value)}
-                    required
-                    disabled={actionLoadingId === editingWarning.id}
-                  />
-                </label>
-              </div>
-              <div className="form-actions">
-                <p className="helper">Revise antes de salvar.</p>
-                <div className="form-buttons">
-                  <button
-                    type="button"
-                    className="button secondary"
-                    onClick={closeEditModal}
-                    disabled={actionLoadingId === editingWarning.id}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="button"
-                    disabled={actionLoadingId === editingWarning.id}
-                  >
-                    {actionLoadingId === editingWarning.id ? "Salvando..." : "Salvar"}
-                  </button>
-                </div>
-                {actionError && <p className="text-red-500">{actionError}</p>}
-              </div>
-            </form>
+              <button
+                type="submit"
+                className="button"
+                disabled={actionLoadingId === editingWarning?.id}
+              >
+                {actionLoadingId === editingWarning?.id ? "Salvando..." : "Salvar"}
+              </button>
+            </div>
+            {actionError && (
+              <p className="text-red-500" role="alert" aria-live="polite">
+                {actionError}
+              </p>
+            )}
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
 
-      {creatingWarning && (
-        <div
-          className="modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={createModalTitleId}
-          aria-describedby={createModalDescriptionId}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              event.stopPropagation();
-              closeCreateModal();
-            }
-          }}
-        >
-          <div className="modal-card">
-            <header className="modal-header">
-              <div>
-                <strong id={createModalTitleId}>Nova advertência</strong>
-                <p className="helper" id={createModalDescriptionId}>
-                  Registre somente o essencial.
-                </p>
-              </div>
-              <button className="button secondary" type="button" onClick={closeCreateModal}>
-                Fechar
-              </button>
-            </header>
-            <form className="modal-body" onSubmit={handleCreateWarning}>
-              <div className="form-grid">
-                <label className="field full">
-                  <span>Buscar membro</span>
-                  <input
-                    className="input"
-                    type="text"
-                    placeholder="Digite o nome"
-                    value={memberSearch}
-                    onChange={(event) => handleMemberSearchChange(event.target.value)}
-                    disabled={actionLoadingId === "new"}
-                  />
-                  {memberSearch.trim().length > 0 && (
-                    <div
-                      className="member-autocomplete"
-                      role="listbox"
-                      aria-label="Resultados da busca de membros"
-                    >
-                      {filteredMemberOptions.length === 0 ? (
-                        <div className="member-autocomplete-empty">
-                          Nenhum membro encontrado.
-                        </div>
-                      ) : (
-                        filteredMemberOptions.map((member) => (
-                          <button
-                            key={member.id}
-                            type="button"
-                            className={`member-autocomplete-item ${
-                              newMemberId === member.id ? "selected" : ""
-                            }`}
-                            role="option"
-                            aria-selected={newMemberId === member.id}
-                            onClick={() => handleSelectMember(member)}
-                            disabled={actionLoadingId === "new"}
-                          >
-                            {member.name}
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </label>
-                <label className="field">
-                  <span>Data da ocorrência</span>
-                  <input
-                    type="date"
-                    className="input"
-                    value={newDate}
-                    onChange={(event) => setNewDate(event.target.value)}
-                    required
-                    disabled={actionLoadingId === "new"}
-                  />
-                </label>
-                <label className="field full">
-                  <span>Descrição</span>
-                  <textarea
-                    className="input"
-                    rows={4}
-                    value={newReason}
-                    onChange={(event) => setNewReason(event.target.value)}
-                    required
-                    disabled={actionLoadingId === "new"}
-                  />
-                </label>
-              </div>
-              {createError && <p className="text-red-500">{createError}</p>}
-              <div className="modal-footer">
-                <button
-                  className="button secondary"
-                  type="button"
-                  onClick={closeCreateModal}
-                  disabled={actionLoadingId === "new"}
+      <Modal
+        isOpen={creatingWarning}
+        onClose={closeCreateModal}
+        title="Nova advertência"
+        description="Registre somente o essencial."
+      >
+        <form onSubmit={handleCreateWarning}>
+          <div className="form-grid">
+            <label className="field full" htmlFor="create-member-search">
+              <span>Buscar membro</span>
+              <input
+                id="create-member-search"
+                className="input"
+                type="text"
+                aria-label="Buscar membro pelo nome"
+                placeholder="Digite o nome"
+                value={memberSearch}
+                onChange={(event) => handleMemberSearchChange(event.target.value)}
+                disabled={actionLoadingId === "new"}
+              />
+              {memberSearch.trim().length > 0 && (
+                <div
+                  className="member-autocomplete"
+                  role="listbox"
+                  aria-label="Resultados da busca de membros"
                 >
-                  Cancelar
-                </button>
-                <button className="button" type="submit" disabled={actionLoadingId === "new"}>
-                  {actionLoadingId === "new" ? "Salvando..." : "Salvar advertência"}
-                </button>
-              </div>
-            </form>
+                  {filteredMemberOptions.length === 0 ? (
+                    <div className="member-autocomplete-empty">
+                      Nenhum membro encontrado.
+                    </div>
+                  ) : (
+                    filteredMemberOptions.map((member) => (
+                      <button
+                        key={member.id}
+                        type="button"
+                        className={`member-autocomplete-item ${
+                          newMemberId === member.id ? "selected" : ""
+                        }`}
+                        role="option"
+                        aria-selected={newMemberId === member.id}
+                        onClick={() => handleSelectMember(member)}
+                        disabled={actionLoadingId === "new"}
+                      >
+                        {member.name}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </label>
+            <label className="field" htmlFor="create-date">
+              <span>Data da ocorrência</span>
+              <input
+                id="create-date"
+                type="date"
+                className="input"
+                value={newDate}
+                max={todayDate}
+                onChange={(event) => dispatchCreate({ type: "SET_FIELD", field: "date", value: event.target.value })}
+                required
+                aria-required="true"
+                disabled={actionLoadingId === "new"}
+              />
+            </label>
+            <label className="field full" htmlFor="create-reason">
+              <span>Descrição</span>
+              <textarea
+                id="create-reason"
+                className="input"
+                rows={4}
+                value={newReason}
+                onChange={(event) => dispatchCreate({ type: "SET_FIELD", field: "reason", value: event.target.value })}
+                required
+                aria-required="true"
+                disabled={actionLoadingId === "new"}
+              />
+            </label>
           </div>
-        </div>
-      )}
+          {createError && (
+            <p className="text-red-500" role="alert" aria-live="polite">
+              {createError}
+            </p>
+          )}
+          <div className="modal-footer">
+            <button
+              className="button secondary"
+              type="button"
+              onClick={closeCreateModal}
+              disabled={actionLoadingId === "new"}
+            >
+              Cancelar
+            </button>
+            <button className="button" type="submit" disabled={actionLoadingId === "new"}>
+              {actionLoadingId === "new" ? "Salvando..." : "Salvar advertência"}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </main>
   );
 }

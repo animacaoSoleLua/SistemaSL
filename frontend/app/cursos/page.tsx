@@ -1,5 +1,6 @@
 "use client";
 
+import './page.css';
 import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiArchive, FiInfo } from "react-icons/fi";
@@ -7,6 +8,7 @@ import {
   createCourse,
   deleteCourse,
   enrollInCourse,
+  finalizeCourse,
   getCourse,
   getCourses,
   getMember,
@@ -20,16 +22,17 @@ import {
   type Role,
   type StoredUser,
 } from "../../lib/auth";
+import { useFocusTrap } from "../../lib/useFocusTrap";
 
 interface Course {
   id: string;
   title: string;
   course_date: string;
-  capacity: number;
+  capacity: number | null;
   created_by: string;
   instructor: { id: string; name: string };
   enrolled_count: number;
-  available_spots: number;
+  available_spots: number | null;
 }
 
 interface CourseDetails {
@@ -38,8 +41,14 @@ interface CourseDetails {
   description?: string | null;
   course_date: string;
   location?: string | null;
-  capacity: number;
+  capacity: number | null;
   instructor: { id: string; name: string };
+  enrollments?: Array<{
+    id: string;
+    member_id: string;
+    member_name: string;
+    status: string;
+  }>;
 }
 
 export default function CursosPage() {
@@ -54,7 +63,7 @@ export default function CursosPage() {
   const [enrolledCourses, setEnrolledCourses] = useState<
     Record<string, "enrolled" | "attended" | "missed">
   >({});
-  const [statusFilter, setStatusFilter] = useState<"available" | "full" | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<"available" | "full" | "all" | "archived">("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
@@ -73,6 +82,7 @@ export default function CursosPage() {
   const [courseTime, setCourseTime] = useState("");
   const [location, setLocation] = useState("");
   const [capacity, setCapacity] = useState("");
+  const [unlimitedVagas, setUnlimitedVagas] = useState(false);
   const [instructorId, setInstructorId] = useState("");
   const [members, setMembers] = useState<Array<{ id: string; name: string }>>([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -87,6 +97,26 @@ export default function CursosPage() {
     title: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const finalizeModalTitleId = useId();
+  const [finalizeModalOpen, setFinalizeModalOpen] = useState(false);
+  const [finalizeLoading, setFinalizeLoading] = useState(false);
+  const [finalizeCourseData, setFinalizeCourseData] = useState<{
+    id: string;
+    title: string;
+    enrollments: Array<{
+      enrollmentId: string;
+      memberId: string;
+      memberName: string;
+      status: "attended" | "missed";
+    }>;
+  } | null>(null);
+  const [finalizing, setFinalizing] = useState(false);
+
+  const createEditTrapRef = useFocusTrap(modalOpen);
+  const viewTrapRef = useFocusTrap(viewModalOpen);
+  const deleteTrapRef = useFocusTrap(!!deleteTarget);
+  const finalizeTrapRef = useFocusTrap(finalizeModalOpen);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -131,7 +161,7 @@ export default function CursosPage() {
       .then((data) => {
         const list = (data.data ?? []) as Array<{ id: string; name: string }>;
         setMembers(list);
-        if (!instructorId && list.length > 0) {
+        if (!editingCourseId && !instructorId && list.length > 0) {
           setInstructorId(list[0].id);
         }
       })
@@ -174,7 +204,7 @@ export default function CursosPage() {
       setNotice({ type: "info", message: "Você já está inscrito neste curso." });
       return;
     }
-    if (course.available_spots <= 0) {
+    if (course.available_spots !== null && course.available_spots <= 0) {
       setNotice({ type: "info", message: "Turma cheia no momento." });
       return;
     }
@@ -215,6 +245,7 @@ export default function CursosPage() {
     setCourseTime("");
     setLocation("");
     setCapacity("");
+    setUnlimitedVagas(false);
     setInstructorId(currentUser?.id ?? "");
     setFormError(null);
   };
@@ -234,10 +265,19 @@ export default function CursosPage() {
       setEditingCourseId(courseId);
       setTitle(data.title ?? "");
       setDescription(data.description ?? "");
-      setCourseDate(data.course_date ?? "");
-      setCourseTime("08:00");
+      const rawDate = data.course_date ?? "";
+      const sep = rawDate.includes("T") ? "T" : " ";
+      const [datePart = "", timeFull = ""] = rawDate.split(sep);
+      setCourseDate(datePart);
+      setCourseTime(timeFull.slice(0, 5) || "08:00");
       setLocation(data.location ?? "");
-      setCapacity(String(data.capacity ?? ""));
+      if (data.capacity === null) {
+        setUnlimitedVagas(true);
+        setCapacity("");
+      } else {
+        setUnlimitedVagas(false);
+        setCapacity(String(data.capacity ?? ""));
+      }
       setInstructorId(data.instructor?.id ?? "");
     } catch (err: any) {
       setNotice({
@@ -267,6 +307,75 @@ export default function CursosPage() {
     }
   };
 
+  const openFinalizeModal = async (course: Course) => {
+    setFinalizeModalOpen(true);
+    setFinalizeLoading(true);
+    setFinalizeCourseData(null);
+    try {
+      const response = await getCourse(course.id);
+      const data = response.data as CourseDetails;
+      setFinalizeCourseData({
+        id: course.id,
+        title: course.title,
+        enrollments: (data.enrollments ?? []).map((e) => ({
+          enrollmentId: e.id,
+          memberId: e.member_id,
+          memberName: e.member_name,
+          status: "attended" as const,
+        })),
+      });
+    } catch (err: any) {
+      setNotice({
+        type: "error",
+        message: err.message || "Não foi possível carregar os inscritos.",
+      });
+      setFinalizeModalOpen(false);
+    } finally {
+      setFinalizeLoading(false);
+    }
+  };
+
+  const toggleFinalizeStatus = (enrollmentId: string) => {
+    if (!finalizeCourseData) return;
+    setFinalizeCourseData({
+      ...finalizeCourseData,
+      enrollments: finalizeCourseData.enrollments.map((e) =>
+        e.enrollmentId === enrollmentId
+          ? { ...e, status: e.status === "attended" ? "missed" : "attended" }
+          : e
+      ),
+    });
+  };
+
+  const handleFinalizeCourse = async () => {
+    if (!finalizeCourseData || finalizing) return;
+    setFinalizing(true);
+    try {
+      await finalizeCourse(
+        finalizeCourseData.id,
+        finalizeCourseData.enrollments.map((e) => ({
+          enrollment_id: e.enrollmentId,
+          status: e.status,
+        }))
+      );
+      setNotice({
+        type: "success",
+        message: "Curso finalizado! Presenças registradas com sucesso.",
+      });
+      setFinalizeModalOpen(false);
+      setFinalizeCourseData(null);
+      const data = await getCourses({ status: statusFilter });
+      setCourses(data.data);
+    } catch (err: any) {
+      setNotice({
+        type: "error",
+        message: err.message || "Não foi possível finalizar o curso.",
+      });
+    } finally {
+      setFinalizing(false);
+    }
+  };
+
   const closeModal = () => {
     setModalOpen(false);
     setSaving(false);
@@ -288,11 +397,15 @@ export default function CursosPage() {
     setSaving(true);
     setFormError(null);
 
-    const parsedCapacity = Number(capacity);
-    if (!Number.isInteger(parsedCapacity) || parsedCapacity <= 0) {
-      setFormError("Informe um número válido de vagas.");
-      setSaving(false);
-      return;
+    let parsedCapacity: number | undefined;
+    if (!unlimitedVagas) {
+      const n = Number(capacity);
+      if (!Number.isInteger(n) || n <= 0) {
+        setFormError("Informe um número válido de vagas.");
+        setSaving(false);
+        return;
+      }
+      parsedCapacity = n;
     }
 
     if (!courseDate || !courseTime) {
@@ -314,7 +427,7 @@ export default function CursosPage() {
           description: description.trim() || undefined,
           course_date: `${courseDate}T${courseTime}`,
           location: location.trim() || undefined,
-          capacity: parsedCapacity,
+          capacity: unlimitedVagas ? null : parsedCapacity,
           instructor_id: instructorId,
         });
         setNotice({ type: "success", message: "Curso atualizado com sucesso." });
@@ -372,8 +485,8 @@ export default function CursosPage() {
 
   const stats = useMemo(() => {
     const totalCourses = courses.length;
-    const totalSpots = courses.reduce((acc, course) => acc + course.capacity, 0);
-    const availableCourses = courses.filter((course) => course.available_spots > 0).length;
+    const totalSpots = courses.reduce((acc, course) => acc + (course.capacity ?? 0), 0);
+    const availableCourses = courses.filter((course) => course.available_spots === null || course.available_spots > 0).length;
     return { totalCourses, totalSpots, availableCourses };
   }, [courses]);
 
@@ -425,21 +538,6 @@ export default function CursosPage() {
           )}
         </header>
 
-        <section className="stats">
-          <article className="stat">
-            <span>Total de cursos</span>
-            <strong>{stats.totalCourses}</strong>
-          </article>
-          <article className="stat">
-            <span>Vagas ofertadas</span>
-            <strong>{stats.totalSpots}</strong>
-          </article>
-          <article className="stat">
-            <span>Turmas com vagas</span>
-            <strong>{stats.availableCourses}</strong>
-          </article>
-        </section>
-
         <section className="report-panel">
           <div className="report-header">
             <div>
@@ -462,13 +560,14 @@ export default function CursosPage() {
                   className="input"
                   value={statusFilter}
                   onChange={(e) =>
-                    setStatusFilter(e.target.value as "available" | "full" | "all")
+                    setStatusFilter(e.target.value as "available" | "full" | "all" | "archived")
                   }
                   aria-label="Filtrar cursos por status"
                 >
                   <option value="all">Todas as turmas</option>
                   <option value="available">Com vagas</option>
                   <option value="full">Lotadas</option>
+                  <option value="archived">Finalizados</option>
                 </select>
               </label>
             </div>
@@ -498,7 +597,7 @@ export default function CursosPage() {
             </div>
           ) : error ? (
             <div className="empty-state">
-              <p className="text-red-500">Erro ao carregar cursos: {error}</p>
+              <p className="text-red-500" role="alert" aria-live="polite">Erro ao carregar cursos: {error}</p>
             </div>
           ) : filteredCourses.length > 0 ? (
             <div className="report-list">
@@ -511,6 +610,12 @@ export default function CursosPage() {
                 const canManageCourse =
                   currentUser &&
                   (currentRole === "admin" || course.created_by === currentUser.id);
+                const isPastCourse = new Date() > new Date(course.course_date);
+                const canFinalize =
+                  isPastCourse &&
+                  currentUser &&
+                  (currentRole === "admin" ||
+                    currentUser.id === course.instructor?.id);
                 const restrictionLabel =
                   currentUser && currentUser.id === course.created_by
                     ? "Criador"
@@ -540,7 +645,9 @@ export default function CursosPage() {
                         Data: {formatDateBR(course.course_date)}
                       </span>
                       <span className="report-date">
-                        Vagas: {course.enrolled_count}/{course.capacity}
+                        {course.capacity === null
+                          ? `Inscritos: ${course.enrolled_count}`
+                          : `Vagas: ${course.enrolled_count}/${course.capacity}`}
                       </span>
                     </div>
                     <div className="course-actions">
@@ -552,16 +659,22 @@ export default function CursosPage() {
                       {restrictionLabel && (
                         <span className="status-pill inactive">{restrictionLabel}</span>
                       )}
-                      <span
-                        className={`status-pill ${
-                          course.available_spots > 0 ? "active" : "inactive"
-                        }`}
-                      >
-                        {course.available_spots > 0
-                          ? `${course.available_spots} vagas`
-                          : "Lotado"}
-                      </span>
-                      {(currentRole === "animador" ||
+                      {statusFilter === "archived" ? (
+                        <span className="status-pill inactive">Finalizado</span>
+                      ) : course.capacity === null ? (
+                        <span className="status-pill active">Ilimitado</span>
+                      ) : (
+                        <span
+                          className={`status-pill ${
+                            (course.available_spots ?? 0) > 0 ? "active" : "inactive"
+                          }`}
+                        >
+                          {(course.available_spots ?? 0) > 0
+                            ? `${course.available_spots} vagas`
+                            : "Lotado"}
+                        </span>
+                      )}
+                      {statusFilter !== "archived" && (currentRole === "animador" ||
                         currentRole === "recreador") && (
                         <button
                           type="button"
@@ -571,7 +684,7 @@ export default function CursosPage() {
                             handleEnroll(course);
                           }}
                           disabled={
-                            course.available_spots <= 0 ||
+                            (course.available_spots !== null && course.available_spots <= 0) ||
                             enrollingId === course.id ||
                             !!enrolledStatus ||
                             !!isRestricted
@@ -581,14 +694,14 @@ export default function CursosPage() {
                             ? "Inscrito"
                             : isRestricted
                             ? "Indisponível"
-                            : course.available_spots <= 0
+                            : (course.available_spots !== null && course.available_spots <= 0)
                             ? "Turma cheia"
                             : enrollingId === course.id
                             ? "Reservando..."
                             : "Pegar vaga"}
                         </button>
                       )}
-                      {canManageCourse && (
+                      {statusFilter !== "archived" && canManageCourse && (
                         <>
                           <button
                             type="button"
@@ -612,6 +725,19 @@ export default function CursosPage() {
                             {deletingId === course.id ? "Apagando..." : "Apagar"}
                           </button>
                         </>
+                      )}
+                      {statusFilter !== "archived" && canFinalize && (
+                        <button
+                          type="button"
+                          className="button"
+                          style={{ background: "linear-gradient(120deg, #28965a, #1a6b3e)" }}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openFinalizeModal(course);
+                          }}
+                        >
+                          Finalizar Curso
+                        </button>
                       )}
                     </div>
                   </article>
@@ -649,7 +775,7 @@ export default function CursosPage() {
             }
           }}
         >
-          <div className="modal-card">
+          <div className="modal-card" ref={deleteTrapRef}>
             <header className="modal-header">
               <div>
                 <strong id={deleteModalTitleId}>Apagar curso</strong>
@@ -661,6 +787,7 @@ export default function CursosPage() {
               <button
                 className="button secondary"
                 type="button"
+                aria-label="Fechar modal de exclusão de curso"
                 onClick={() => setDeleteTarget(null)}
                 disabled={deletingId === deleteTarget.id}
               >
@@ -708,7 +835,7 @@ export default function CursosPage() {
             }
           }}
         >
-          <div className="modal-card">
+          <div className="modal-card" ref={viewTrapRef}>
             <header className="modal-header">
               <div>
                 <strong id={`${modalTitleId}-view`}>Detalhes do curso</strong>
@@ -716,7 +843,7 @@ export default function CursosPage() {
                   Visualização somente de leitura.
                 </p>
               </div>
-              <button className="button secondary" type="button" onClick={closeViewModal}>
+              <button className="button secondary" type="button" aria-label="Fechar modal de detalhes do curso" onClick={closeViewModal}>
                 Fechar
               </button>
             </header>
@@ -724,7 +851,7 @@ export default function CursosPage() {
               {viewLoading ? (
                 <p>Carregando detalhes...</p>
               ) : viewError ? (
-                <p className="text-red-500">{viewError}</p>
+                <p className="text-red-500" role="alert" aria-live="polite">{viewError}</p>
               ) : (
                 <div className="form-grid">
                   <div className="field full">
@@ -765,14 +892,20 @@ export default function CursosPage() {
                     <span>Vagas</span>
                     <p className="helper">
                       {viewCourse
-                        ? `${viewCourse.enrolled_count}/${viewCourse.capacity}`
-                        : viewDetails?.capacity ?? "-"}
+                        ? viewCourse.capacity === null
+                          ? `${viewCourse.enrolled_count} inscritos (ilimitado)`
+                          : `${viewCourse.enrolled_count}/${viewCourse.capacity}`
+                        : viewDetails?.capacity === null
+                        ? "Ilimitado"
+                        : (viewDetails?.capacity ?? "-")}
                     </p>
                   </div>
                   <div className="field">
                     <span>Disponíveis</span>
                     <p className="helper">
-                      {viewCourse?.available_spots ?? "-"}
+                      {viewCourse?.available_spots === null
+                        ? "Ilimitado"
+                        : (viewCourse?.available_spots ?? "-")}
                     </p>
                   </div>
                   <div className="field full">
@@ -785,10 +918,145 @@ export default function CursosPage() {
               )}
             </div>
             <div className="modal-footer">
-              <button className="button secondary" type="button" onClick={closeViewModal}>
+              <button className="button secondary" type="button" aria-label="Fechar modal de detalhes do curso" onClick={closeViewModal}>
                 Fechar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {finalizeModalOpen && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={finalizeModalTitleId}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              if (!finalizing) {
+                setFinalizeModalOpen(false);
+                setFinalizeCourseData(null);
+              }
+            }
+          }}
+        >
+          <div className="modal-card" ref={finalizeTrapRef}>
+            <header className="modal-header">
+              <div>
+                <strong id={finalizeModalTitleId}>
+                  Finalizar Curso
+                </strong>
+                <p className="helper">
+                  {finalizeCourseData?.title ?? "Carregando..."}
+                </p>
+              </div>
+              <button
+                className="button secondary"
+                type="button"
+                aria-label="Fechar modal de finalização de curso"
+                onClick={() => {
+                  if (!finalizing) {
+                    setFinalizeModalOpen(false);
+                    setFinalizeCourseData(null);
+                  }
+                }}
+                disabled={finalizing}
+              >
+                Fechar
+              </button>
+            </header>
+            <div className="modal-body">
+              {finalizeLoading ? (
+                <p className="helper">Carregando inscritos...</p>
+              ) : !finalizeCourseData || finalizeCourseData.enrollments.length === 0 ? (
+                <div className="empty-state">
+                  <p>Nenhum inscrito encontrado neste curso.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="helper" style={{ marginBottom: 12 }}>
+                    Marque quem <strong>não compareceu</strong>. Por padrão todos estão como presentes.
+                  </p>
+                  <div style={{ display: "grid", gap: 10 }}>
+                    {finalizeCourseData.enrollments.map((enrollment) => (
+                      <div
+                        key={enrollment.enrollmentId}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 12,
+                          padding: "12px 16px",
+                          borderRadius: 12,
+                          border: `1px solid ${enrollment.status === "attended" ? "rgba(40, 150, 90, 0.25)" : "rgba(208, 75, 75, 0.25)"}`,
+                          background: enrollment.status === "attended" ? "#f1fbf4" : "#fff4f4",
+                          transition: "background 0.2s ease, border-color 0.2s ease",
+                        }}
+                      >
+                        <span style={{ fontWeight: 500, color: "var(--ink)" }}>
+                          {enrollment.memberName}
+                        </span>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button
+                            type="button"
+                            className={`button small${enrollment.status === "attended" ? "" : " secondary"}`}
+                            style={enrollment.status === "attended" ? { background: "linear-gradient(120deg, #28965a, #1a6b3e)", boxShadow: "none" } : {}}
+                            onClick={() => {
+                              if (enrollment.status !== "attended") {
+                                toggleFinalizeStatus(enrollment.enrollmentId);
+                              }
+                            }}
+                            disabled={finalizing}
+                          >
+                            Presente
+                          </button>
+                          <button
+                            type="button"
+                            className={`button small${enrollment.status === "missed" ? " danger" : " secondary"}`}
+                            style={enrollment.status === "missed" ? { background: "linear-gradient(120deg, #d04b4b, #a83030)", color: "#fff", border: "none", boxShadow: "none" } : {}}
+                            onClick={() => {
+                              if (enrollment.status !== "missed") {
+                                toggleFinalizeStatus(enrollment.enrollmentId);
+                              }
+                            }}
+                            disabled={finalizing}
+                          >
+                            Faltou
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            {!finalizeLoading && finalizeCourseData && finalizeCourseData.enrollments.length > 0 && (
+              <div className="modal-footer">
+                <button
+                  className="button secondary"
+                  type="button"
+                  onClick={() => {
+                    if (!finalizing) {
+                      setFinalizeModalOpen(false);
+                      setFinalizeCourseData(null);
+                    }
+                  }}
+                  disabled={finalizing}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="button"
+                  type="button"
+                  onClick={handleFinalizeCourse}
+                  disabled={finalizing}
+                >
+                  {finalizing ? "Salvando..." : "Confirmar Presenças"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -807,7 +1075,7 @@ export default function CursosPage() {
             }
           }}
         >
-          <div className="modal-card">
+          <div className="modal-card" ref={createEditTrapRef}>
             <header className="modal-header">
               <div>
                 <strong id={modalTitleId}>
@@ -817,27 +1085,30 @@ export default function CursosPage() {
                   Preencha apenas as informações essenciais.
                 </p>
               </div>
-              <button className="button secondary" type="button" onClick={closeModal}>
+              <button className="button secondary" type="button" aria-label="Fechar modal de curso" onClick={closeModal}>
                 Fechar
               </button>
             </header>
             <form className="modal-body" onSubmit={handleCreateCourse}>
               <div className="form-grid">
-                <label className="field full">
+                <label className="field full" htmlFor="course-title">
                   <span>Título do curso</span>
                   <input
+                    id="course-title"
                     className="input"
                     type="text"
                     placeholder="Ex: Curso de Pintura de Rosto"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
+                    aria-required="true"
                     disabled={saving || editingLoading}
                   />
                 </label>
-                <label className="field full">
+                <label className="field full" htmlFor="course-description">
                   <span>Descrição (opcional)</span>
                   <textarea
+                    id="course-description"
                     className="input"
                     rows={3}
                     placeholder="Resumo do conteúdo do curso"
@@ -846,13 +1117,15 @@ export default function CursosPage() {
                     disabled={saving || editingLoading}
                   />
                 </label>
-                <label className="field full">
+                <label className="field full" htmlFor="course-instructor">
                   <span>Instrutor</span>
                   <select
+                    id="course-instructor"
                     className="input"
                     value={instructorId}
                     onChange={(e) => setInstructorId(e.target.value)}
                     required
+                    aria-required="true"
                     disabled={saving || membersLoading || editingLoading}
                   >
                     {membersLoading && <option>Carregando...</option>}
@@ -867,44 +1140,70 @@ export default function CursosPage() {
                       ))}
                   </select>
                 </label>
-                <label className="field">
+                <label className="field" htmlFor="course-date">
                   <span>Data do curso</span>
                   <input
+                    id="course-date"
                     className="input"
                     type="date"
                     value={courseDate}
                     onChange={(e) => setCourseDate(e.target.value)}
                     required
+                    aria-required="true"
                     disabled={saving || editingLoading}
                   />
                 </label>
-                <label className="field">
+                <label className="field" htmlFor="course-time">
                   <span>Hora do curso</span>
                   <input
+                    id="course-time"
                     className="input"
                     type="time"
                     value={courseTime}
                     onChange={(e) => setCourseTime(e.target.value)}
                     required
+                    aria-required="true"
                     disabled={saving || editingLoading}
                   />
                 </label>
-                <label className="field">
-                  <span>Quantidade de vagas</span>
-                  <input
+                <label className="field" htmlFor="course-capacity-type">
+                  <span>Tipo de vagas</span>
+                  <select
+                    id="course-capacity-type"
                     className="input"
-                    type="number"
-                    min={1}
-                    placeholder="Ex: 25"
-                    value={capacity}
-                    onChange={(e) => setCapacity(e.target.value)}
-                    required
+                    value={unlimitedVagas ? "unlimited" : "limited"}
+                    onChange={(e) => {
+                      const isUnlimited = e.target.value === "unlimited";
+                      setUnlimitedVagas(isUnlimited);
+                      if (isUnlimited) setCapacity("");
+                    }}
                     disabled={saving || editingLoading}
-                  />
+                  >
+                    <option value="limited">Vagas limitadas</option>
+                    <option value="unlimited">Vagas ilimitadas</option>
+                  </select>
                 </label>
-                <label className="field full">
+                {!unlimitedVagas && (
+                  <label className="field" htmlFor="course-capacity">
+                    <span>Quantidade de vagas</span>
+                    <input
+                      id="course-capacity"
+                      className="input"
+                      type="number"
+                      min={1}
+                      placeholder="Ex: 25"
+                      value={capacity}
+                      onChange={(e) => setCapacity(e.target.value)}
+                      required
+                      aria-required="true"
+                      disabled={saving || editingLoading}
+                    />
+                  </label>
+                )}
+                <label className="field full" htmlFor="course-location">
                   <span>Local</span>
                   <input
+                    id="course-location"
                     className="input"
                     type="text"
                     placeholder="Endereço do local"
@@ -914,7 +1213,11 @@ export default function CursosPage() {
                   />
                 </label>
               </div>
-              {formError && <p className="text-red-500">{formError}</p>}
+              {formError && (
+                <p className="text-red-500" role="alert" aria-live="polite">
+                  {formError}
+                </p>
+              )}
               <div className="modal-footer">
                 <button className="button secondary" type="button" onClick={closeModal}>
                   Cancelar

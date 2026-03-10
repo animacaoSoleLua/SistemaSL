@@ -1,5 +1,9 @@
+import compress from "@fastify/compress";
+import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
+import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import Fastify, { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
@@ -13,6 +17,7 @@ import { cursosRoutes } from "./cursos/routes.js";
 import { dashboardRoutes } from "./dashboard/routes.js";
 import { ensureBaseUsers } from "./db/seed.js";
 import { membrosRoutes } from "./membros/routes.js";
+import { scheduleCleanup } from "./relatorios/cleanup.js";
 import { relatoriosRoutes } from "./relatorios/routes.js";
 import { healthRoutes } from "./routes/health.js";
 
@@ -51,8 +56,20 @@ export function buildServer(): FastifyInstance {
 
   const app = Fastify({
     logger,
+    disableRequestLogging: true,
     ignoreTrailingSlash: true,
     ignoreDuplicateSlashes: true,
+  });
+
+  app.addHook("onResponse", (req, reply, done) => {
+    if (req.method === "OPTIONS") {
+      done();
+      return;
+    }
+    const ms = reply.elapsedTime.toFixed(0);
+    const status = reply.statusCode;
+    app.log.info(`${req.method} ${req.url} -> ${status} (${ms}ms)`);
+    done();
   });
 
   // Enable CORS for the frontend origin (and allow subdomains of solelua.cloud)
@@ -65,6 +82,28 @@ export function buildServer(): FastifyInstance {
     "https://www.solelua.cloud",
   ];
   const allowedOrigins = new Set([...defaultOrigins, ...envOrigins].filter(Boolean));
+
+  // Compressão gzip/deflate para respostas JSON > 1KB
+  app.register(compress, {
+    global: true,
+    threshold: 1024,
+    encodings: ["gzip", "deflate"],
+  });
+
+  // Security headers
+  app.register(helmet, {
+    contentSecurityPolicy: false, // gerenciado pelo frontend (Next.js)
+    // Arquivos de upload são recursos públicos acessados cross-origin (frontend em porta diferente)
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  });
+
+  // Cookie support (necessário para autenticação via httpOnly cookie)
+  app.register(cookie);
+
+  // Rate limiting global — sobrescrito por rota em auth
+  app.register(rateLimit, {
+    global: false,
+  });
 
   app.register(cors, {
     origin: (origin, cb) => {
@@ -92,6 +131,7 @@ export function buildServer(): FastifyInstance {
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   });
 
   const uploadsRoot = process.env.UPLOADS_DIR
@@ -108,6 +148,7 @@ export function buildServer(): FastifyInstance {
   app.addHook("onReady", async () => {
     await ensureUploadsWritable(uploadsRoot);
     await ensureBaseUsers();
+    scheduleCleanup(app.log);
   });
 
   app.register(multipart, {

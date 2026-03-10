@@ -74,6 +74,19 @@
 
 ---
 
+## Auditoria de Qualidade
+
+| Documento | Conteudo |
+|-----------|----------|
+| [auditoria/README.md](auditoria/README.md) | Visão geral e score |
+| [auditoria/sprint-1-seguranca.md](auditoria/sprint-1-seguranca.md) | JWT cookie, helmet, rate limit, senha |
+| [auditoria/sprint-2-validacao.md](auditoria/sprint-2-validacao.md) | Zod, CPF, upload, formulários |
+| [auditoria/sprint-3-acessibilidade.md](auditoria/sprint-3-acessibilidade.md) | WCAG AA, aria, contraste, foco |
+| [auditoria/sprint-4-performance.md](auditoria/sprint-4-performance.md) | Queries SQL, cache, compressão |
+| [auditoria/sprint-5-refatoracao.md](auditoria/sprint-5-refatoracao.md) | Componentes, useReducer, CSS |
+
+---
+
 ## Documentos Operacionais
 
 | Documento | Descricao |

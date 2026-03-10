@@ -1,10 +1,23 @@
 "use client";
 
+import './page.css';
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { registerUser } from "../../lib/api";
 import logo from "../../assets/logo.png";
+
+function isValidCPF(cpf: string): boolean {
+  const cleaned = cpf.replace(/\D/g, "");
+  if (cleaned.length !== 11) return false;
+  if (/^(\d)\1+$/.test(cleaned)) return false;
+  const calc = (digits: string, factor: number): number =>
+    digits.split("").reduce((sum, d, i) => sum + parseInt(d, 10) * (factor - i), 0);
+  const r1 = (calc(cleaned.slice(0, 9), 10) * 10) % 11;
+  if ((r1 === 10 || r1 === 11 ? 0 : r1) !== parseInt(cleaned[9], 10)) return false;
+  const r2 = (calc(cleaned.slice(0, 10), 11) * 10) % 11;
+  return (r2 === 10 || r2 === 11 ? 0 : r2) === parseInt(cleaned[10], 10);
+}
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -76,6 +89,26 @@ export default function CadastroPage() {
     setError(null);
     setSuccess(null);
 
+    if (!isValidCPF(formData.cpf)) {
+      setError("CPF inválido. Verifique os dígitos.");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError("A senha deve ter pelo menos 8 caracteres.");
+      return;
+    }
+
+    if (!/[A-Z]/.test(formData.password)) {
+      setError("A senha deve conter ao menos uma letra maiúscula.");
+      return;
+    }
+
+    if (!/[0-9]/.test(formData.password)) {
+      setError("A senha deve conter ao menos um número.");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("As senhas não conferem.");
       return;
@@ -116,130 +149,164 @@ export default function CadastroPage() {
           Preencha os dados para se cadastrar.
         </p>
         <form className="login-form register-form" onSubmit={handleSubmit}>
-          <label className="login-field">
-            Nome
-            <input
-              type="text"
-              name="name"
-              placeholder="Primeiro nome"
-              required
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              disabled={loading}
-            />
-          </label>
-          <label className="login-field">
-            Sobrenome
-            <input
-              type="text"
-              name="last_name"
-              placeholder="Último nome"
-              required
-              value={formData.last_name}
-              onChange={(e) => handleChange("last_name", e.target.value)}
-              disabled={loading}
-            />
-          </label>
-          <label className="login-field">
-            E-mail
-            <input
-              type="email"
-              name="email"
-              required
-              placeholder="seu@email.com"
-              value={formData.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              disabled={loading}
-            />
-          </label>
-          <label className="login-field">
-            CPF
-            <input
-              type="text"
-              name="cpf"
-              required
-              placeholder="000.000.000-00"
-              inputMode="numeric"
-              value={formData.cpf}
-              onChange={(e) => handleChange("cpf", formatCpf(e.target.value))}
-              disabled={loading}
-            />
-          </label>
-          <label className="login-field">
-            Data de nascimento
-            <input
-              type="date"
-              name="birth_date"
-              required
-              value={formData.birth_date}
-              onChange={(e) => handleChange("birth_date", e.target.value)}
-              disabled={loading}
-            />
-          </label>
-          <label className="login-field">
-            Região / Cidade
-            <input
-              type="text"
-              name="region"
-              required
-              placeholder="Gama, Riacho..."
-              value={formData.region}
-              onChange={(e) => handleChange("region", e.target.value)}
-              disabled={loading}
-            />
-          </label>
-          <label className="login-field">
-            Telefone
-            <input
-              type="tel"
-              name="phone"
-              required
-              placeholder="(61) 99999-9999"
-              inputMode="numeric"
-              value={formData.phone}
-              onChange={(e) => handleChange("phone", formatPhone(e.target.value))}
-              disabled={loading}
-            />
-          </label>
-          <label className="login-field">
-            Função
-            <select
-              name="role"
-              required
-              value={formData.role}
-              onChange={(e) => handleChange("role", e.target.value)}
-              disabled={loading}
-            >
-              <option value="recreador">Recreador</option>
-              <option value="animador">Animador</option>
-            </select>
-          </label>
-          <label className="login-field">
-            Senha
-            <input
-              type="password"
-              name="password"
-              required
-              placeholder="******"
-              value={formData.password}
-              onChange={(e) => handleChange("password", e.target.value)}
-              disabled={loading}
-            />
-          </label>
-          <label className="login-field">
-            Confirmar senha
-            <input
-              type="password"
-              placeholder="******"
-              name="confirmPassword"
-              required
-              value={formData.confirmPassword}
-              onChange={(e) => handleChange("confirmPassword", e.target.value)}
-              disabled={loading}
-            />
-          </label>
-          {error && <p className="error-message full">{error}</p>}
-          {success && <p className="success-message full">{success}</p>}
+          <fieldset className="register-fieldset">
+            <legend className="register-legend">Dados pessoais</legend>
+            <label className="login-field" htmlFor="reg-name">
+              Nome
+              <input
+                id="reg-name"
+                type="text"
+                name="name"
+                placeholder="Primeiro nome"
+                required
+                aria-required="true"
+                value={formData.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                disabled={loading}
+              />
+            </label>
+            <label className="login-field" htmlFor="reg-last-name">
+              Sobrenome
+              <input
+                id="reg-last-name"
+                type="text"
+                name="last_name"
+                placeholder="Último nome"
+                required
+                aria-required="true"
+                value={formData.last_name}
+                onChange={(e) => handleChange("last_name", e.target.value)}
+                disabled={loading}
+              />
+            </label>
+            <label className="login-field" htmlFor="reg-cpf">
+              CPF
+              <input
+                id="reg-cpf"
+                type="text"
+                name="cpf"
+                required
+                aria-required="true"
+                placeholder="000.000.000-00"
+                inputMode="numeric"
+                value={formData.cpf}
+                onChange={(e) => handleChange("cpf", formatCpf(e.target.value))}
+                disabled={loading}
+              />
+            </label>
+            <label className="login-field" htmlFor="reg-birth-date">
+              Data de nascimento
+              <input
+                id="reg-birth-date"
+                type="date"
+                name="birth_date"
+                required
+                aria-required="true"
+                value={formData.birth_date}
+                onChange={(e) => handleChange("birth_date", e.target.value)}
+                disabled={loading}
+              />
+            </label>
+            <label className="login-field" htmlFor="reg-region">
+              Região / Cidade
+              <input
+                id="reg-region"
+                type="text"
+                name="region"
+                required
+                aria-required="true"
+                placeholder="Gama, Riacho..."
+                value={formData.region}
+                onChange={(e) => handleChange("region", e.target.value)}
+                disabled={loading}
+              />
+            </label>
+            <label className="login-field" htmlFor="reg-phone">
+              Telefone
+              <input
+                id="reg-phone"
+                type="tel"
+                name="phone"
+                required
+                aria-required="true"
+                placeholder="(61) 99999-9999"
+                inputMode="numeric"
+                value={formData.phone}
+                onChange={(e) => handleChange("phone", formatPhone(e.target.value))}
+                disabled={loading}
+              />
+            </label>
+            <label className="login-field" htmlFor="reg-role">
+              Função
+              <select
+                id="reg-role"
+                name="role"
+                required
+                aria-required="true"
+                value={formData.role}
+                onChange={(e) => handleChange("role", e.target.value)}
+                disabled={loading}
+              >
+                <option value="recreador">Recreador</option>
+                <option value="animador">Animador</option>
+              </select>
+            </label>
+          </fieldset>
+          <fieldset className="register-fieldset">
+            <legend className="register-legend">Acesso</legend>
+            <label className="login-field" htmlFor="reg-email">
+              E-mail
+              <input
+                id="reg-email"
+                type="email"
+                name="email"
+                required
+                aria-required="true"
+                placeholder="seu@email.com"
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                disabled={loading}
+              />
+            </label>
+            <label className="login-field" htmlFor="reg-password">
+              Senha
+              <input
+                id="reg-password"
+                type="password"
+                name="password"
+                required
+                aria-required="true"
+                placeholder="******"
+                value={formData.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                disabled={loading}
+              />
+            </label>
+            <label className="login-field" htmlFor="reg-confirm-password">
+              Confirmar senha
+              <input
+                id="reg-confirm-password"
+                type="password"
+                placeholder="******"
+                name="confirmPassword"
+                required
+                aria-required="true"
+                value={formData.confirmPassword}
+                onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                disabled={loading}
+              />
+            </label>
+          </fieldset>
+          {error && (
+            <p className="error-message full" role="alert" aria-live="polite">
+              {error}
+            </p>
+          )}
+          {success && (
+            <p className="success-message full" role="status" aria-live="polite">
+              {success}
+            </p>
+          )}
           <button className="login-button full" type="submit" disabled={!canSubmit || loading}>
             {loading ? "Enviando..." : "Finalizar cadastro"}
           </button>

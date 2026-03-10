@@ -112,7 +112,7 @@ export default function SidebarNav() {
         if (cancelled) return;
         const photoUrl = response?.data?.photo_url ?? null;
         if (!photoUrl) return;
-        localStorage.setItem(
+        sessionStorage.setItem(
           "user",
           JSON.stringify({
             ...user,
@@ -129,9 +129,14 @@ export default function SidebarNav() {
     };
   }, [user]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
+    try {
+      const { logout } = await import("../../lib/api");
+      await logout(); // limpa cookie no backend + sessionStorage
+    } catch {
+      sessionStorage.removeItem("authToken");
+      sessionStorage.removeItem("user");
+    }
     router.push("/login");
   };
 
@@ -193,6 +198,7 @@ export default function SidebarNav() {
                   key={item.href}
                   href={item.href}
                   className={`nav-link${active ? " active" : ""}`}
+                  aria-current={active ? "page" : undefined}
                 >
                   <span className="nav-icon">{item.icon}</span>
                   {item.label}
@@ -223,10 +229,12 @@ export default function SidebarNav() {
               aria-controls={logoutMenuId}
             >
               {user.photo_url ? (
-                <img
+                <Image
                   className="user-avatar avatar-image"
                   src={resolveApiAssetUrl(user.photo_url)}
                   alt={`Foto de ${user.name}`}
+                  width={36}
+                  height={36}
                 />
               ) : (
                 <span className="user-avatar">
@@ -278,6 +286,7 @@ export default function SidebarNav() {
                       key={item.href}
                       href={item.href}
                       className={`nav-link mobile-nav-link${active ? " active" : ""}`}
+                      aria-current={active ? "page" : undefined}
                       onClick={() => setMenuOpen(false)}
                     >
                       <span className="nav-icon">{item.icon}</span>
@@ -290,10 +299,12 @@ export default function SidebarNav() {
               <div className="mobile-user-area">
                 <div className="mobile-user">
                   {user.photo_url ? (
-                    <img
+                    <Image
                       className="user-avatar avatar-image"
                       src={resolveApiAssetUrl(user.photo_url)}
                       alt={`Foto de ${user.name}`}
+                      width={36}
+                      height={36}
                     />
                   ) : (
                     <span className="user-avatar">

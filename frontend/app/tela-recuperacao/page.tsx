@@ -1,5 +1,6 @@
 "use client";
 
+import './page.css';
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -81,13 +82,15 @@ export default function TelaRecuperacaoPage() {
           Primeiro informe o email para receber o token, depois cole aqui para continuar.
         </p>
 
-        <form className="login-form" onSubmit={handleSend}>
-          <label className="login-field">
+        <form className="login-form" onSubmit={handleSend} aria-label="Enviar token de recuperação">
+          <label className="login-field" htmlFor="recovery-email">
             E-mail
             <input
+              id="recovery-email"
               type="email"
               name="email"
               required={true}
+              aria-required="true"
               placeholder="seu@email.com"
               autoComplete="email"
               value={email}
@@ -95,27 +98,41 @@ export default function TelaRecuperacaoPage() {
               disabled={sending || verifying}
             />
           </label>
-          {error && <p className="error-message">{error}</p>}
-          {message && <p className="success-message">{message}</p>}
+          {error && (
+            <p className="error-message" role="alert" aria-live="polite">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p className="success-message" role="status" aria-live="polite">
+              {message}
+            </p>
+          )}
           <button className="login-button" type="submit" disabled={sending}>
             {sending ? "Enviando..." : "Enviar token"}
           </button>
         </form>
 
-        <form className="login-form" onSubmit={handleVerify}>
-          <label className="login-field">
+        <form className="login-form" onSubmit={handleVerify} aria-label="Verificar token">
+          <label className="login-field" htmlFor="recovery-token">
             Token recebido
             <input
+              id="recovery-token"
               type="text"
               name="token"
               required={true}
+              aria-required="true"
               placeholder="Digite o token"
               value={token}
               onChange={(event) => setTokenInput(event.target.value)}
               disabled={sending || verifying}
             />
           </label>
-          {error && <p className="error-message">{error}</p>}
+          {error && (
+            <p className="error-message" role="alert" aria-live="polite">
+              {error}
+            </p>
+          )}
           <button className="login-button" type="submit" disabled={verifying}>
             {verifying ? "Verificando..." : "Verificar"}
           </button>

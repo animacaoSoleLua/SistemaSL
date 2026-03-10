@@ -17,7 +17,7 @@ export function getStoredUser(): StoredUser | null {
   if (typeof window === "undefined") {
     return null;
   }
-  const stored = localStorage.getItem("user");
+  const stored = sessionStorage.getItem("user");
   if (!stored) {
     return null;
   }

@@ -1,9 +1,10 @@
 "use client";
 
+import './page.css';
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FiAlertTriangle, FiFileText, FiX } from "react-icons/fi";
+import { FiAlertTriangle, FiDownload, FiFileText, FiMaximize2, FiX } from "react-icons/fi";
 import {
   deleteReport,
   getReportById,
@@ -131,6 +132,7 @@ export default function RelatoriosPage() {
   const [viewError, setViewError] = useState<string | null>(null);
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Report | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -248,6 +250,23 @@ export default function RelatoriosPage() {
     router.push(`/novo-relatorio?editar=${reportId}`);
   };
 
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url, { credentials: "include" });
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(url, "_blank");
+    }
+  };
+
   return (
     <main className="app-page">
       <section className="shell reveal">
@@ -266,6 +285,7 @@ export default function RelatoriosPage() {
           <div className="report-header">
             <div>
               <h2 className="section-title">Listagem de relatórios</h2>
+              <p>Dos últimos 90 dias</p>
             </div>
             <label className="field report-search">
               <input
@@ -280,8 +300,20 @@ export default function RelatoriosPage() {
           </div>
 
           {loading ? (
-            <div className="empty-state">
-              <p>Carregando relatórios...</p>
+            <div className="report-list" aria-hidden="true">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <article key={i} className="report-item">
+                  <div className="report-meta">
+                    <div className="skeleton" style={{ width: "50%", height: 16 }} />
+                    <div className="skeleton" style={{ width: "35%", height: 13, marginTop: 6 }} />
+                    <div className="skeleton" style={{ width: "30%", height: 13, marginTop: 4 }} />
+                  </div>
+                  <div className="member-row-actions">
+                    <div className="skeleton" style={{ width: 56, height: 32, borderRadius: 8 }} />
+                    <div className="skeleton" style={{ width: 72, height: 32, borderRadius: 8 }} />
+                  </div>
+                </article>
+              ))}
             </div>
           ) : error ? (
             <div className="empty-state">
@@ -515,20 +547,63 @@ export default function RelatoriosPage() {
                     {selectedReport.media.length === 0 ? (
                       <p className="helper">Sem mídias anexadas.</p>
                     ) : (
-                      <ul className="report-detail-list">
-                        {selectedReport.media.map((item) => (
-                          <li key={item.id}>
-                            <a
-                              href={resolveApiAssetUrl(item.url)}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              {item.media_type === "image" ? "Imagem" : "Vídeo"} ({item.size_bytes}{" "}
-                              bytes)
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="media-grid">
+                        {selectedReport.media.map((item) => {
+                          const assetUrl = resolveApiAssetUrl(item.url);
+                          const filename = item.url.split("/").pop() ?? (item.media_type === "image" ? "imagem.jpg" : "video.mp4");
+                          if (item.media_type === "image") {
+                            return (
+                              <div key={item.id} className="media-thumb-wrap">
+                                <button
+                                  type="button"
+                                  className="media-thumb-btn"
+                                  onClick={() => setLightboxUrl(assetUrl)}
+                                  aria-label="Ampliar imagem"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={assetUrl}
+                                    alt="Mídia do relatório"
+                                    className="media-thumb"
+                                    loading="lazy"
+                                  />
+                                  <span className="media-thumb-overlay" aria-hidden="true">
+                                    <FiMaximize2 />
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="media-download-btn"
+                                  aria-label="Baixar imagem"
+                                  onClick={() => handleDownload(assetUrl, filename)}
+                                >
+                                  <FiDownload />
+                                </button>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div key={item.id} className="media-thumb-wrap media-thumb-wrap--video">
+                              <a
+                                href={assetUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="media-video-link"
+                              >
+                                Vídeo
+                              </a>
+                              <button
+                                type="button"
+                                className="media-download-btn"
+                                aria-label="Baixar vídeo"
+                                onClick={() => handleDownload(assetUrl, filename)}
+                              >
+                                <FiDownload />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
 
@@ -567,6 +642,41 @@ export default function RelatoriosPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {lightboxUrl && (
+        <div
+          className="lightbox-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Visualizar imagem"
+          onClick={() => setLightboxUrl(null)}
+          onKeyDown={(e) => { if (e.key === "Escape") setLightboxUrl(null); }}
+        >
+          <button
+            type="button"
+            className="lightbox-close"
+            aria-label="Fechar"
+            onClick={() => setLightboxUrl(null)}
+          >
+            <FiX />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightboxUrl}
+            alt="Imagem ampliada"
+            className="lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            className="lightbox-download"
+            onClick={(e) => { e.stopPropagation(); handleDownload(lightboxUrl, lightboxUrl.split("/").pop() ?? "imagem.jpg"); }}
+            aria-label="Baixar imagem"
+          >
+            <FiDownload /> Baixar
+          </button>
         </div>
       )}
 

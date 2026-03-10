@@ -1,5 +1,6 @@
 "use client";
 
+import './page.css';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -233,7 +234,7 @@ export default function PerfilPage() {
         );
         const storedUser = getStoredUser();
         if (storedUser) {
-          localStorage.setItem(
+          sessionStorage.setItem(
             "user",
             JSON.stringify({
               ...storedUser,
@@ -256,7 +257,7 @@ export default function PerfilPage() {
         );
         const storedUser = getStoredUser();
         if (storedUser) {
-          localStorage.setItem(
+          sessionStorage.setItem(
             "user",
             JSON.stringify({
               ...storedUser,
@@ -450,8 +451,16 @@ export default function PerfilPage() {
                     </button>
                   </div>
                 </div>
-                {saveError && <p className="text-red-500">{saveError}</p>}
-                {saveSuccess && <p className="text-green-600">{saveSuccess}</p>}
+                {saveError && (
+                  <p className="text-red-500" role="alert" aria-live="polite">
+                    {saveError}
+                  </p>
+                )}
+                {saveSuccess && (
+                  <p className="text-green-600" role="status" aria-live="polite">
+                    {saveSuccess}
+                  </p>
+                )}
               </article>
             </form>
 

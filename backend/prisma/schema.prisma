@@ -118,6 +118,7 @@ model Course {
   courseDate   DateTime           @map("course_date")
   location     String?            @db.VarChar(150)
   capacity     Int?
+  archivedAt   DateTime?          @map("archived_at")
   createdAt    DateTime           @default(now()) @map("created_at")
   creator      User               @relation("CoursesByCreator", fields: [createdBy], references: [id])
   instructor   User               @relation("CoursesByInstructor", fields: [instructorId], references: [id])

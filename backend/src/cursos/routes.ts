@@ -1,27 +1,41 @@
 import { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { requireRole } from "../auth/guard.js";
 import { getUserById } from "../auth/store.js";
 import {
   addEnrollment,
+  archiveCourse,
   createCourse,
   deleteCourse,
   EnrollmentStatus,
+  finalizeEnrollments,
   getCourseById,
+  getCourseWithMembers,
   getEnrollmentById,
   getEnrollmentByMember,
+  listArchivedCourses,
   listCourses,
   updateCourse,
   updateEnrollmentStatus,
 } from "./store.js";
 
-interface CourseBody {
-  title?: string;
-  description?: string;
-  course_date?: string;
-  location?: string;
-  capacity?: number;
-  instructor_id?: string;
-}
+const CreateCourseSchema = z.object({
+  title: z.string().min(1, "Titulo obrigatorio"),
+  description: z.string().optional(),
+  course_date: z.string().min(1, "Data obrigatoria"),
+  location: z.string().optional(),
+  capacity: z.number().int().positive("Vagas devem ser maior que zero").optional(),
+  instructor_id: z.string().min(1, "Instrutor obrigatorio"),
+});
+
+const UpdateCourseSchema = z.object({
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
+  course_date: z.string().optional(),
+  location: z.string().optional(),
+  capacity: z.number().int().positive().nullable().optional(),
+  instructor_id: z.string().min(1).optional(),
+});
 
 interface EnrollmentBody {
   member_id?: string;
@@ -69,7 +83,7 @@ function parsePositiveInt(value: string | undefined): number | undefined {
 }
 
 function isValidStatusFilter(value: string): boolean {
-  return value === "available" || value === "full" || value === "all";
+  return value === "available" || value === "full" || value === "all" || value === "archived";
 }
 
 export async function cursosRoutes(app: FastifyInstance) {
@@ -108,10 +122,15 @@ export async function cursosRoutes(app: FastifyInstance) {
       });
     }
 
-    let courses = await listCourses();
+    let courses = query.status === "archived"
+      ? await listArchivedCourses()
+      : await listCourses();
 
-    if (query.status && query.status !== "all") {
+    if (query.status && query.status !== "all" && query.status !== "archived") {
       courses = courses.filter((course) => {
+        if (course.capacity === null) {
+          return query.status === "available";
+        }
         const remaining = course.capacity - course.enrollments.length;
         if (query.status === "available") {
           return remaining > 0;
@@ -137,10 +156,9 @@ export async function cursosRoutes(app: FastifyInstance) {
           name: course.instructorName,
         },
         enrolled_count: course.enrollments.length,
-        available_spots: Math.max(
-          course.capacity - course.enrollments.length,
-          0
-        ),
+        available_spots: course.capacity === null
+          ? null
+          : Math.max(course.capacity - course.enrollments.length, 0),
       })),
     });
   });
@@ -149,28 +167,22 @@ export async function cursosRoutes(app: FastifyInstance) {
     "/api/v1/cursos",
     { preHandler: requireRole(["admin", "animador"]) },
     async (request, reply) => {
-      const { title, description, course_date, location, capacity, instructor_id } =
-        request.body as CourseBody;
-
-      if (!title || !course_date || capacity === undefined || !instructor_id) {
+      const parsedBody = CreateCourseSchema.safeParse(request.body);
+      if (!parsedBody.success) {
         return reply.status(400).send({
           error: "invalid_request",
-          message: "Titulo, data, vagas e instrutor sao obrigatorios",
+          message: parsedBody.error.issues[0].message,
         });
       }
+
+      const { title, description, course_date, location, capacity, instructor_id } =
+        parsedBody.data;
 
       const courseDate = parseDate(course_date);
       if (!courseDate) {
         return reply.status(400).send({
           error: "invalid_request",
           message: "Data do curso invalida",
-        });
-      }
-
-      if (!Number.isInteger(capacity) || capacity <= 0) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message: "Vagas invalidas",
         });
       }
 
@@ -230,16 +242,18 @@ export async function cursosRoutes(app: FastifyInstance) {
         });
       }
 
-      const { title, description, course_date, location, capacity, instructor_id } =
-        request.body as CourseBody;
+      const parsedBody = UpdateCourseSchema.safeParse(request.body);
+      if (!parsedBody.success) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: parsedBody.error.issues[0].message,
+        });
+      }
 
-      if (capacity !== undefined) {
-        if (!Number.isInteger(capacity) || capacity <= 0) {
-          return reply.status(400).send({
-            error: "invalid_request",
-            message: "Vagas invalidas",
-          });
-        }
+      const { title, description, course_date, location, capacity, instructor_id } =
+        parsedBody.data;
+
+      if (capacity !== undefined && capacity !== null) {
         if (capacity < course.enrollments.length) {
           return reply.status(409).send({
             error: "invalid_request",
@@ -336,18 +350,18 @@ export async function cursosRoutes(app: FastifyInstance) {
       });
     }
 
-    const course = await getCourseById(params.id);
-    if (!course) {
-      return reply.status(404).send({
-        error: "not_found",
-        message: "Curso nao encontrado",
-      });
-    }
-
     if (!request.user) {
       return reply.status(401).send({
         error: "unauthorized",
         message: "Token ausente",
+      });
+    }
+
+    const course = await getCourseWithMembers(params.id);
+    if (!course) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Curso nao encontrado",
       });
     }
 
@@ -364,23 +378,32 @@ export async function cursosRoutes(app: FastifyInstance) {
         name: course.instructorName,
       },
       enrolled_count: course.enrollments.length,
-      available_spots: Math.max(course.capacity - course.enrollments.length, 0),
+      available_spots: course.capacity === null
+        ? null
+        : Math.max(course.capacity - course.enrollments.length, 0),
     };
 
-    if (request.user.role === "admin") {
+    const isAdminOrInstructor =
+      request.user.role === "admin" ||
+      request.user.id === course.instructorId;
+
+    if (isAdminOrInstructor) {
       return reply.status(200).send({
         data: {
           ...base,
           enrollments: course.enrollments.map((enrollment) => ({
             id: enrollment.id,
             member_id: enrollment.memberId,
+            member_name: enrollment.memberName,
             status: enrollment.status,
           })),
         },
       });
     }
 
-    const enrollment = getEnrollmentByMember(course, request.user.id);
+    const enrollment = course.enrollments.find(
+      (e) => e.memberId === request.user!.id
+    );
     return reply.status(200).send({
       data: {
         ...base,
@@ -451,7 +474,7 @@ export async function cursosRoutes(app: FastifyInstance) {
       });
     }
 
-    if (course.enrollments.length >= course.capacity) {
+    if (course.capacity !== null && course.enrollments.length >= course.capacity) {
       return reply.status(409).send({
         error: "course_full",
         message: "Vagas esgotadas",
@@ -470,8 +493,14 @@ export async function cursosRoutes(app: FastifyInstance) {
 
   app.patch(
     "/api/v1/cursos/:id/inscricoes/:inscricaoId",
-    { preHandler: requireRole(["admin"]) },
     async (request, reply) => {
+      if (!request.user) {
+        return reply.status(401).send({
+          error: "unauthorized",
+          message: "Token ausente",
+        });
+      }
+
       const params = request.params as { id?: string; inscricaoId?: string };
       if (!params.id || !params.inscricaoId) {
         return reply.status(400).send({
@@ -485,6 +514,16 @@ export async function cursosRoutes(app: FastifyInstance) {
         return reply.status(404).send({
           error: "not_found",
           message: "Curso nao encontrado",
+        });
+      }
+
+      if (
+        request.user.role !== "admin" &&
+        request.user.id !== course.instructorId
+      ) {
+        return reply.status(403).send({
+          error: "forbidden",
+          message: "Acesso negado",
         });
       }
 
@@ -514,4 +553,79 @@ export async function cursosRoutes(app: FastifyInstance) {
       });
     }
   );
+
+  interface FinalizeBody {
+    enrollments?: Array<{ enrollment_id: string; status: string }>;
+  }
+
+  app.post("/api/v1/cursos/:id/finalizar", async (request, reply) => {
+    const params = request.params as { id?: string };
+    if (!params.id) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Curso invalido",
+      });
+    }
+
+    if (!request.user) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Token ausente",
+      });
+    }
+
+    const course = await getCourseById(params.id);
+    if (!course) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Curso nao encontrado",
+      });
+    }
+
+    if (
+      request.user.role !== "admin" &&
+      request.user.id !== course.instructorId
+    ) {
+      return reply.status(403).send({
+        error: "forbidden",
+        message: "Acesso negado",
+      });
+    }
+
+    const body = request.body as FinalizeBody;
+    if (!Array.isArray(body.enrollments) || body.enrollments.length === 0) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Lista de presencas obrigatoria",
+      });
+    }
+
+    for (const item of body.enrollments) {
+      if (!item.enrollment_id || (item.status !== "attended" && item.status !== "missed")) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Dados de presenca invalidos",
+        });
+      }
+      if (!getEnrollmentById(course, item.enrollment_id)) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Inscricao nao encontrada",
+        });
+      }
+    }
+
+    await finalizeEnrollments(
+      body.enrollments.map((item) => ({
+        id: item.enrollment_id,
+        status: item.status as EnrollmentStatus,
+      }))
+    );
+
+    await archiveCourse(params.id);
+
+    return reply.status(200).send({
+      data: { finalized: body.enrollments.length },
+    });
+  });
 }

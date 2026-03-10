@@ -19,7 +19,8 @@ export interface CourseRecord {
   description?: string;
   courseDate: Date;
   location?: string;
-  capacity: number;
+  capacity: number | null;
+  archivedAt?: Date;
   createdAt: Date;
   enrollments: EnrollmentRecord[];
 }
@@ -30,7 +31,7 @@ export interface CreateCourseInput {
   description?: string;
   courseDate: Date;
   location?: string;
-  capacity: number;
+  capacity?: number;
 }
 
 export interface UpdateCourseInput {
@@ -39,7 +40,7 @@ export interface UpdateCourseInput {
   description?: string | null;
   courseDate?: Date;
   location?: string | null;
-  capacity?: number;
+  capacity?: number | null;
 }
 
 function toEnrollmentRecord(entry: {
@@ -67,6 +68,7 @@ function toCourseRecord(course: {
   courseDate: Date;
   location: string | null;
   capacity: number | null;
+  archivedAt: Date | null;
   createdAt: Date;
   instructor: {
     id: string;
@@ -89,7 +91,8 @@ function toCourseRecord(course: {
     description: course.description ?? undefined,
     courseDate: course.courseDate,
     location: course.location ?? undefined,
-    capacity: course.capacity ?? 0,
+    capacity: course.capacity ?? null,
+    archivedAt: course.archivedAt ?? undefined,
     createdAt: course.createdAt,
     enrollments: course.enrollments.map((enrollment) =>
       toEnrollmentRecord(enrollment)
@@ -119,9 +122,25 @@ export async function createCourse(
 
 export async function listCourses(): Promise<CourseRecord[]> {
   const courses = await prisma.course.findMany({
+    where: { archivedAt: null },
     include: { enrollments: true, instructor: true },
   });
   return courses.map((course) => toCourseRecord(course));
+}
+
+export async function listArchivedCourses(): Promise<CourseRecord[]> {
+  const courses = await prisma.course.findMany({
+    where: { archivedAt: { not: null } },
+    include: { enrollments: true, instructor: true },
+  });
+  return courses.map((course) => toCourseRecord(course));
+}
+
+export async function archiveCourse(courseId: string): Promise<void> {
+  await prisma.course.update({
+    where: { id: courseId },
+    data: { archivedAt: new Date() },
+  });
 }
 
 export async function getCourseById(
@@ -134,6 +153,63 @@ export async function getCourseById(
   return course ? toCourseRecord(course) : undefined;
 }
 
+export interface EnrollmentWithMember extends EnrollmentRecord {
+  memberName: string;
+}
+
+export interface CourseWithMembers extends Omit<CourseRecord, 'enrollments'> {
+  enrollments: EnrollmentWithMember[];
+}
+
+export async function getCourseWithMembers(id: string): Promise<CourseWithMembers | undefined> {
+  const course = await prisma.course.findUnique({
+    where: { id },
+    include: {
+      enrollments: {
+        include: {
+          member: { select: { name: true } },
+        },
+      },
+      instructor: true,
+    },
+  });
+  if (!course) return undefined;
+
+  return {
+    id: course.id,
+    createdBy: course.createdBy,
+    instructorId: course.instructorId,
+    instructorName: course.instructor.name,
+    title: course.title,
+    description: course.description ?? undefined,
+    courseDate: course.courseDate,
+    location: course.location ?? undefined,
+    capacity: course.capacity ?? null,
+    createdAt: course.createdAt,
+    enrollments: course.enrollments.map((e) => ({
+      id: e.id,
+      courseId: e.courseId,
+      memberId: e.memberId,
+      status: e.status as EnrollmentStatus,
+      createdAt: e.createdAt,
+      memberName: e.member.name,
+    })),
+  };
+}
+
+export async function finalizeEnrollments(
+  updates: Array<{ id: string; status: EnrollmentStatus }>
+): Promise<void> {
+  await prisma.$transaction(
+    updates.map((u) =>
+      prisma.courseEnrollment.update({
+        where: { id: u.id },
+        data: { status: u.status },
+      })
+    )
+  );
+}
+
 export async function updateCourse(
   courseId: string,
   input: UpdateCourseInput
@@ -144,7 +220,7 @@ export async function updateCourse(
     description?: string | null;
     courseDate?: Date;
     location?: string | null;
-    capacity?: number;
+    capacity?: number | null;
   } = {};
 
   if (input.instructorId !== undefined) {

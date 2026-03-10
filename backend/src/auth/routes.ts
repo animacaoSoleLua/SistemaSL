@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import { z } from "zod";
 import {
   getUserByEmail,
   createUser,
@@ -13,55 +14,84 @@ import {
 import { sendPasswordResetEmail } from "./password-reset-email.js";
 import { verifyPassword } from "./password.js";
 import { createAccessToken } from "./token.js";
+import { auditLog } from "../lib/audit.js";
+import { isValidCPF } from "../lib/validators.js";
 
-interface LoginBody {
-  email?: string;
-  password?: string;
-}
-
-interface ForgotPasswordBody {
-  email?: string;
-}
-
-interface VerifyTokenBody {
-  email?: string;
-  token?: string;
-}
-
-interface ResetPasswordBody {
-  email?: string;
-  token?: string;
-  novaSenha?: string;
-  novaSenhaConfirmacao?: string;
-  password?: string;
-  passwordConfirm?: string;
-}
-
-interface RegisterBody {
-  name?: string;
-  last_name?: string;
-  cpf?: string;
-  email?: string;
-  birth_date?: string;
-  region?: string;
-  phone?: string;
-  role?: Role;
-  password?: string;
-}
-
-const registerRoles: Role[] = ["animador", "recreador"];
-
-function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
+const MIN_PASSWORD_LENGTH = 8;
 
 function normalizeCpf(value: string): string {
   return value.replace(/\D/g, "");
 }
 
-function isValidCpf(value: string): boolean {
-  const digits = normalizeCpf(value);
-  return digits.length === 11;
+const LoginSchema = z.object({
+  email: z.string().min(1, "Email obrigatorio"),
+  password: z.string().min(1, "Senha obrigatoria"),
+});
+
+const RegisterSchema = z.object({
+  name: z.string().min(1, "Nome obrigatorio"),
+  last_name: z.string().min(1, "Sobrenome obrigatorio"),
+  cpf: z.string().refine(isValidCPF, { message: "CPF invalido" }),
+  email: z.string().email("Email invalido"),
+  birth_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Data de nascimento invalida"),
+  region: z.string().min(1, "Regiao invalida"),
+  phone: z.string().min(1, "Telefone invalido"),
+  role: z.enum(["animador", "recreador"] as const, {
+    message: "Papel invalido",
+  }),
+  password: z.string().min(MIN_PASSWORD_LENGTH, `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`),
+});
+
+const ForgotPasswordSchema = z.object({
+  email: z.string().email("Email invalido"),
+});
+
+const VerifyTokenSchema = z.object({
+  email: z.string().min(1, "Email obrigatorio"),
+  token: z.string().min(1, "Token obrigatorio"),
+});
+
+const ResetPasswordSchema = z.object({
+  email: z.string().min(1, "Email obrigatorio"),
+  token: z.string().min(1, "Token obrigatorio"),
+  novaSenha: z.string().optional(),
+  novaSenhaConfirmacao: z.string().optional(),
+  password: z.string().optional(),
+  passwordConfirm: z.string().optional(),
+});
+
+/**
+ * Valida força da senha: mínimo 8 chars, ao menos 1 maiúscula e 1 número.
+ * Retorna null se válida, ou mensagem de erro se inválida.
+ */
+function validatePasswordStrength(password: string): string | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`;
+  }
+  if (!/[A-Z]/.test(password)) {
+    return "A senha deve conter ao menos uma letra maiúscula";
+  }
+  if (!/[0-9]/.test(password)) {
+    return "A senha deve conter ao menos um número";
+  }
+  return null;
+}
+
+function setAuthCookie(reply: import("fastify").FastifyReply, token: string): void {
+  const isProduction = process.env.NODE_ENV === "production";
+  reply.setCookie("auth_token", token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "strict" : "lax",
+    maxAge: 60 * 60, // 1 hora
+    path: "/",
+  });
+}
+
+function clearAuthCookie(reply: import("fastify").FastifyReply): void {
+  reply.clearCookie("auth_token", { path: "/" });
 }
 
 function parseDate(value: string | undefined): Date | undefined {
@@ -81,19 +111,35 @@ function parseDate(value: string | undefined): Date | undefined {
   return parsed;
 }
 
-export async function authRoutes(app: FastifyInstance) {
-  app.post("/login", async (request, reply) => {
-    const { email, password } = request.body as LoginBody;
+const rateLimitAuth = {
+  config: {
+    rateLimit: {
+      max: 10,
+      timeWindow: "15 minutes",
+      errorResponseBuilder: () => ({
+        statusCode: 429,
+        error: "too_many_requests",
+        message: "Muitas tentativas. Aguarde 15 minutos e tente novamente.",
+      }),
+    },
+  },
+} as const;
 
-    if (!email || !password) {
+export async function authRoutes(app: FastifyInstance) {
+  app.post("/login", rateLimitAuth, async (request, reply) => {
+    const parsed = LoginSchema.safeParse(request.body);
+    if (!parsed.success) {
       return reply.status(400).send({
         error: "invalid_request",
-        message: "Email e senha sao obrigatorios",
+        message: parsed.error.issues[0].message,
       });
     }
+    const { email, password } = parsed.data;
 
+    const ip = request.ip ?? "unknown";
     const user = await getUserByEmail(email);
     if (!user) {
+      auditLog(request.log, "LOGIN_FAILED", "anonymous", { ip, detail: `email: ${email}` });
       return reply.status(401).send({
         error: "invalid_credentials",
         message: "Email ou senha invalidos",
@@ -102,6 +148,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     const passwordCheck = verifyPassword(password, user.passwordHash);
     if (!passwordCheck.valid) {
+      auditLog(request.log, "LOGIN_FAILED", user.id, { ip });
       return reply.status(401).send({
         error: "invalid_credentials",
         message: "Email ou senha invalidos",
@@ -113,6 +160,11 @@ export async function authRoutes(app: FastifyInstance) {
     }
 
     const accessToken = createAccessToken(user);
+    auditLog(request.log, "LOGIN_SUCCESS", user.id, { ip });
+
+    // Definir cookie httpOnly (seguro em produção)
+    setAuthCookie(reply, accessToken);
+
     return reply.status(200).send({
       data: {
         access_token: accessToken,
@@ -126,7 +178,15 @@ export async function authRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post("/register", async (request, reply) => {
+  app.post("/register", rateLimitAuth, async (request, reply) => {
+    const parsed = RegisterSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: parsed.error.issues[0].message,
+      });
+    }
+
     const {
       name,
       last_name,
@@ -137,43 +197,13 @@ export async function authRoutes(app: FastifyInstance) {
       phone,
       role,
       password,
-    } = request.body as RegisterBody;
+    } = parsed.data;
 
-    if (
-      !name ||
-      !last_name ||
-      !cpf ||
-      !email ||
-      !birth_date ||
-      !region ||
-      !phone ||
-      !role ||
-      !password
-    ) {
+    const passwordError = validatePasswordStrength(password);
+    if (passwordError) {
       return reply.status(400).send({
         error: "invalid_request",
-        message: "Preencha todos os campos obrigatorios",
-      });
-    }
-
-    if (!isValidEmail(email)) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Email invalido",
-      });
-    }
-
-    if (!registerRoles.includes(role)) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Papel invalido",
-      });
-    }
-
-    if (!password.trim()) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Senha invalida",
+        message: passwordError,
       });
     }
 
@@ -182,27 +212,6 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Data de nascimento invalida",
-      });
-    }
-
-    if (!region.trim()) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Regiao invalida",
-      });
-    }
-
-    if (!phone.trim()) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Telefone invalido",
-      });
-    }
-
-    if (!isValidCpf(cpf)) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "CPF invalido",
       });
     }
 
@@ -237,28 +246,26 @@ export async function authRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post("/forgot-password", async (request, reply) => {
-    const { email } = request.body as ForgotPasswordBody;
-
-    if (!email) {
+  app.post("/forgot-password", rateLimitAuth, async (request, reply) => {
+    const parsed = ForgotPasswordSchema.safeParse(request.body);
+    if (!parsed.success) {
       return reply.status(400).send({
         error: "invalid_request",
-        message: "Email e obrigatorio",
+        message: parsed.error.issues[0].message,
       });
     }
+    const { email } = parsed.data;
 
-    if (!isValidEmail(email)) {
-      return reply.status(400).send({
-        error: "invalid_request",
-        message: "Email invalido",
-      });
-    }
+    auditLog(request.log, "PASSWORD_RESET_REQUESTED", "anonymous", {
+      ip: request.ip ?? "unknown",
+      detail: `email: ${email}`,
+    });
 
     const user = await getUserByEmail(email);
     if (!user) {
-      return reply.status(404).send({
-        error: "not_found",
-        message: "Email nao encontrado",
+      // Não revelar se o email existe (previne user enumeration)
+      return reply.status(200).send({
+        data: { sent: true },
       });
     }
 
@@ -304,14 +311,14 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/verify-reset-token", async (request, reply) => {
-    const { email, token } = request.body as VerifyTokenBody;
-
-    if (!email || !token) {
+    const parsed = VerifyTokenSchema.safeParse(request.body);
+    if (!parsed.success) {
       return reply.status(400).send({
         error: "invalid_request",
-        message: "Email e token sao obrigatorios",
+        message: parsed.error.issues[0].message,
       });
     }
+    const { email, token } = parsed.data;
 
     const valid = await verifyPasswordResetToken(email, token);
     if (!valid) {
@@ -325,6 +332,13 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/reset-password", async (request, reply) => {
+    const parsedBody = ResetPasswordSchema.safeParse(request.body);
+    if (!parsedBody.success) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: parsedBody.error.issues[0].message,
+      });
+    }
     const {
       email,
       token,
@@ -332,7 +346,7 @@ export async function authRoutes(app: FastifyInstance) {
       novaSenhaConfirmacao,
       password,
       passwordConfirm,
-    } = request.body as ResetPasswordBody;
+    } = parsedBody.data;
 
     const newPassword = novaSenha ?? password ?? "";
     const confirmPassword = novaSenhaConfirmacao ?? passwordConfirm ?? "";
@@ -344,10 +358,11 @@ export async function authRoutes(app: FastifyInstance) {
       });
     }
 
-    if (newPassword.length < 6) {
+    const passwordError = validatePasswordStrength(newPassword);
+    if (passwordError) {
       return reply.status(400).send({
         error: "invalid_request",
-        message: "A nova senha deve ter pelo menos 6 caracteres",
+        message: passwordError,
       });
     }
 
@@ -377,6 +392,16 @@ export async function authRoutes(app: FastifyInstance) {
     await updateUserPassword(user.id, newPassword);
     await consumePasswordResetToken(email, token);
 
+    auditLog(request.log, "PASSWORD_RESET_COMPLETED", user.id, {
+      ip: request.ip ?? "unknown",
+    });
+
     return reply.status(200).send({ data: { updated: true } });
+  });
+
+  // AUD-S1-01: endpoint de logout limpa o cookie httpOnly
+  app.post("/logout", async (_request, reply) => {
+    clearAuthCookie(reply);
+    return reply.status(200).send({ data: { logged_out: true } });
   });
 }

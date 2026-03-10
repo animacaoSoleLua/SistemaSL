@@ -1,5 +1,6 @@
 "use client";
 
+import './page.css';
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -77,13 +78,17 @@ export default function TelaRedefinicaoPage() {
         </p>
 
         <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
-          <label className="login-field">
+          <label className="login-field" htmlFor="nova-senha">
             Nova senha
             <input
+              id="nova-senha"
               type="password"
               placeholder="Digite sua nova senha"
               autoComplete="new-password"
               disabled={isSubmitting}
+              aria-required="true"
+              aria-invalid={!!errors.novaSenha}
+              aria-describedby={errors.novaSenha ? "nova-senha-error" : undefined}
               {...register("novaSenha", {
                 required: "Informe a nova senha.",
                 minLength: {
@@ -94,16 +99,27 @@ export default function TelaRedefinicaoPage() {
             />
           </label>
           {errors.novaSenha && (
-            <p className="error-message">{errors.novaSenha.message}</p>
+            <p
+              id="nova-senha-error"
+              className="error-message"
+              role="alert"
+              aria-live="polite"
+            >
+              {errors.novaSenha.message}
+            </p>
           )}
 
-          <label className="login-field">
+          <label className="login-field" htmlFor="confirmar-senha">
             Confirmar nova senha
             <input
+              id="confirmar-senha"
               type="password"
               placeholder="Repita a nova senha"
               autoComplete="new-password"
               disabled={isSubmitting}
+              aria-required="true"
+              aria-invalid={!!errors.novaSenhaConfirmacao}
+              aria-describedby={errors.novaSenhaConfirmacao ? "confirmar-senha-error" : undefined}
               {...register("novaSenhaConfirmacao", {
                 required: "Confirme a nova senha.",
                 validate: (value) =>
@@ -112,11 +128,26 @@ export default function TelaRedefinicaoPage() {
             />
           </label>
           {errors.novaSenhaConfirmacao && (
-            <p className="error-message">{errors.novaSenhaConfirmacao.message}</p>
+            <p
+              id="confirmar-senha-error"
+              className="error-message"
+              role="alert"
+              aria-live="polite"
+            >
+              {errors.novaSenhaConfirmacao.message}
+            </p>
           )}
 
-          {error && <p className="error-message">{error}</p>}
-          {success && <p className="success-message">{success}</p>}
+          {error && (
+            <p className="error-message" role="alert" aria-live="polite">
+              {error}
+            </p>
+          )}
+          {success && (
+            <p className="success-message" role="status" aria-live="polite">
+              {success}
+            </p>
+          )}
           <button className="login-button" type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Salvando..." : "Salvar nova senha"}
           </button>

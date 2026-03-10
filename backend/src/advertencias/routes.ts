@@ -1,21 +1,39 @@
 import { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { requireRole } from "../auth/guard.js";
+import { auditLog } from "../lib/audit.js";
 import { getUserById } from "../auth/store.js";
 import {
   createWarning,
   deleteWarning,
   getWarningById,
   listWarnings,
-  listWarningsByCreator,
-  listWarningsForMember,
   updateWarning,
 } from "./store.js";
 
-interface WarningBody {
-  member_id?: string;
-  reason?: string;
-  warning_date?: string;
-}
+const todayDateString = () => new Date().toISOString().slice(0, 10);
+
+const CreateWarningSchema = z.object({
+  member_id: z.string().min(1, "Membro obrigatorio"),
+  reason: z.string().min(5, "Motivo deve ter ao menos 5 caracteres").max(500, "Motivo muito longo"),
+  warning_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida (YYYY-MM-DD)")
+    .refine((date) => date <= todayDateString(), {
+      message: "Data da advertencia nao pode ser no futuro",
+    }),
+});
+
+const UpdateWarningSchema = z.object({
+  reason: z.string().min(5, "Motivo deve ter ao menos 5 caracteres").max(500).optional(),
+  warning_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida (YYYY-MM-DD)")
+    .refine((date) => date <= todayDateString(), {
+      message: "Data da advertencia nao pode ser no futuro",
+    })
+    .optional(),
+});
 
 interface WarningQuery {
   member_id?: string;
@@ -102,40 +120,31 @@ export async function advertenciasRoutes(app: FastifyInstance) {
       }
     }
 
-    let warnings = await listWarnings();
+    let memberId: string | undefined;
+    let createdBy: string | undefined;
 
     if (isAdmin) {
-      if (query.member_id) {
-        warnings = warnings.filter((warning) => warning.memberId === query.member_id);
-      }
-      if (query.created_by) {
-        const creatorId = createdByMe ? request.user.id : query.created_by;
-        warnings = warnings.filter((warning) => warning.createdBy === creatorId);
-      }
+      if (query.member_id) memberId = query.member_id;
+      if (query.created_by) createdBy = createdByMe ? request.user.id : query.created_by;
     } else if (createdByMe) {
-      warnings = await listWarningsByCreator(request.user.id);
+      createdBy = request.user.id;
     } else {
-      warnings = await listWarningsForMember(request.user.id);
+      memberId = request.user.id;
     }
 
-    warnings.sort((a, b) => {
-      const dateDiff = b.warningDate.getTime() - a.warningDate.getTime();
-      if (dateDiff !== 0) {
-        return dateDiff;
-      }
-      return b.createdAt.getTime() - a.createdAt.getTime();
-    });
-
-    const start = (page - 1) * limit;
-    const paged = warnings.slice(start, start + limit);
+    const result = await listWarnings({ memberId, createdBy, page, limit });
 
     return reply.status(200).send({
-      data: paged.map((warning) => ({
+      data: result.warnings.map((warning) => ({
         id: warning.id,
         member_id: warning.memberId,
         reason: warning.reason,
         warning_date: formatDate(warning.warningDate),
       })),
+      total: result.total,
+      pages: result.pages,
+      page,
+      limit,
     });
   });
 
@@ -143,13 +152,20 @@ export async function advertenciasRoutes(app: FastifyInstance) {
     "/api/v1/advertencias",
     { preHandler: requireRole(["admin", "animador"]) },
     async (request, reply) => {
-      const { member_id, reason, warning_date } = request.body as WarningBody;
-
-      const normalizedReason = reason?.trim() ?? "";
-      if (!member_id || !normalizedReason || !warning_date) {
+      const parsedBody = CreateWarningSchema.safeParse(request.body);
+      if (!parsedBody.success) {
         return reply.status(400).send({
           error: "invalid_request",
-          message: "Membro, motivo e data sao obrigatorios",
+          message: parsedBody.error.issues[0].message,
+        });
+      }
+
+      const { member_id, reason, warning_date } = parsedBody.data;
+
+      if (member_id === request.user!.id) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Voce nao pode dar uma advertencia para si mesmo",
         });
       }
 
@@ -171,8 +187,14 @@ export async function advertenciasRoutes(app: FastifyInstance) {
 
       const result = await createWarning(request.user!.id, {
         memberId: member.id,
-        reason: normalizedReason,
+        reason: reason.trim(),
         warningDate: parsedDate,
+      });
+
+      auditLog(request.log, "WARNING_CREATED", request.user!.id, {
+        targetId: member.id,
+        ip: request.ip ?? "unknown",
+        detail: `reason: ${reason.trim()}`,
       });
 
       return reply.status(201).send({
@@ -203,6 +225,11 @@ export async function advertenciasRoutes(app: FastifyInstance) {
           message: "Advertencia nao encontrada",
         });
       }
+
+      auditLog(request.log, "WARNING_DELETED", request.user!.id, {
+        targetId: params.id,
+        ip: request.ip ?? "unknown",
+      });
 
       return reply.status(204).send();
     }
@@ -235,7 +262,15 @@ export async function advertenciasRoutes(app: FastifyInstance) {
         });
       }
 
-      const { reason, warning_date } = request.body as WarningBody;
+      const parsedBody = UpdateWarningSchema.safeParse(request.body);
+      if (!parsedBody.success) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: parsedBody.error.issues[0].message,
+        });
+      }
+
+      const { reason, warning_date } = parsedBody.data;
       const trimmedReason = reason?.trim();
       const parsedDate = parseDate(warning_date);
 
@@ -243,20 +278,6 @@ export async function advertenciasRoutes(app: FastifyInstance) {
         return reply.status(400).send({
           error: "invalid_request",
           message: "Informe uma descricao ou data",
-        });
-      }
-
-      if (reason !== undefined && !trimmedReason) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message: "Descricao invalida",
-        });
-      }
-
-      if (warning_date !== undefined && !parsedDate) {
-        return reply.status(400).send({
-          error: "invalid_request",
-          message: "Data da advertencia invalida",
         });
       }
 

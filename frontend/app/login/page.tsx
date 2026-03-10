@@ -1,5 +1,6 @@
 "use client";
 
+import './page.css';
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -21,8 +22,10 @@ export default function LoginPage() {
 
     try {
       const response = await login(email, password);
-      localStorage.setItem("authToken", response.data.access_token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      // Token em sessionStorage (limpo ao fechar a aba); cookie httpOnly
+      // definido pelo backend é o mecanismo principal em produção (HTTPS).
+      sessionStorage.setItem("authToken", response.data.access_token);
+      sessionStorage.setItem("user", JSON.stringify(response.data.user));
       window.dispatchEvent(new Event("user-updated"));
       const role = response.data.user.role as Role;
       router.push(getDefaultRoute(role));
@@ -51,12 +54,14 @@ export default function LoginPage() {
           Entre com suas credenciais para acessar o sistema
         </p>
         <form className="login-form" onSubmit={handleSubmit}>
-          <label className="login-field">
+          <label className="login-field" htmlFor="login-email">
             E-mail
             <input
+              id="login-email"
               type="email"
               name="email"
               required={true}
+              aria-required="true"
               placeholder="seu@email.com"
               autoComplete="email"
               value={email}
@@ -64,12 +69,14 @@ export default function LoginPage() {
               disabled={loading}
             />
           </label>
-          <label className="login-field">
+          <label className="login-field" htmlFor="login-password">
             Senha
             <input
+              id="login-password"
               type="password"
               name="password"
               required={true}
+              aria-required="true"
               placeholder="********"
               autoComplete="current-password"
               value={password}
@@ -77,7 +84,11 @@ export default function LoginPage() {
               disabled={loading}
             />
           </label>
-          {error && <p className="error-message">{error}</p>}
+          {error && (
+            <p className="error-message" role="alert" aria-live="polite">
+              {error}
+            </p>
+          )}
           <button className="login-button" type="submit" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </button>

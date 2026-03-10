@@ -2,6 +2,7 @@ FROM node:20-bullseye-slim
 
 WORKDIR /app
 
+# Instala dependências no build da imagem — não repete no startup
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -15,4 +16,4 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npm ci && npm run dev -- -p 3000 -H 0.0.0.0"]
+CMD ["npm", "run", "dev", "--", "-p", "3000", "-H", "0.0.0.0"]

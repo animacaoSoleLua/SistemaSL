@@ -1,0 +1,68 @@
+/* Perfil Page — edição de perfil e informações do usuário */
+
+@media (max-width: 960px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field.full {
+    grid-column: span 1;
+  }
+
+  .profile-photo-block {
+    grid-column: span 1;
+    grid-template-columns: 1fr;
+    align-items: center;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .profile-photo-meta {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-photo-block {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+
+  .profile-photo-preview {
+    width: 88px;
+    height: 88px;
+    border-radius: 24px;
+  }
+
+  .profile-photo-placeholder {
+    font-size: 11px;
+  }
+
+  .profile-photo-meta {
+    gap: 10px;
+  }
+
+  .profile-photo-meta strong {
+    font-size: 15px;
+  }
+
+  .form-card {
+    padding: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .form-buttons .button {
+    width: 100%;
+  }
+}

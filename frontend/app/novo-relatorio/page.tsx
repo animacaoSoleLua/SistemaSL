@@ -1,5 +1,6 @@
 "use client";
 
+import './page.css';
 import type { FormEvent } from "react";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -152,6 +153,7 @@ function MediaUploadField(props: {
   onRemoveFile: (index: number) => void;
   accept?: string;
   helperText?: string;
+  maxFiles?: number;
 }) {
   const handlePreviewFile = (file: File) => {
     const previewUrl = URL.createObjectURL(file);
@@ -161,24 +163,28 @@ function MediaUploadField(props: {
     }, 60_000);
   };
 
+  const isAtLimit = props.maxFiles !== undefined && props.files.length >= props.maxFiles;
+
   return (
     <div className="field full">
       {props.label ? <span>{props.label}</span> : null}
       <div className="media-upload-row">
-        <label className="profile-photo-upload" htmlFor={props.id}>
-          <span>Adicionar foto</span>
-          <input
-            id={props.id}
-            name={props.name}
-            className="profile-photo-input"
-            type="file"
-            accept={props.accept}
-            onChange={(event) => {
-              props.onAddFiles(event.target.files);
-              event.target.value = "";
-            }}
-          />
-        </label>
+        {!isAtLimit && (
+          <label className="profile-photo-upload" htmlFor={props.id}>
+            <span>Adicionar foto</span>
+            <input
+              id={props.id}
+              name={props.name}
+              className="profile-photo-input"
+              type="file"
+              accept={props.accept}
+              onChange={(event) => {
+                props.onAddFiles(event.target.files);
+                event.target.value = "";
+              }}
+            />
+          </label>
+        )}
         {props.helperText ? <small className="helper">{props.helperText}</small> : null}
         {props.files.length === 0 ? (
           <small className="helper media-upload-file-name">Nenhuma foto adicionada.</small>
@@ -947,6 +953,7 @@ function NovoRelatorioContent() {
                 }
                 accept="image/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
+                maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
               <MediaUploadField
                 id="balloonFiles"
@@ -961,6 +968,7 @@ function NovoRelatorioContent() {
                 }
                 accept="image/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
+                maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
               <MediaUploadField
                 id="animationFiles"
@@ -975,6 +983,7 @@ function NovoRelatorioContent() {
                 }
                 accept="image/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
+                maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
               <MediaUploadField
                 id="charactersFiles"
@@ -994,6 +1003,7 @@ function NovoRelatorioContent() {
                 }
                 accept="image/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
+                maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
               <MediaUploadField
                 id="workshopsFiles"
@@ -1008,6 +1018,7 @@ function NovoRelatorioContent() {
                 }
                 accept="image/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
+                maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
             </div>
           </article>

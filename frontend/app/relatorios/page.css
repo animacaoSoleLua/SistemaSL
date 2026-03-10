@@ -1,0 +1,250 @@
+/* Relatórios Page — listagem de relatórios e modal de detalhes */
+
+.report-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(111, 76, 255, 0.12);
+  background: #fbfaff;
+}
+
+.report-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.report-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.report-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.report-date {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.report-modal {
+  width: min(900px, 100%);
+  max-height: calc(100vh - 48px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+.report-modal-body {
+  overflow-y: auto;
+  padding-right: 4px;
+  min-height: 0;
+}
+
+.report-detail-group {
+  display: grid;
+  gap: 8px;
+}
+
+.report-modal .field > span {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.report-modal .field h3 {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.report-detail-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* ── Media grid (thumbnails) ── */
+.media-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.media-thumb-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(111, 76, 255, 0.18);
+  background: #f3f0ff;
+  flex-shrink: 0;
+}
+
+.media-thumb-btn {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.media-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.15s;
+}
+
+.media-thumb-btn:hover .media-thumb {
+  opacity: 0.82;
+}
+
+.media-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.28);
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+
+.media-thumb-btn:hover .media-thumb-overlay {
+  opacity: 1;
+}
+
+.media-download-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--primary, #6f4cff);
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  transition: background 0.15s;
+}
+
+.media-download-btn:hover {
+  background: #fff;
+}
+
+.media-thumb-wrap--video {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.media-video-link {
+  color: var(--primary, #6f4cff);
+  text-decoration: underline;
+}
+
+/* ── Lightbox ── */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  cursor: zoom-out;
+}
+
+.lightbox-img {
+  max-width: min(90vw, 1100px);
+  max-height: 80vh;
+  border-radius: 10px;
+  object-fit: contain;
+  cursor: default;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.lightbox-download {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+
+.lightbox-download:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+@media (max-width: 960px) {
+  .report-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .media-thumb-wrap {
+    width: 90px;
+    height: 90px;
+  }
+
+  .report-modal {
+    max-height: calc(100dvh - 32px);
+  }
+
+  .lightbox-img {
+    max-height: 70vh;
+  }
+
+  .lightbox-close {
+    top: 12px;
+    right: 12px;
+  }
+}
