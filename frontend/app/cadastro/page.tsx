@@ -296,6 +296,9 @@ export default function CadastroPage() {
                 disabled={loading}
               />
             </label>
+            <span style={{ fontSize: "0.78rem", color: "#888", marginTop: "2px", display: "block" }}>
+                Mínimo 8 caracteres, com letra maiúscula, minúscula e número.
+              </span>
           </fieldset>
           {error && (
             <p className="error-message full" role="alert" aria-live="polite">

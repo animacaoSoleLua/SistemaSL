@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-03-05
+**Ultima Atualizacao:** 2026-03-10
 **Atualizado por:** Codex
 
 ---
@@ -21,6 +21,159 @@
 ---
 
 ## Tarefa Atual
+
+### INTEGRACAO-001: Google Agenda nos Cursos
+
+**Epic:** Integração com Google Calendar
+**User Story:** Quando um curso é criado, ele aparece automaticamente no Google Agenda da organização. Quando um membro se inscreve, o evento aparece no Google Agenda pessoal dele.
+
+**Descricao:**
+Integrar a API do Google Calendar ao módulo de cursos, usando dois fluxos distintos:
+1. **Calendário da organização** (Service Account): ao criar/editar/excluir um curso, o evento é espelhado no Google Agenda compartilhado da Sol e Lua.
+2. **Calendário pessoal do membro** (OAuth 2.0): ao se inscrever em um curso, o evento é adicionado ao Google Agenda pessoal do membro (requer que ele conecte sua conta Google).
+
+---
+
+### Passos de Implementação
+
+#### Passo 1 — Configuração no Google Cloud Console
+
+1. Acessar [console.cloud.google.com](https://console.cloud.google.com) e criar um projeto (ex: `sistemasl-agenda`).
+2. Ativar a **Google Calendar API** no projeto.
+3. Criar duas credenciais:
+   - **Service Account** (para o calendário da organização): baixar o JSON da chave.
+   - **OAuth 2.0 Client ID** (para o calendário pessoal do membro): tipo "Web application", configurar URI de redirecionamento (`/api/v1/auth/google/callback`).
+4. Configurar a **tela de consentimento OAuth** (nome do app, escopo `calendar.events`).
+5. Compartilhar o calendário da organização com o e-mail da Service Account (permissão de "Fazer alterações nos eventos").
+6. Anotar: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `GOOGLE_CALENDAR_ID`, conteúdo do JSON da Service Account.
+
+---
+
+#### Passo 2 — Banco de Dados (Prisma)
+
+Adicionar campos na migration:
+
+```prisma
+// No modelo Curso (tabela cursos)
+google_calendar_event_id  String?   // ID do evento no calendário da org
+
+// No modelo User/Membro (tabela users)
+google_access_token   String?   // Token OAuth do usuário
+google_refresh_token  String?   // Refresh token OAuth
+google_token_expiry   DateTime? // Validade do access token
+```
+
+Rodar `npx prisma migrate dev --name google_calendar`.
+
+---
+
+#### Passo 3 — Backend: Serviço do Google Calendar
+
+Criar `backend/src/lib/googleCalendar.ts` com:
+
+- Instalar dependência: `npm install googleapis`
+- **`createOrgEvent(course)`**: cria evento no calendário da organização via Service Account, retorna `eventId`.
+- **`updateOrgEvent(eventId, course)`**: atualiza evento quando o curso é editado.
+- **`deleteOrgEvent(eventId)`**: exclui evento quando o curso é deletado.
+- **`createUserEvent(userTokens, course)`**: cria evento no calendário pessoal do membro usando os tokens OAuth dele.
+- **`deleteUserEvent(userTokens, eventId)`**: remove o evento do calendário pessoal ao cancelar inscrição.
+- **`refreshAccessToken(refreshToken)`**: renova o access token expirado antes de cada operação.
+
+Variáveis de ambiente necessárias:
+```
+GOOGLE_SERVICE_ACCOUNT_JSON=<conteúdo do JSON>
+GOOGLE_CALENDAR_ID=<id do calendário da org>
+GOOGLE_CLIENT_ID=<oauth client id>
+GOOGLE_CLIENT_SECRET=<oauth client secret>
+GOOGLE_REDIRECT_URI=<uri de callback>
+```
+
+---
+
+#### Passo 4 — Backend: Rotas OAuth para Membros
+
+Criar rotas em `backend/src/auth/routes.ts` ou novo arquivo `backend/src/google/routes.ts`:
+
+- **`GET /api/v1/auth/google`**: gera URL de autorização do Google e redireciona o usuário.
+- **`GET /api/v1/auth/google/callback`**: recebe o `code` do Google, troca por tokens, salva no banco do membro logado, redireciona para o frontend com sucesso/erro.
+- **`DELETE /api/v1/auth/google`**: desconecta a conta Google (apaga tokens do banco).
+
+---
+
+#### Passo 5 — Backend: Disparos nos Cursos
+
+Editar `backend/src/cursos/routes.ts`:
+
+- **`POST /api/v1/cursos`** (criar curso): após salvar, chamar `createOrgEvent()` e salvar o `google_calendar_event_id` no curso.
+- **`PATCH /api/v1/cursos/:id`** (editar curso): se o curso tiver `google_calendar_event_id`, chamar `updateOrgEvent()`.
+- **`DELETE /api/v1/cursos/:id`** (excluir curso): se tiver evento, chamar `deleteOrgEvent()` antes de deletar.
+- **`POST /api/v1/cursos/:id/inscricoes`** (inscrição): após inscrever, se o membro tiver `google_access_token`, chamar `createUserEvent()` e salvar o `google_calendar_event_id` na inscrição.
+- Cancelamento/remoção de inscrição (se implementado): chamar `deleteUserEvent()`.
+
+> Todos os disparos ao Google Calendar devem ser feitos de forma **não-bloqueante**: erros na API do Google não devem impedir a operação principal (log do erro, mas retornar sucesso ao usuário).
+
+---
+
+#### Passo 6 — Frontend: Conectar Conta Google
+
+Na tela de **Perfil** (`frontend/app/perfil/page.tsx`):
+
+- Buscar se o membro já tem conta Google conectada (novo campo no endpoint `GET /api/v1/membros/me` ou similar).
+- Exibir botão **"Conectar Google Agenda"** se não conectado, ou **"Google Agenda conectado ✓"** + botão de desconectar se já conectado.
+- Ao clicar em conectar, redirecionar para `GET /api/v1/auth/google`.
+- Após o callback do OAuth, exibir mensagem de sucesso/erro.
+
+---
+
+#### Passo 7 — Frontend: Feedback na Inscrição
+
+Na tela de **Cursos** (`frontend/app/cursos/page.tsx`):
+
+- Após inscrição bem-sucedida, se o membro tiver conta Google conectada: exibir mensagem "Evento adicionado ao seu Google Agenda".
+- Se não tiver conta conectada: exibir link "Conecte seu Google Agenda no perfil para adicionar automaticamente".
+
+---
+
+### Resumo de Arquivos a Criar/Editar
+
+| Arquivo | Ação |
+|---------|------|
+| `backend/src/lib/googleCalendar.ts` | Criar — serviço principal |
+| `backend/src/google/routes.ts` | Criar — rotas OAuth |
+| `backend/src/cursos/routes.ts` | Editar — disparos na criação/edição/exclusão/inscrição |
+| `backend/src/cursos/store.ts` | Editar — salvar `google_calendar_event_id` |
+| `backend/prisma/schema.prisma` | Editar — novos campos |
+| `frontend/app/perfil/page.tsx` | Editar — botão conectar Google |
+| `frontend/app/cursos/page.tsx` | Editar — feedback após inscrição |
+| `.env.example` | Editar — novas variáveis |
+
+---
+
+### Ordem de Execução Recomendada
+
+1. Configurar Google Cloud Console e obter credenciais.
+2. Fazer migration do banco.
+3. Criar `googleCalendar.ts`.
+4. Criar rotas OAuth (`/auth/google`).
+5. Integrar nos cursos (criar/editar/excluir).
+6. Integrar nas inscrições.
+7. Frontend: botão de conectar no perfil.
+8. Frontend: feedback na inscrição.
+9. Testar fluxo completo em dev.
+
+**Status:** Planejada (aguardando início)
+
+**Criterios de Conclusao:**
+- [ ] Criar curso cria evento no Google Agenda da organização.
+- [ ] Editar curso atualiza o evento na organização.
+- [ ] Excluir curso remove o evento da organização.
+- [ ] Membro pode conectar/desconectar conta Google no perfil.
+- [ ] Inscrever em curso com conta Google conectada adiciona evento no Google Agenda pessoal.
+- [ ] Falhas na API do Google não bloqueiam operações do sistema.
+
+---
+
+## Ultima Tarefa Concluida
 
 ### MELHORIA-097: Visualizar foto selecionada no formulário (sem miniatura na listagem)
 
@@ -203,7 +356,7 @@ Nenhum bloqueador no momento.
 
 | Prioridade | Task | Descricao | Estimativa |
 |------------|------|-----------|-----------|
-| - | - | Nenhuma pendente | - |
+| Alta | INTEGRACAO-001 | Google Agenda nos Cursos | - |
 
 ---
 

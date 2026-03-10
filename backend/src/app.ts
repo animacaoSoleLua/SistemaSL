@@ -102,7 +102,9 @@ export function buildServer(): FastifyInstance {
 
   // Rate limiting global — sobrescrito por rota em auth
   app.register(rateLimit, {
-    global: false,
+    global: true,
+    max: 200,
+    timeWindow: "1 minute",
   });
 
   app.register(cors, {

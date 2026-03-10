@@ -34,6 +34,7 @@ services:
     ports:
       - "3001:3001"
     restart: unless-stopped
+    mem_limit: 1g
 
   frontend:
     build:
@@ -48,6 +49,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     restart: unless-stopped
+    mem_limit: 512m
 
 volumes:
   postgres_data:
