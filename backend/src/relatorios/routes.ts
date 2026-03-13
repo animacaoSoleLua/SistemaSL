@@ -282,7 +282,7 @@ function buildPdfDocument(lines: string[]): Buffer {
 }
 
 function isValidRating(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 5;
+  return Number.isInteger(value) && value >= 0 && value <= 10;
 }
 
 function parsePositiveInt(value: string | undefined): number | undefined {

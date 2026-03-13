@@ -1,4 +1,20 @@
 // lib/api.ts
+
+export type ApiError = {
+  message?: string;
+  error?: string;
+  statusCode?: number;
+};
+
+export function getErrorMessage(err: unknown, fallback = "Erro desconhecido."): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object" && err !== null) {
+    const e = err as ApiError;
+    return e.message ?? e.error ?? fallback;
+  }
+  return fallback;
+}
+
 const RAW_API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001/api/v1";
 const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, "");

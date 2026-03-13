@@ -4,6 +4,7 @@ import './page.css';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  getErrorMessage,
   getMember,
   resolveApiAssetUrl,
   updateMember,
@@ -85,8 +86,8 @@ export default function PerfilPage() {
       try {
         const response = await getMember(user.id);
         setMember(response.data as MemberDetail);
-      } catch (err: any) {
-        setError(err.message || "Erro ao carregar perfil.");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Erro ao carregar perfil."));
       } finally {
         setLoading(false);
       }
@@ -276,8 +277,8 @@ export default function PerfilPage() {
       } else {
         setSaveSuccess("Dados atualizados com sucesso.");
       }
-    } catch (err: any) {
-      setSaveError(err.message || "Erro ao salvar perfil.");
+    } catch (err: unknown) {
+      setSaveError(getErrorMessage(err, "Erro ao salvar perfil."));
     } finally {
       setSaving(false);
     }

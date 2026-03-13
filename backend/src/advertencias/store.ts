@@ -1,3 +1,4 @@
+import { addMonths, subMonths } from "date-fns";
 import { prisma } from "../db/prisma.js";
 
 export interface WarningRecord {
@@ -26,15 +27,11 @@ export interface CreateWarningInput {
 }
 
 function addOneMonth(date: Date): Date {
-  const next = new Date(date.getTime());
-  next.setMonth(next.getMonth() + 1);
-  return next;
+  return addMonths(date, 1);
 }
 
 function subtractOneMonth(date: Date): Date {
-  const previous = new Date(date.getTime());
-  previous.setMonth(previous.getMonth() - 1);
-  return previous;
+  return subMonths(date, 1);
 }
 
 function isSuspensionActive(suspension: SuspensionRecord, now: Date): boolean {

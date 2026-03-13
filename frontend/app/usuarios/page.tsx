@@ -18,6 +18,7 @@ import {
 import {
   createMember,
   deleteMember,
+  getErrorMessage,
   getMember,
   getMembers,
   resolveApiAssetUrl,
@@ -25,6 +26,7 @@ import {
 } from "../../lib/api";
 import { getStoredUser, roleLabels, type Role, type StoredUser } from "../../lib/auth";
 import { useFocusTrap } from "../../lib/useFocusTrap";
+import { isStrongPassword, isValidCPF } from "../../lib/validators";
 
 // ── Reducer: formulário de membro ───────────────────────────────────────────
 
@@ -204,8 +206,8 @@ export default function UsuariosPage() {
     try {
       const response = await getMembers();
       setUsers(response.data as Member[]);
-    } catch (err: any) {
-      setError(err.message || "Erro ao carregar membros.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Erro ao carregar membros."));
     } finally {
       setLoading(false);
     }
@@ -269,8 +271,22 @@ export default function UsuariosPage() {
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
-    setSaving(true);
     setActionError(null);
+
+    if (!isValidCPF(formData.cpf)) {
+      setActionError("CPF inválido.");
+      return;
+    }
+
+    if (modalMode === "create") {
+      const pwdError = isStrongPassword(formData.password);
+      if (pwdError) {
+        setActionError(pwdError);
+        return;
+      }
+    }
+
+    setSaving(true);
 
     try {
       if (modalMode === "create") {
@@ -299,8 +315,8 @@ export default function UsuariosPage() {
       }
       await loadMembers();
       setModalOpen(false);
-    } catch (err: any) {
-      setActionError(err.message || "Não foi possível salvar o membro.");
+    } catch (err: unknown) {
+      setActionError(getErrorMessage(err, "Não foi possível salvar o membro."));
     } finally {
       setSaving(false);
     }
@@ -331,8 +347,8 @@ export default function UsuariosPage() {
         setSelectedMemberId(null);
       }
       setDeleteTarget(null);
-    } catch (err: any) {
-      setActionError(err.message || "Não foi possível excluir o membro.");
+    } catch (err: unknown) {
+      setActionError(getErrorMessage(err, "Não foi possível excluir o membro."));
     } finally {
       setDeleting(false);
     }
@@ -602,8 +618,8 @@ export default function UsuariosPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-    } catch (err: any) {
-      setCpfActionError(err.message || "Não foi possível gerar o PDF.");
+    } catch (err: unknown) {
+      setCpfActionError(getErrorMessage(err, "Não foi possível gerar o PDF."));
     } finally {
       setCpfGenerating(false);
     }
@@ -1188,6 +1204,12 @@ export default function UsuariosPage() {
                   </select>
                 </label>
               </div>
+
+              {actionError && (
+                <p className="text-red-500" role="alert" aria-live="polite" style={{ marginTop: 8 }}>
+                  {actionError}
+                </p>
+              )}
 
               <div className="modal-footer">
                 <button

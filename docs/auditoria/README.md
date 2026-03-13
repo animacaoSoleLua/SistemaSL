@@ -34,6 +34,7 @@ Auditoria completa realizada no sistema identificando problemas em segurança, a
 | Sprint 4 | Performance | [sprint-4-performance.md](sprint-4-performance.md) | Concluída |
 | Sprint 5 | Refatoração | [sprint-5-refatoracao.md](sprint-5-refatoracao.md) | Pendente |
 | Sprint 6 | Responsividade Mobile | [sprint-6-responsividade.md](sprint-6-responsividade.md) | Pendente |
+| Sprint 7 | Correções de Lógica e Type Safety | [sprint-7-correcoes-qualidade.md](sprint-7-correcoes-qualidade.md) | Concluída |
 
 ---
 

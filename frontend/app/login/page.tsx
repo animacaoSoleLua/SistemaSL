@@ -4,7 +4,7 @@ import './page.css';
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "../../lib/api";
+import { getErrorMessage, login } from "../../lib/api";
 import { getDefaultRoute, type Role } from "../../lib/auth";
 import logo from "../../assets/logo.png";
 
@@ -29,7 +29,7 @@ export default function LoginPage() {
       window.dispatchEvent(new Event("user-updated"));
       const role = response.data.user.role as Role;
       router.push(getDefaultRoute(role));
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError("Credenciais invalidas.");
       setEmail("");
       setPassword("");

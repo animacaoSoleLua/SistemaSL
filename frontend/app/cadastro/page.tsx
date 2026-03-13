@@ -3,21 +3,10 @@
 import './page.css';
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { registerUser } from "../../lib/api";
+import { useEffect, useMemo, useState } from "react";
+import { getErrorMessage, registerUser } from "../../lib/api";
+import { isStrongPassword, isValidCPF } from "../../lib/validators";
 import logo from "../../assets/logo.png";
-
-function isValidCPF(cpf: string): boolean {
-  const cleaned = cpf.replace(/\D/g, "");
-  if (cleaned.length !== 11) return false;
-  if (/^(\d)\1+$/.test(cleaned)) return false;
-  const calc = (digits: string, factor: number): number =>
-    digits.split("").reduce((sum, d, i) => sum + parseInt(d, 10) * (factor - i), 0);
-  const r1 = (calc(cleaned.slice(0, 9), 10) * 10) % 11;
-  if ((r1 === 10 || r1 === 11 ? 0 : r1) !== parseInt(cleaned[9], 10)) return false;
-  const r2 = (calc(cleaned.slice(0, 10), 11) * 10) % 11;
-  return (r2 === 10 || r2 === 11 ? 0 : r2) === parseInt(cleaned[10], 10);
-}
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -36,6 +25,12 @@ export default function CadastroPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!success) return;
+    const timer = setTimeout(() => router.push("/login"), 1200);
+    return () => clearTimeout(timer);
+  }, [success, router]);
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -94,18 +89,9 @@ export default function CadastroPage() {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError("A senha deve ter pelo menos 8 caracteres.");
-      return;
-    }
-
-    if (!/[A-Z]/.test(formData.password)) {
-      setError("A senha deve conter ao menos uma letra maiúscula.");
-      return;
-    }
-
-    if (!/[0-9]/.test(formData.password)) {
-      setError("A senha deve conter ao menos um número.");
+    const pwdError = isStrongPassword(formData.password);
+    if (pwdError) {
+      setError(pwdError);
       return;
     }
 
@@ -128,11 +114,8 @@ export default function CadastroPage() {
         password: formData.password,
       });
       setSuccess("Cadastro feito! Agora você pode entrar.");
-      setTimeout(() => {
-        router.push("/login");
-      }, 1200);
-    } catch (err: any) {
-      setError(err.message || "Não foi possível concluir o cadastro.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Não foi possível concluir o cadastro."));
     } finally {
       setLoading(false);
     }

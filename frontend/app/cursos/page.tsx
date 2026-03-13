@@ -3,7 +3,7 @@
 import './page.css';
 import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiArchive, FiInfo } from "react-icons/fi";
+import { FiAlertTriangle, FiArchive, FiInfo, FiX } from "react-icons/fi";
 import {
   createCourse,
   deleteCourse,
@@ -11,6 +11,7 @@ import {
   finalizeCourse,
   getCourse,
   getCourses,
+  getErrorMessage,
   getMember,
   getMembers,
   updateCourse,
@@ -133,6 +134,12 @@ export default function CursosPage() {
   }, [router]);
 
   useEffect(() => {
+    if (!notice || notice.type !== "success") return;
+    const timer = setTimeout(() => setNotice(null), 3000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
+  useEffect(() => {
     if (!currentUser) return;
     getMember(currentUser.id)
       .then((data) => {
@@ -227,10 +234,10 @@ export default function CursosPage() {
         }
       });
       setEnrolledCourses(next);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setNotice({
         type: "error",
-        message: err.message || "Não foi possível pegar a vaga.",
+        message: getErrorMessage(err, "Não foi possível pegar a vaga."),
       });
     } finally {
       setEnrollingId(null);
@@ -279,10 +286,10 @@ export default function CursosPage() {
         setCapacity(String(data.capacity ?? ""));
       }
       setInstructorId(data.instructor?.id ?? "");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setNotice({
         type: "error",
-        message: err.message || "Não foi possível carregar o curso.",
+        message: getErrorMessage(err, "Não foi possível carregar o curso."),
       });
       setModalOpen(false);
     } finally {
@@ -300,8 +307,8 @@ export default function CursosPage() {
       const response = await getCourse(course.id);
       const data = response.data as CourseDetails;
       setViewDetails(data);
-    } catch (err: any) {
-      setViewError(err.message || "Não foi possível carregar os detalhes do curso.");
+    } catch (err: unknown) {
+      setViewError(getErrorMessage(err, "Não foi possível carregar os detalhes do curso."));
     } finally {
       setViewLoading(false);
     }
@@ -324,10 +331,10 @@ export default function CursosPage() {
           status: "attended" as const,
         })),
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setNotice({
         type: "error",
-        message: err.message || "Não foi possível carregar os inscritos.",
+        message: getErrorMessage(err, "Não foi possível carregar os inscritos."),
       });
       setFinalizeModalOpen(false);
     } finally {
@@ -366,10 +373,10 @@ export default function CursosPage() {
       setFinalizeCourseData(null);
       const data = await getCourses({ status: statusFilter });
       setCourses(data.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setNotice({
         type: "error",
-        message: err.message || "Não foi possível finalizar o curso.",
+        message: getErrorMessage(err, "Não foi possível finalizar o curso."),
       });
     } finally {
       setFinalizing(false);
@@ -445,8 +452,8 @@ export default function CursosPage() {
       closeModal();
       const data = await getCourses({ status: statusFilter });
       setCourses(data.data);
-    } catch (err: any) {
-      setFormError(err.message || "Erro ao salvar curso.");
+    } catch (err: unknown) {
+      setFormError(getErrorMessage(err, "Erro ao salvar curso."));
     } finally {
       setSaving(false);
     }
@@ -466,10 +473,10 @@ export default function CursosPage() {
       setNotice({ type: "success", message: "Curso apagado com sucesso." });
       const data = await getCourses({ status: statusFilter });
       setCourses(data.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setNotice({
         type: "error",
-        message: err.message || "Não foi possível apagar o curso.",
+        message: getErrorMessage(err, "Não foi possível apagar o curso."),
       });
     } finally {
       setDeletingId(null);
@@ -775,29 +782,39 @@ export default function CursosPage() {
             }
           }}
         >
-          <div className="modal-card" ref={deleteTrapRef}>
+          <div className="modal-card confirm-modal" ref={deleteTrapRef}>
             <header className="modal-header">
               <div>
-                <strong id={deleteModalTitleId}>Apagar curso</strong>
-                <p className="helper" id={deleteModalDescriptionId}>
-                  Esta ação não pode ser desfeita. Curso:{" "}
-                  <strong>{deleteTarget.title}</strong>
+                <h2 className="section-title" id={deleteModalTitleId}>
+                  Confirmar exclusão
+                </h2>
+                <p id={deleteModalDescriptionId}>
+                  Esta ação não pode ser desfeita.
                 </p>
               </div>
               <button
-                className="button secondary"
+                className="icon-button"
                 type="button"
                 aria-label="Fechar modal de exclusão de curso"
                 onClick={() => setDeleteTarget(null)}
                 disabled={deletingId === deleteTarget.id}
               >
-                Fechar
+                <FiX aria-hidden="true" />
               </button>
             </header>
-            <div className="modal-body">
-              <p className="helper">
-                Ao apagar, o curso sai da lista e as inscrições são removidas.
-              </p>
+            <div className="modal-body confirm-body">
+              <div className="confirm-icon" aria-hidden="true">
+                <FiAlertTriangle />
+              </div>
+              <div className="confirm-text">
+                <p>
+                  Tem certeza que deseja apagar o curso{" "}
+                  <strong>{deleteTarget.title}</strong>?
+                </p>
+                <p className="confirm-muted">
+                  O curso será removido e todas as inscrições canceladas.
+                </p>
+              </div>
             </div>
             <div className="modal-footer">
               <button

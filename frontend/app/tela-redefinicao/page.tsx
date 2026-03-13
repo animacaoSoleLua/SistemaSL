@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { resetPassword } from "../../lib/api";
+import { getErrorMessage, resetPassword } from "../../lib/api";
 import { useResetPassword } from "../context/ResetPasswordContext";
 import logo from "../../assets/logo.png";
 
@@ -61,8 +61,8 @@ export default function TelaRedefinicaoPage() {
       clear();
       setError(null);
       setSuccess("Senha redefinida com sucesso! Indo para o login...");
-    } catch (err: any) {
-      setError(err.message || "Nao foi possivel redefinir a senha.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Nao foi possivel redefinir a senha."));
     }
   };
 

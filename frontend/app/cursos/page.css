@@ -71,6 +71,48 @@
 }
 
 /* AUD-M6-06 — cursos em mobile */
+/* ── Delete confirmation modal ───────────────────────────── */
+.confirm-modal {
+  max-width: 520px;
+  border-color: rgba(208, 75, 75, 0.2);
+}
+
+.confirm-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.confirm-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #fff1f1;
+  color: #d04b4b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.confirm-icon svg {
+  width: 26px;
+  height: 26px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+}
+
+.confirm-text {
+  display: grid;
+  gap: 6px;
+}
+
+.confirm-muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+
 @media (max-width: 600px) {
   .stats {
     grid-template-columns: 1fr;

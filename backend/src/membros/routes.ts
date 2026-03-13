@@ -35,6 +35,21 @@ interface MemberQuery {
   limit?: string;
 }
 
+const MIN_PASSWORD_LENGTH = 8;
+
+function validatePasswordStrength(password: string): string | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres`;
+  }
+  if (!/[A-Z]/.test(password)) {
+    return "A senha deve conter ao menos uma letra maiuscula";
+  }
+  if (!/[0-9]/.test(password)) {
+    return "A senha deve conter ao menos um numero";
+  }
+  return null;
+}
+
 const CreateMemberSchema = z.object({
   name: z.string().min(1, "Nome obrigatorio"),
   last_name: z.string().min(1, "Sobrenome obrigatorio"),
@@ -44,7 +59,7 @@ const CreateMemberSchema = z.object({
   region: z.string().min(1, "Regiao invalida"),
   phone: z.string().min(1, "Telefone invalido"),
   role: z.enum(["admin", "animador", "recreador"] as const, { message: "Papel invalido" }),
-  password: z.string().min(1).optional(),
+  password: z.string().min(1, "Senha obrigatoria"),
 });
 
 const UpdateMemberSchema = z.object({
@@ -295,6 +310,14 @@ export async function membrosRoutes(app: FastifyInstance) {
         role,
         password,
       } = parsedBody.data;
+
+      const passwordError = validatePasswordStrength(password);
+      if (passwordError) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: passwordError,
+        });
+      }
 
       const parsedBirthDate = parseDate(birth_date);
       if (!parsedBirthDate) {

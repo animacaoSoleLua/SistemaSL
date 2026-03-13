@@ -8,6 +8,7 @@ import { Modal } from "../../components/Modal";
 import {
   createWarning,
   deleteWarning,
+  getErrorMessage,
   getMembers,
   getWarnings,
   updateWarning,
@@ -142,8 +143,8 @@ export default function WarningsPage() {
         setMembers(members);
         setMemberMap(map);
         setWarnings(warningsResponse.data as Warning[]);
-      } catch (err: any) {
-        setError(err.message || "Erro ao carregar advertências.");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Erro ao carregar advertências."));
       } finally {
         setLoading(false);
       }
@@ -246,8 +247,8 @@ export default function WarningsPage() {
         )
       );
       closeEditModal();
-    } catch (err: any) {
-      setActionError(err.message || "Erro ao atualizar advertência.");
+    } catch (err: unknown) {
+      setActionError(getErrorMessage(err, "Erro ao atualizar advertência."));
     } finally {
       setActionLoadingId(null);
     }
@@ -262,8 +263,8 @@ export default function WarningsPage() {
     try {
       await deleteWarning(warning.id);
       setWarnings((prev) => prev.filter((item) => item.id !== warning.id));
-    } catch (err: any) {
-      setActionError(err.message || "Erro ao excluir advertência.");
+    } catch (err: unknown) {
+      setActionError(getErrorMessage(err, "Erro ao excluir advertência."));
     } finally {
       setActionLoadingId(null);
     }
@@ -308,8 +309,8 @@ export default function WarningsPage() {
         setNotice(null);
         setNoticeVisible(false);
       }
-    } catch (err: any) {
-      setCreateError(err.message || "Erro ao salvar advertência.");
+    } catch (err: unknown) {
+      setCreateError(getErrorMessage(err, "Erro ao salvar advertência."));
     } finally {
       setActionLoadingId(null);
     }

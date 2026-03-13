@@ -4,7 +4,7 @@ import './page.css';
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { requestPasswordReset, verifyResetToken } from "../../lib/api";
+import { getErrorMessage, requestPasswordReset, verifyResetToken } from "../../lib/api";
 import { useResetPassword } from "../context/ResetPasswordContext";
 import logo from "../../assets/logo.png";
 
@@ -36,8 +36,8 @@ export default function TelaRecuperacaoPage() {
       } else {
         setMessage("Token enviado para o seu e-mail.");
       }
-    } catch (err: any) {
-      setError(err.message || "Nao foi possivel enviar o token.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Nao foi possivel enviar o token."));
     } finally {
       setSending(false);
     }
@@ -59,8 +59,8 @@ export default function TelaRecuperacaoPage() {
       setEmail(email.trim());
       setToken(token.trim());
       router.push("/tela-redefinicao");
-    } catch (err: any) {
-      setError(err.message || "Token invalido ou expirado.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Token invalido ou expirado."));
     } finally {
       setVerifying(false);
     }

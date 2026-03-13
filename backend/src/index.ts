@@ -1,5 +1,23 @@
 import "dotenv/config";
+import { z } from "zod";
 import { buildServer } from "./app.js";
+
+const envSchema = z.object({
+  DATABASE_URL: z.string().min(1, "DATABASE_URL é obrigatória"),
+  JWT_SECRET: z.string().min(32, "JWT_SECRET precisa ter ao menos 32 caracteres"),
+  PORT: z.string().default("3001"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM: z.string().optional(),
+  UPLOADS_DIR: z.string().default("./uploads"),
+});
+
+const envResult = envSchema.safeParse(process.env);
+if (!envResult.success) {
+  console.error("❌ Variáveis de ambiente inválidas:");
+  console.error(envResult.error.issues.map((i) => `  ${i.path}: ${i.message}`).join("\n"));
+  process.exit(1);
+}
 
 const app = buildServer();
 const port = Number(process.env.PORT ?? 3001);
