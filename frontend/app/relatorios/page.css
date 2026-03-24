@@ -222,6 +222,16 @@
   background: rgba(255, 255, 255, 0.24);
 }
 
+/* ── Dark mode overrides ───────────────────────────────────── */
+body.theme-purple .report-item {
+  background: rgba(21, 11, 34, 0.85);
+  border-color: rgba(161, 97, 255, 0.18);
+}
+body.theme-purple .media-thumb-wrap {
+  background: rgba(161, 97, 255, 0.12);
+  border-color: rgba(161, 97, 255, 0.25);
+}
+
 @media (max-width: 960px) {
   .report-item {
     flex-direction: column;

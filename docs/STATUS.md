@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-03-10
+**Ultima Atualizacao:** 2026-03-16
 **Atualizado por:** Codex
 
 ---
@@ -161,15 +161,18 @@ Na tela de **Cursos** (`frontend/app/cursos/page.tsx`):
 8. Frontend: feedback na inscrição.
 9. Testar fluxo completo em dev.
 
-**Status:** Planejada (aguardando início)
+**Status:** Concluída (código implementado — aguarda configuração de credenciais no Google Cloud Console)
 
 **Criterios de Conclusao:**
-- [ ] Criar curso cria evento no Google Agenda da organização.
-- [ ] Editar curso atualiza o evento na organização.
-- [ ] Excluir curso remove o evento da organização.
-- [ ] Membro pode conectar/desconectar conta Google no perfil.
-- [ ] Inscrever em curso com conta Google conectada adiciona evento no Google Agenda pessoal.
-- [ ] Falhas na API do Google não bloqueiam operações do sistema.
+- [x] Criar curso cria evento no Google Agenda da organização.
+- [x] Editar curso atualiza o evento na organização.
+- [x] Excluir curso remove o evento da organização.
+- [x] Membro pode conectar/desconectar conta Google no perfil.
+- [x] Inscrever em curso com conta Google conectada adiciona evento no Google Agenda pessoal.
+- [x] Falhas na API do Google não bloqueiam operações do sistema.
+
+**Próximo passo (manual):**
+Ver `backend/.env.example` — configurar `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `GOOGLE_CALENDAR_ID` e `GOOGLE_SERVICE_ACCOUNT_JSON` no ambiente de produção.
 
 ---
 
@@ -236,6 +239,28 @@ Na tela de **Cursos** (`frontend/app/cursos/page.tsx`):
 | FASE-4-TASK-005 | Cobertura automatica de testes | Concluida | FASE-4-TASK-001 |
 
 ---
+
+## Bugs Pendentes
+
+### BUG-001: Fotos de perfil sumindo após deploy
+
+**Reportado em:** 2026-03-15
+**Resolvido em:** 2026-03-16
+**Prioridade:** Alta
+**Status:** Resolvido
+
+**Sintoma:** Fotos de perfil que já haviam sido cadastradas param de aparecer após um novo deploy em produção.
+
+**Causa:** O diretório `uploads` estava dentro do container Docker sem volume persistente — a cada redeploy o container era recriado e os arquivos eram perdidos. Além disso, `UPLOADS_DIR` não estava definido no ambiente de produção e o frontend tinha bind mounts de dev no compose de produção.
+
+**Solução aplicada (`docker-compose.yml`):**
+- Adicionado volume nomeado `backend_uploads:/backend/uploads` no serviço backend
+- Adicionado `UPLOADS_DIR: /backend/uploads` nas variáveis de ambiente do backend
+- Adicionado `JWT_SECRET: ${JWT_SECRET}` (estava ausente em produção)
+- Removidos os bind mounts de dev do serviço frontend (`./frontend:/app` e `/app/node_modules`)
+
+---
+
 
 ## Bloqueadores
 
@@ -356,7 +381,57 @@ Nenhum bloqueador no momento.
 
 | Prioridade | Task | Descricao | Estimativa |
 |------------|------|-----------|-----------|
-| Alta | INTEGRACAO-001 | Google Agenda nos Cursos | - |
+| ~~Alta~~ | ~~BUG-001~~ | ~~Fotos de perfil sumindo após deploy~~ | Resolvido |
+| ~~Media~~ | ~~INTEGRACAO-001~~ | ~~Google Agenda nos Cursos~~ | Concluída |
+
+---
+
+## Auditoria de Acessibilidade (2026-03-16)
+
+Auditoria completa WCAG AA realizada. Score estimado: **65% acessível**. Abaixo as tarefas pendentes organizadas por prioridade.
+
+### Criticas (WCAG Level A)
+
+| Task | Descricao | WCAG | Status |
+|------|-----------|------|--------|
+| ACESS-001 | Adicionar `aria-label` em todos os botões de ícone (editar, deletar, download, hamburguer, tema) | 4.1.2 | Concluída |
+| ACESS-002 | Substituir `window.confirm()` por modal acessível com `role="alertdialog"` | 4.1.2 | Concluída |
+| ACESS-003 | Adicionar `aria-label` nos avatares de iniciais (fallback sem foto) | 1.1.1 | Concluída |
+
+### Altas (WCAG Level A/AA)
+
+| Task | Descricao | WCAG | Status |
+|------|-----------|------|--------|
+| ACESS-004 | Implementar navegação por teclado no dropdown de logout (ArrowDown, Escape) | 2.1.1 | Concluída |
+| ACESS-005 | Adicionar `aria-label` nos inputs de busca/filtro de todas as páginas | 1.3.1 | Concluída |
+| ACESS-006 | Adicionar regiões `aria-live` para anunciar estados de carregamento (skeletons) | 4.1.3 | Concluída |
+| ACESS-007 | Adicionar `aria-pressed` nos botões de toggle de visualização | 4.1.2 | Concluída |
+
+### Medias (WCAG Level AA)
+
+| Task | Descricao | WCAG | Status |
+|------|-----------|------|--------|
+| ACESS-008 | Corrigir contraste do placeholder: light `#7a6e8d` (~3.2:1) e dark `#9580b8` (~3.5:1), meta ≥ 4.5:1 | 1.4.3 | Pendente |
+| ACESS-009 | Implementar `aria-activedescendant` no autocomplete de membros (advertencias) | 2.1.1 | Pendente |
+| ACESS-010 | Adicionar semântica ARIA/HTML nas grades de dados (lista de membros em usuarios/page.tsx) | 1.3.1 | Pendente |
+| ACESS-011 | Adicionar dismiss com tecla Escape no aviso flutuante (advertencias) | 2.1.1 | Pendente |
+
+### Baixas
+
+| Task | Descricao | WCAG | Status |
+|------|-----------|------|--------|
+| ACESS-012 | Aumentar opacidade do outline de foco de 0.45 para ≥ 0.75 em `:focus-visible` | 2.4.7 | Pendente |
+| ACESS-013 | Aumentar fonte da `legend` do fieldset de 11px para 13px | 1.4.4 | Pendente |
+
+### O que ja esta correto
+
+- `Modal.tsx` — focus trap, `role="dialog"`, `aria-modal`, ESC, `aria-labelledby`
+- `Button.tsx` — `aria-busy`, `disabled`, texto `sr-only` no loading
+- `FormField.tsx` — `aria-invalid`, `aria-describedby`, `role="alert"` nos erros
+- Menu mobile — `role="dialog"`, `aria-modal`, botão fechar com `aria-label`
+- Avisos flutuantes — `role="status"`, `aria-live="polite"`
+- Campos required — asterisco com `aria-hidden="true"`
+- Touch targets mobile — `min-height: 44px` nos icon-buttons
 
 ---
 

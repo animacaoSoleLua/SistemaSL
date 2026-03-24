@@ -26,13 +26,17 @@ services:
       HOST: ${HOST:-0.0.0.0}
       PORT: ${PORT:-3001}
       NODE_ENV: ${NODE_ENV:-production}
+      JWT_SECRET: ${JWT_SECRET}
       RESEND_API_KEY: ${RESEND_API_KEY}
       RESEND_FROM: ${RESEND_FROM}
+      UPLOADS_DIR: /backend/uploads
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "3001:3001"
+    volumes:
+      - backend_uploads:/backend/uploads
     restart: unless-stopped
     mem_limit: 1g
 
@@ -45,11 +49,9 @@ services:
         condition: service_started
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     restart: unless-stopped
     mem_limit: 512m
 
 volumes:
   postgres_data:
+  backend_uploads:

@@ -19,6 +19,7 @@ import {
   createMember,
   deleteMember,
   getErrorMessage,
+  getFeedbacks,
   getMember,
   getMembers,
   resolveApiAssetUrl,
@@ -156,12 +157,15 @@ export default function UsuariosPage() {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [selectedMemberDetails, setSelectedMemberDetails] =
     useState<MemberDetails | null>(null);
+  const [feedbackCounts, setFeedbackCounts] = useState<{ positive: number; negative: number } | null>(null);
+  const [feedbackCountsLoading, setFeedbackCountsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [cpfModalOpen, setCpfModalOpen] = useState(false);
   const [cpfSearchTerm, setCpfSearchTerm] = useState("");
   const [cpfSelectedMembers, setCpfSelectedMembers] = useState<Member[]>([]);
   const [cpfGenerating, setCpfGenerating] = useState(false);
   const [cpfActionError, setCpfActionError] = useState<string | null>(null);
+  const [photoLightbox, setPhotoLightbox] = useState<{ url: string; name: string } | null>(null);
 
   const memberModalTrapRef = useFocusTrap(modalOpen);
   const deleteTrapRef = useFocusTrap(!!deleteTarget);
@@ -411,6 +415,37 @@ export default function UsuariosPage() {
     };
   }, [isAdmin, selectedMemberId]);
 
+  useEffect(() => {
+    if (!selectedMemberId) {
+      setFeedbackCounts(null);
+      return;
+    }
+
+    let cancelled = false;
+    setFeedbackCountsLoading(true);
+
+    Promise.all([
+      getFeedbacks({ member_id: selectedMemberId, type: "positive", limit: 1 }),
+      getFeedbacks({ member_id: selectedMemberId, type: "negative", limit: 1 }),
+    ])
+      .then(([pos, neg]) => {
+        if (cancelled) return;
+        setFeedbackCounts({ positive: pos.total ?? 0, negative: neg.total ?? 0 });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFeedbackCounts({ positive: 0, negative: 0 });
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setFeedbackCountsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedMemberId]);
+
   const getInitials = (name: string) =>
     name
       .split(" ")
@@ -455,6 +490,8 @@ export default function UsuariosPage() {
           alt={`Foto de ${name}`}
           width={54}
           height={54}
+          style={{ width: '100%', height: '100%' }}
+          unoptimized
         />
       );
     }
@@ -723,6 +760,9 @@ export default function UsuariosPage() {
               </div>
             </div>
 
+            <p className="sr-only" aria-live="polite" aria-atomic="true">
+              {loading ? "Carregando membros..." : ""}
+            </p>
             {loading ? (
               <div className="members-list" aria-hidden="true">
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -746,11 +786,11 @@ export default function UsuariosPage() {
                 <p>Nenhum membro encontrado.</p>
               </div>
             ) : (
-              <div className="members-list">
+              <ul className="members-list" role="list">
                 {filteredUsers.map((user) => {
                   const isSelected = selectedMemberId === user.id;
                   return (
-                    <div
+                    <li
                       className={`member-row ${isAdmin ? "admin" : "read-only"} ${
                         isSelected ? "selected" : ""
                       }`}
@@ -808,10 +848,10 @@ export default function UsuariosPage() {
                           </div>
                         )}
                         </div>
-                    </div>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             )}
 
             {actionError && (
@@ -838,7 +878,24 @@ export default function UsuariosPage() {
               <div className="member-panel-body">
                 {selectedMemberInfo && (
                   <div className="member-identity">
-                    <div className="member-avatar" aria-hidden="true">
+                    <div
+                      className={`member-avatar${resolveApiAssetUrl(selectedMemberInfo.photo_url) ? " member-avatar-clickable" : ""}`}
+                      aria-hidden={!resolveApiAssetUrl(selectedMemberInfo.photo_url)}
+                      role={resolveApiAssetUrl(selectedMemberInfo.photo_url) ? "button" : undefined}
+                      tabIndex={resolveApiAssetUrl(selectedMemberInfo.photo_url) ? 0 : undefined}
+                      aria-label={resolveApiAssetUrl(selectedMemberInfo.photo_url) ? `Ver foto de ${getDisplayName(selectedMemberInfo)}` : undefined}
+                      onClick={() => {
+                        const url = resolveApiAssetUrl(selectedMemberInfo.photo_url);
+                        if (url) setPhotoLightbox({ url, name: getDisplayName(selectedMemberInfo) });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          const url = resolveApiAssetUrl(selectedMemberInfo.photo_url);
+                          if (url) setPhotoLightbox({ url, name: getDisplayName(selectedMemberInfo) });
+                        }
+                      }}
+                    >
                       {renderAvatar(
                         getDisplayName(selectedMemberInfo),
                         selectedMemberInfo.photo_url
@@ -906,6 +963,31 @@ export default function UsuariosPage() {
                       </div>
                     )}
                   </div>
+                )}
+
+                {isAdmin && (
+                <div className="member-section">
+                  <div className="member-section-header">
+                    <h3 className="section-title">Feedbacks</h3>
+                    <span className="member-section-count">
+                      {feedbackCounts ? feedbackCounts.positive + feedbackCounts.negative : 0}
+                    </span>
+                  </div>
+                  {feedbackCountsLoading ? (
+                    <p className="member-section-empty">Carregando feedbacks...</p>
+                  ) : (
+                    <div className="feedback-counts">
+                      <div className="feedback-count-item positive">
+                        <span className="feedback-count-value">{feedbackCounts?.positive ?? 0}</span>
+                        <span className="feedback-count-label">Positivos</span>
+                      </div>
+                      <div className="feedback-count-item negative">
+                        <span className="feedback-count-value">{feedbackCounts?.negative ?? 0}</span>
+                        <span className="feedback-count-label">Negativos</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 )}
 
                 {isAdmin && (
@@ -1430,6 +1512,39 @@ export default function UsuariosPage() {
                 {cpfGenerating ? "Gerando..." : "Gerar PDF"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {photoLightbox && (
+        <div
+          className="modal-backdrop photo-lightbox-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Foto de ${photoLightbox.name}`}
+          onClick={() => setPhotoLightbox(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setPhotoLightbox(null);
+          }}
+        >
+          <div className="photo-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="icon-button photo-lightbox-close"
+              type="button"
+              aria-label="Fechar foto"
+              onClick={() => setPhotoLightbox(null)}
+            >
+              <FiX aria-hidden="true" />
+            </button>
+            <Image
+              className="photo-lightbox-image"
+              src={photoLightbox.url}
+              alt={`Foto de ${photoLightbox.name}`}
+              width={400}
+              height={400}
+              style={{ objectFit: "contain" }}
+              unoptimized
+            />
+            <p className="photo-lightbox-name">{photoLightbox.name}</p>
           </div>
         </div>
       )}

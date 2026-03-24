@@ -7,7 +7,7 @@ const uploadsRoot = process.env.UPLOADS_DIR
   : join(process.cwd(), "uploads");
 
 const MEDIA_EXPIRY_DAYS = 20;
-const REPORT_EXPIRY_DAYS = 90;
+const REPORT_EXPIRY_DAYS = 365;
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 async function safeUnlink(path: string): Promise<void> {

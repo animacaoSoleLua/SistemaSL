@@ -3,13 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useId, useState, useEffect } from "react";
+import { useId, useRef, useState, useEffect } from "react";
 import {
   FiAlertTriangle,
   FiBookOpen,
   FiFileText,
   FiGrid,
   FiMenu,
+  FiMessageSquare,
+  FiMoon,
+  FiSun,
   FiUser,
   FiUsers,
   FiX,
@@ -17,6 +20,7 @@ import {
 import logo from "../../assets/logo.png";
 import { getMember, resolveApiAssetUrl } from "../../lib/api";
 import { getStoredUser, roleLabels, type Role } from "../../lib/auth";
+import { useTheme } from "../context/ThemeContext";
 
 const navItems = [
   {
@@ -42,6 +46,12 @@ const navItems = [
     href: "/advertencias",
     roles: ["admin", "animador"],
     icon: <FiAlertTriangle aria-hidden="true" />
+  },
+  {
+    label: "Feedbacks",
+    href: "/feedbacks",
+    roles: ["admin"],
+    icon: <FiMessageSquare aria-hidden="true" />
   },
   {
     label: "Membros",
@@ -83,11 +93,16 @@ function isActive(pathname: string, href: string) {
 export default function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [showLogout, setShowLogout] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const logoutMenuId = useId();
   const mobileMenuId = useId();
+  const sidebarFooterRef = useRef<HTMLButtonElement>(null);
+  const sidebarFooterWrapperRef = useRef<HTMLDivElement>(null);
+  const logoutButtonRef = useRef<HTMLButtonElement>(null);
+  const logoutWasOpen = useRef(false);
 
   useEffect(() => {
     const refreshUser = () => {
@@ -141,6 +156,16 @@ export default function SidebarNav() {
   };
 
   useEffect(() => {
+    if (showLogout) {
+      logoutWasOpen.current = true;
+      logoutButtonRef.current?.focus();
+    } else if (logoutWasOpen.current) {
+      // foco retorna ao botão-gatilho quando o menu fecha
+      sidebarFooterRef.current?.focus();
+    }
+  }, [showLogout]);
+
+  useEffect(() => {
     if (!showLogout) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -149,6 +174,20 @@ export default function SidebarNav() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showLogout]);
+
+  useEffect(() => {
+    if (!showLogout) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        sidebarFooterWrapperRef.current &&
+        !sidebarFooterWrapperRef.current.contains(event.target as Node)
+      ) {
+        setShowLogout(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showLogout]);
 
   useEffect(() => {
@@ -206,12 +245,14 @@ export default function SidebarNav() {
               );
             })}
         </nav>
+        {/* theme-toggle temporariamente oculto */}
         {user ? (
-          <div className="sidebar-footer-wrapper">
+          <div className="sidebar-footer-wrapper" ref={sidebarFooterWrapperRef}>
             {showLogout && (
               <div className="logout-popup" role="menu" id={logoutMenuId}>
                 <button
                   type="button"
+                  ref={logoutButtonRef}
                   onClick={handleLogout}
                   className="logout-button"
                   role="menuitem"
@@ -222,6 +263,7 @@ export default function SidebarNav() {
             )}
             <button
               className="sidebar-footer"
+              ref={sidebarFooterRef}
               onClick={() => setShowLogout(!showLogout)}
               type="button"
               aria-haspopup="menu"
@@ -235,9 +277,11 @@ export default function SidebarNav() {
                   alt={`Foto de ${user.name}`}
                   width={36}
                   height={36}
+                  style={{ width: '100%', height: '100%' }}
+                  unoptimized
                 />
               ) : (
-                <span className="user-avatar">
+                <span className="user-avatar" aria-hidden="true">
                   {user.name.charAt(0).toUpperCase()}
                 </span>
               )}
@@ -305,9 +349,10 @@ export default function SidebarNav() {
                       alt={`Foto de ${user.name}`}
                       width={36}
                       height={36}
+                      unoptimized
                     />
                   ) : (
-                    <span className="user-avatar">
+                    <span className="user-avatar" aria-hidden="true">
                       {user.name.charAt(0).toUpperCase()}
                     </span>
                   )}
@@ -316,6 +361,7 @@ export default function SidebarNav() {
                     <span>{roleLabels[user.role]}</span>
                   </div>
                 </div>
+                {/* mobile-theme-toggle temporariamente oculto */}
                 <button
                   type="button"
                   className="mobile-logout"

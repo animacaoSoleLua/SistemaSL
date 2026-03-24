@@ -15,6 +15,7 @@ interface ModalProps {
   size?: "sm" | "md" | "lg";
   footer?: React.ReactNode;
   className?: string;
+  role?: "dialog" | "alertdialog";
 }
 
 export function Modal({
@@ -28,6 +29,7 @@ export function Modal({
   size = "md",
   footer,
   className,
+  role = "dialog",
 }: ModalProps) {
   const generatedTitleId = useId();
   const generatedDescId = useId();
@@ -66,7 +68,7 @@ export function Modal({
   return (
     <div
       className="modal-backdrop"
-      role="dialog"
+      role={role}
       aria-modal="true"
       aria-labelledby={resolvedTitleId}
       aria-describedby={description ? resolvedDescId : undefined}

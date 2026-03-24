@@ -4,7 +4,9 @@ import './page.css';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  disconnectGoogle,
   getErrorMessage,
+  getGoogleAuthUrl,
   getMember,
   resolveApiAssetUrl,
   updateMember,
@@ -40,6 +42,7 @@ interface MemberDetail {
   phone?: string | null;
   role: Role;
   photo_url?: string | null;
+  google_connected?: boolean;
   courses: Array<{
     id: string;
     title: string;
@@ -66,9 +69,12 @@ export default function PerfilPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoInputKey, setPhotoInputKey] = useState(0);
+  const [removingPhoto, setRemovingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [googleDisconnecting, setGoogleDisconnecting] = useState(false);
+  const [googleMsg, setGoogleMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -79,6 +85,18 @@ export default function PerfilPage() {
     if (!isRoleAllowed(user.role, ["recreador", "animador", "admin"])) {
       router.push(getDefaultRoute(user.role));
       return;
+    }
+    // Verifica resultado do OAuth do Google na query string
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const googleStatus = params.get("google");
+      if (googleStatus === "connected") {
+        setGoogleMsg("Google Agenda conectado com sucesso!");
+        window.history.replaceState({}, "", "/perfil");
+      } else if (googleStatus === "error") {
+        setGoogleMsg("Erro ao conectar o Google Agenda. Tente novamente.");
+        window.history.replaceState({}, "", "/perfil");
+      }
     }
     const loadProfile = async () => {
       setLoading(true);
@@ -94,6 +112,21 @@ export default function PerfilPage() {
     };
     loadProfile();
   }, [router]);
+
+  const handleDisconnectGoogle = async () => {
+    if (googleDisconnecting) return;
+    setGoogleDisconnecting(true);
+    setGoogleMsg(null);
+    try {
+      await disconnectGoogle();
+      setMember((m) => m ? { ...m, google_connected: false } : m);
+      setGoogleMsg("Google Agenda desconectado.");
+    } catch (err) {
+      setGoogleMsg(getErrorMessage(err, "Erro ao desconectar Google Agenda."));
+    } finally {
+      setGoogleDisconnecting(false);
+    }
+  };
 
   useEffect(() => {
     if (member) {
@@ -284,6 +317,29 @@ export default function PerfilPage() {
     }
   };
 
+  const handleRemovePhoto = async () => {
+    if (!member || removingPhoto) return;
+    setRemovingPhoto(true);
+    setSaveError(null);
+    setSaveSuccess(null);
+    try {
+      await updateMember(member.id, { photo_url: null });
+      setMember((current) => current ? { ...current, photo_url: null } : current);
+      setPhotoFile(null);
+      setPhotoInputKey((prev) => prev + 1);
+      const storedUser = getStoredUser();
+      if (storedUser) {
+        sessionStorage.setItem("user", JSON.stringify({ ...storedUser, photo_url: null }));
+        window.dispatchEvent(new Event("user-updated"));
+      }
+      setSaveSuccess("Foto removida com sucesso.");
+    } catch (err: unknown) {
+      setSaveError(getErrorMessage(err, "Erro ao remover foto."));
+    } finally {
+      setRemovingPhoto(false);
+    }
+  };
+
   const previewUrl = photoPreview ?? resolveApiAssetUrl(member?.photo_url);
 
   return (
@@ -353,6 +409,23 @@ export default function PerfilPage() {
                           }
                         />
                       </label>
+                      {(member?.photo_url || photoFile) && (
+                        <button
+                          type="button"
+                          className="profile-photo-remove"
+                          onClick={() => {
+                            if (photoFile) {
+                              setPhotoFile(null);
+                              setPhotoInputKey((prev) => prev + 1);
+                            } else {
+                              handleRemovePhoto();
+                            }
+                          }}
+                          disabled={removingPhoto}
+                        >
+                          {removingPhoto ? "Removendo..." : "Remover foto"}
+                        </button>
+                      )}
                     </div>
                   </div>
                   <label className="field full" htmlFor="profileName">
@@ -504,6 +577,7 @@ export default function PerfilPage() {
                 </div>
               )}
             </section>
+
 
             <section className="report-panel">
               <div className="report-header">

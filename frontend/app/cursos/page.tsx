@@ -219,10 +219,11 @@ export default function CursosPage() {
     setNotice(null);
     try {
       await enrollInCourse(course.id, currentUser.id);
-      setNotice({ type: "success", message: "Vaga reservada com sucesso." });
-      const data = await getCourses({ status: statusFilter });
+      const [data, profile] = await Promise.all([
+        getCourses({ status: statusFilter }),
+        getMember(currentUser.id),
+      ]);
       setCourses(data.data);
-      const profile = await getMember(currentUser.id);
       const coursesData = (profile.data?.courses ?? []) as Array<{
         id: string;
         status: "enrolled" | "attended" | "missed";
@@ -234,6 +235,12 @@ export default function CursosPage() {
         }
       });
       setEnrolledCourses(next);
+      const googleConnected = !!(profile.data as { google_connected?: boolean })?.google_connected;
+      if (googleConnected) {
+        setNotice({ type: "success", message: "Vaga reservada! Evento adicionado ao seu Google Agenda." });
+      } else {
+        setNotice({ type: "success", message: "Vaga reservada com sucesso. Conecte o Google Agenda no Perfil para adicionar eventos automaticamente." });
+      }
     } catch (err: unknown) {
       setNotice({
         type: "error",
@@ -599,7 +606,7 @@ export default function CursosPage() {
           )}
 
           {loading ? (
-            <div className="empty-state">
+            <div className="empty-state" aria-live="polite" aria-atomic="true">
               <p>Carregando cursos...</p>
             </div>
           ) : error ? (
@@ -1020,6 +1027,7 @@ export default function CursosPage() {
                             type="button"
                             className={`button small${enrollment.status === "attended" ? "" : " secondary"}`}
                             style={enrollment.status === "attended" ? { background: "linear-gradient(120deg, #28965a, #1a6b3e)", boxShadow: "none" } : {}}
+                            aria-pressed={enrollment.status === "attended"}
                             onClick={() => {
                               if (enrollment.status !== "attended") {
                                 toggleFinalizeStatus(enrollment.enrollmentId);
@@ -1033,6 +1041,7 @@ export default function CursosPage() {
                             type="button"
                             className={`button small${enrollment.status === "missed" ? " danger" : " secondary"}`}
                             style={enrollment.status === "missed" ? { background: "linear-gradient(120deg, #d04b4b, #a83030)", color: "#fff", border: "none", boxShadow: "none" } : {}}
+                            aria-pressed={enrollment.status === "missed"}
                             onClick={() => {
                               if (enrollment.status !== "missed") {
                                 toggleFinalizeStatus(enrollment.enrollmentId);

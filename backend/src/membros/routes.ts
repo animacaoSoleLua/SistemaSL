@@ -71,7 +71,7 @@ const UpdateMemberSchema = z.object({
   region: z.string().min(1).optional(),
   phone: z.string().min(1).optional(),
   role: z.enum(["admin", "animador", "recreador"] as const).optional(),
-  photo_url: z.string().optional(),
+  photo_url: z.string().nullable().optional(),
 });
 
 const uploadsRoot = process.env.UPLOADS_DIR
@@ -440,6 +440,7 @@ export async function membrosRoutes(app: FastifyInstance) {
         phone: member.phone ?? null,
         role: member.role,
         photo_url: member.photoUrl ?? null,
+        google_connected: member.googleConnected,
         courses: (
           await Promise.all(
             (await listEnrollmentsForMember(member.id)).map(

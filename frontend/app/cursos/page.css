@@ -53,6 +53,23 @@
 }
 
 
+/* ── Dark mode overrides ───────────────────────────────────── */
+body.theme-purple .stat {
+  background: rgba(196, 92, 42, 0.1);
+  border-color: rgba(196, 92, 42, 0.25);
+}
+body.theme-purple .stat strong {
+  color: #f5b47a;
+}
+body.theme-purple .report-item {
+  background: rgba(21, 11, 34, 0.85);
+  border-color: rgba(161, 97, 255, 0.18);
+}
+body.theme-purple .confirm-icon {
+  background: rgba(208, 75, 75, 0.15);
+  color: #ff8080;
+}
+
 @media (max-width: 960px) {
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));

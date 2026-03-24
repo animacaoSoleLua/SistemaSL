@@ -21,6 +21,7 @@ export interface CourseRecord {
   location?: string;
   capacity: number | null;
   archivedAt?: Date;
+  googleCalendarEventId?: string | null;
   createdAt: Date;
   enrollments: EnrollmentRecord[];
 }
@@ -69,6 +70,7 @@ function toCourseRecord(course: {
   location: string | null;
   capacity: number | null;
   archivedAt: Date | null;
+  googleCalendarEventId?: string | null;
   createdAt: Date;
   instructor: {
     id: string;
@@ -93,6 +95,7 @@ function toCourseRecord(course: {
     location: course.location ?? undefined,
     capacity: course.capacity ?? null,
     archivedAt: course.archivedAt ?? undefined,
+    googleCalendarEventId: course.googleCalendarEventId ?? null,
     createdAt: course.createdAt,
     enrollments: course.enrollments.map((enrollment) =>
       toEnrollmentRecord(enrollment)
@@ -253,6 +256,16 @@ export async function updateCourse(
 
 export async function deleteCourse(courseId: string): Promise<void> {
   await prisma.course.delete({ where: { id: courseId } });
+}
+
+export async function updateCourseCalendarEventId(
+  courseId: string,
+  googleCalendarEventId: string | null
+): Promise<void> {
+  await prisma.course.update({
+    where: { id: courseId },
+    data: { googleCalendarEventId },
+  });
 }
 
 export function getEnrollmentByMember(

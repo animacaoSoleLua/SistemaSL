@@ -1,7 +1,7 @@
 "use client";
 
 import './page.css';
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useId, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiAlertTriangle } from "react-icons/fi";
 import { Modal } from "../../components/Modal";
@@ -106,8 +106,12 @@ export default function WarningsPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [warningToDelete, setWarningToDelete] = useState<Warning | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [noticeVisible, setNoticeVisible] = useState(false);
+  const [activeMemberIndex, setActiveMemberIndex] = useState<number>(-1);
+  const autocompleteId = useId();
+  const noticeRef = useRef<HTMLDivElement>(null);
   const todayDate = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
@@ -254,10 +258,14 @@ export default function WarningsPage() {
     }
   };
 
-  const handleDelete = async (warning: Warning) => {
-    if (!window.confirm("Deseja excluir esta advertência?")) {
-      return;
-    }
+  const handleDelete = (warning: Warning) => {
+    setWarningToDelete(warning);
+  };
+
+  const confirmDelete = async () => {
+    if (!warningToDelete) return;
+    const warning = warningToDelete;
+    setWarningToDelete(null);
     setActionLoadingId(warning.id);
     setActionError(null);
     try {
@@ -325,6 +333,7 @@ export default function WarningsPage() {
   const handleMemberSearchChange = (value: string) => {
     dispatchCreate({ type: "SET_FIELD", field: "memberSearch", value });
     dispatchCreate({ type: "SET_FIELD", field: "memberId", value: "" });
+    setActiveMemberIndex(-1);
     setCreateError(null);
   };
 
@@ -342,6 +351,15 @@ export default function WarningsPage() {
     }, 4200);
     return () => window.clearTimeout(timer);
   }, [notice]);
+
+  useEffect(() => {
+    if (!noticeVisible) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") hideNotice();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [noticeVisible]);
 
   return (
     <main className="app-page">
@@ -376,6 +394,7 @@ export default function WarningsPage() {
                 type="text"
                 placeholder="Digite o nome do membro"
                 className="input"
+                aria-label="Buscar membro pelo nome"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -388,6 +407,7 @@ export default function WarningsPage() {
           )}
           {notice && (
             <div
+              ref={noticeRef}
               className={`floating-notice${noticeVisible ? "" : " is-hiding"}`}
               role="status"
               aria-live="polite"
@@ -408,7 +428,7 @@ export default function WarningsPage() {
           )}
 
           {loading ? (
-            <div className="empty-state">
+            <div className="empty-state" aria-live="polite" aria-atomic="true">
               <p>Carregando advertências...</p>
             </div>
           ) : error ? (
@@ -555,6 +575,32 @@ export default function WarningsPage() {
       </Modal>
 
       <Modal
+        isOpen={!!warningToDelete}
+        onClose={() => setWarningToDelete(null)}
+        title="Excluir advertência"
+        description="Esta ação não pode ser desfeita."
+        role="alertdialog"
+      >
+        <p>Tem certeza que deseja excluir esta advertência?</p>
+        <div className="modal-footer">
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => setWarningToDelete(null)}
+          >
+            Cancelar
+          </button>
+          <button
+            className="button danger"
+            type="button"
+            onClick={confirmDelete}
+          >
+            Excluir
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
         isOpen={creatingWarning}
         onClose={closeCreateModal}
         title="Nova advertência"
@@ -568,14 +614,42 @@ export default function WarningsPage() {
                 id="create-member-search"
                 className="input"
                 type="text"
+                role="combobox"
                 aria-label="Buscar membro pelo nome"
                 placeholder="Digite o nome"
                 value={memberSearch}
+                aria-expanded={memberSearch.trim().length > 0}
+                aria-controls={`${autocompleteId}-listbox`}
+                aria-autocomplete="list"
+                aria-activedescendant={
+                  activeMemberIndex >= 0 && filteredMemberOptions[activeMemberIndex]
+                    ? `${autocompleteId}-option-${activeMemberIndex}`
+                    : undefined
+                }
                 onChange={(event) => handleMemberSearchChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (!filteredMemberOptions.length) return;
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setActiveMemberIndex((prev) =>
+                      Math.min(prev + 1, filteredMemberOptions.length - 1)
+                    );
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setActiveMemberIndex((prev) => Math.max(prev - 1, 0));
+                  } else if (event.key === "Enter" && activeMemberIndex >= 0) {
+                    event.preventDefault();
+                    const selected = filteredMemberOptions[activeMemberIndex];
+                    if (selected) handleSelectMember(selected);
+                  } else if (event.key === "Escape") {
+                    setActiveMemberIndex(-1);
+                  }
+                }}
                 disabled={actionLoadingId === "new"}
               />
               {memberSearch.trim().length > 0 && (
                 <div
+                  id={`${autocompleteId}-listbox`}
                   className="member-autocomplete"
                   role="listbox"
                   aria-label="Resultados da busca de membros"
@@ -585,12 +659,13 @@ export default function WarningsPage() {
                       Nenhum membro encontrado.
                     </div>
                   ) : (
-                    filteredMemberOptions.map((member) => (
+                    filteredMemberOptions.map((member, index) => (
                       <button
                         key={member.id}
+                        id={`${autocompleteId}-option-${index}`}
                         type="button"
                         className={`member-autocomplete-item ${
-                          newMemberId === member.id ? "selected" : ""
+                          newMemberId === member.id || activeMemberIndex === index ? "selected" : ""
                         }`}
                         role="option"
                         aria-selected={newMemberId === member.id}

@@ -24,6 +24,11 @@ enum EnrollmentStatus {
   missed
 }
 
+enum FeedbackType {
+  positive
+  negative
+}
+
 model User {
   id                String             @id @default(uuid()) @db.Uuid
   name              String             @db.VarChar(100)
@@ -38,14 +43,19 @@ model User {
   photoUrl          String?            @map("photo_url") @db.Text
   createdAt         DateTime           @default(now()) @map("created_at")
   updatedAt         DateTime           @updatedAt @map("updated_at")
-  reports           Report[]           @relation("ReportsByAuthor")
-  reportNotes       ReportFeedback[]   @relation("FeedbacksForMember")
-  courses           Course[]           @relation("CoursesByCreator")
-  instructedCourses Course[]           @relation("CoursesByInstructor")
-  enrollments       CourseEnrollment[] @relation("EnrollmentsByMember")
-  warnings          Warning[]          @relation("WarningsForMember")
-  warningsMade      Warning[]          @relation("WarningsByCreator")
-  suspensions       Suspension[]
+  reports              Report[]               @relation("ReportsByAuthor")
+  reportNotes          ReportFeedback[]       @relation("FeedbacksForMember")
+  courses              Course[]               @relation("CoursesByCreator")
+  instructedCourses    Course[]               @relation("CoursesByInstructor")
+  enrollments          CourseEnrollment[]     @relation("EnrollmentsByMember")
+  warnings             Warning[]              @relation("WarningsForMember")
+  warningsMade         Warning[]              @relation("WarningsByCreator")
+  suspensions          Suspension[]
+  googleAccessToken    String?                @map("google_access_token") @db.Text
+  googleRefreshToken   String?                @map("google_refresh_token") @db.Text
+  googleTokenExpiry    DateTime?              @map("google_token_expiry")
+  createdFeedbacks     ClientFeedback[]       @relation("FeedbacksCreatedBy")
+  clientFeedbacks      ClientFeedbackMember[] @relation("ClientFeedbacksForMember")
 
   @@map("users")
 }
@@ -117,9 +127,10 @@ model Course {
   description  String?            @db.Text
   courseDate   DateTime           @map("course_date")
   location     String?            @db.VarChar(150)
-  capacity     Int?
-  archivedAt   DateTime?          @map("archived_at")
-  createdAt    DateTime           @default(now()) @map("created_at")
+  capacity                Int?
+  archivedAt              DateTime?          @map("archived_at")
+  googleCalendarEventId   String?            @map("google_calendar_event_id") @db.Text
+  createdAt               DateTime           @default(now()) @map("created_at")
   creator      User               @relation("CoursesByCreator", fields: [createdBy], references: [id])
   instructor   User               @relation("CoursesByInstructor", fields: [instructorId], references: [id])
   enrollments  CourseEnrollment[]
@@ -165,6 +176,33 @@ model Suspension {
   member    User     @relation(fields: [memberId], references: [id])
 
   @@map("suspensions")
+}
+
+model ClientFeedback {
+  id        String               @id @default(uuid()) @db.Uuid
+  createdBy String               @map("created_by") @db.Uuid
+  type      FeedbackType
+  text      String?              @db.Text
+  audioUrl  String?              @map("audio_url") @db.Text
+  createdAt DateTime             @default(now()) @map("created_at")
+  creator   User                 @relation("FeedbacksCreatedBy", fields: [createdBy], references: [id])
+  members   ClientFeedbackMember[]
+
+  @@index([createdBy], map: "idx_client_feedbacks_creator")
+  @@index([type], map: "idx_client_feedbacks_type")
+  @@map("client_feedbacks")
+}
+
+model ClientFeedbackMember {
+  id         String         @id @default(uuid()) @db.Uuid
+  feedbackId String         @map("feedback_id") @db.Uuid
+  memberId   String         @map("member_id") @db.Uuid
+  feedback   ClientFeedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  member     User           @relation("ClientFeedbacksForMember", fields: [memberId], references: [id])
+
+  @@unique([feedbackId, memberId])
+  @@index([memberId], map: "idx_client_feedback_members_member")
+  @@map("client_feedback_members")
 }
 
 model PasswordResetToken {

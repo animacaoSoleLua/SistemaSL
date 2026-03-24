@@ -428,3 +428,58 @@ export async function finalizeCourse(
     body: JSON.stringify({ enrollments }),
   });
 }
+
+export async function getFeedbacks(params: {
+  type?: "positive" | "negative";
+  member_id?: string;
+  member_role?: string;
+  page?: number;
+  limit?: number;
+} = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.type) searchParams.set("type", params.type);
+  if (params.member_id) searchParams.set("member_id", params.member_id);
+  if (params.member_role) searchParams.set("member_role", params.member_role);
+  if (params.page) searchParams.set("page", String(params.page));
+  if (params.limit) searchParams.set("limit", String(params.limit));
+  const query = searchParams.toString();
+  const endpoint = query ? `/feedbacks?${query}` : "/feedbacks";
+  return request(endpoint, { method: "GET" });
+}
+
+export async function createFeedback(input: {
+  type: "positive" | "negative";
+  text?: string;
+  member_ids: string[];
+}) {
+  return request("/feedbacks", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function createFeedbackWithAudio(formData: FormData) {
+  return request("/feedbacks", {
+    method: "POST",
+    body: formData,
+  });
+}
+
+export async function deleteFeedback(id: string) {
+  return request(`/feedbacks/${id}`, { method: "DELETE" });
+}
+
+// ── Google Calendar ────────────────────────────────────────────────────────────
+
+/**
+ * Retorna a URL para iniciar o fluxo OAuth do Google.
+ * O usuário deve ser redirecionado para essa URL.
+ */
+export function getGoogleAuthUrl(): string {
+  return `${API_ORIGIN}/api/v1/auth/google`;
+}
+
+/** Desconecta a conta Google do usuário logado. */
+export async function disconnectGoogle() {
+  return request("/auth/google", { method: "DELETE" });
+}

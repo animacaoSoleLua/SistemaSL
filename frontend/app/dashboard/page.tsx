@@ -133,6 +133,9 @@ export default function DashboardPage() {
           </div>
         </header>
 
+        <p className="sr-only" aria-live="polite" aria-atomic="true">
+          {loading ? "Carregando dashboard..." : ""}
+        </p>
         {loading ? (
           <section className="dashboard-grid" aria-hidden="true">
             {Array.from({ length: 8 }).map((_, i) => (

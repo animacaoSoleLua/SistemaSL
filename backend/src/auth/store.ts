@@ -16,6 +16,7 @@ export interface UserRecord {
   passwordHash: string;
   role: Role;
   photoUrl?: string;
+  googleConnected: boolean;
 }
 
 function normalizeEmail(email: string): string {
@@ -34,6 +35,7 @@ function toUserRecord(user: {
   passwordHash: string;
   role: Role;
   photoUrl: string | null;
+  googleAccessToken?: string | null;
 }): UserRecord {
   return {
     id: user.id,
@@ -47,6 +49,7 @@ function toUserRecord(user: {
     passwordHash: user.passwordHash,
     role: user.role,
     photoUrl: user.photoUrl ?? undefined,
+    googleConnected: !!user.googleAccessToken,
   };
 }
 

@@ -299,6 +299,9 @@ export default function RelatoriosPage() {
             </label>
           </div>
 
+          <p className="sr-only" aria-live="polite" aria-atomic="true">
+            {loading ? "Carregando relatórios..." : ""}
+          </p>
           {loading ? (
             <div className="report-list" aria-hidden="true">
               {Array.from({ length: 5 }).map((_, i) => (
