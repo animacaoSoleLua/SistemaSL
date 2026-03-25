@@ -607,6 +607,11 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
+    if (photo_url === null && member.photoUrl) {
+      const relativePath = member.photoUrl.replace(/^\/uploads\//, "");
+      await safeUnlink(join(uploadsRoot, relativePath));
+    }
+
     auditLog(request.log, "MEMBER_UPDATED", request.user.id, {
       targetId: member.id,
       ip: request.ip ?? "unknown",
