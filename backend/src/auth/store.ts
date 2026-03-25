@@ -124,7 +124,7 @@ export async function createUser(input: {
 
 export async function updateUser(
   id: string,
-  updates: Partial<Omit<UserRecord, "id" | "passwordHash">> & {
+  updates: Partial<Omit<UserRecord, "id" | "passwordHash" | "photoUrl">> & {
     password?: string;
     photoUrl?: string | null;
   }
