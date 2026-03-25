@@ -70,7 +70,8 @@ export function buildServer(): FastifyInstance {
     }
     const ms = reply.elapsedTime.toFixed(0);
     const status = reply.statusCode;
-    app.log.info(`${req.method} ${req.url} -> ${status} (${ms}ms)`);
+    const actor = req.user ? `[${req.user.name}]` : "[anon]";
+    app.log.info(`${actor} ${req.method} ${req.url} -> ${status} (${ms}ms)`);
     done();
   });
 
