@@ -126,6 +126,7 @@ export async function updateUser(
   id: string,
   updates: Partial<Omit<UserRecord, "id" | "passwordHash">> & {
     password?: string;
+    photoUrl?: string | null;
   }
 ): Promise<UserRecord | undefined> {
   const existing = await prisma.user.findUnique({ where: { id } });
