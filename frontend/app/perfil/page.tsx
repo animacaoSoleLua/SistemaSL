@@ -424,10 +424,12 @@ export default function PerfilPage() {
                               className="profile-photo-confirm-yes"
                               onClick={() => {
                                 setConfirmRemovePhoto(false);
+                                const hasPersistedPhoto = Boolean(member?.photo_url);
                                 if (photoFile) {
                                   setPhotoFile(null);
                                   setPhotoInputKey((prev) => prev + 1);
-                                } else {
+                                }
+                                if (hasPersistedPhoto) {
                                   handleRemovePhoto();
                                 }
                               }}
