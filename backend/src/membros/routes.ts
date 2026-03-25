@@ -609,7 +609,10 @@ export async function membrosRoutes(app: FastifyInstance) {
 
     if (photo_url === null && member.photoUrl) {
       const relativePath = member.photoUrl.replace(/^\/uploads\//, "");
-      await safeUnlink(join(uploadsRoot, relativePath));
+      const fullPath = join(uploadsRoot, relativePath);
+      request.log.info({ uploadsRoot, memberPhotoUrl: member.photoUrl, relativePath, fullPath }, "Tentando deletar foto");
+      await safeUnlink(fullPath);
+      request.log.info({ fullPath }, "safeUnlink chamado");
     }
 
     auditLog(request.log, "MEMBER_UPDATED", request.user.id, {
