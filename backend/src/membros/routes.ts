@@ -607,6 +607,7 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
+    request.log.info({ photo_url, memberPhotoUrl: member.photoUrl }, "DEBUG remocao foto");
     if (photo_url === null && member.photoUrl) {
       const relativePath = member.photoUrl.replace(/^\/uploads\//, "");
       const fullPath = join(uploadsRoot, relativePath);
