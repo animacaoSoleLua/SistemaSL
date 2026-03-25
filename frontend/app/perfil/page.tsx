@@ -104,6 +104,7 @@ export default function PerfilPage() {
       setError(null);
       try {
         const response = await getMember(user.id);
+        console.log("[perfil] dados do membro carregados", { photo_url: (response.data as MemberDetail).photo_url });
         setMember(response.data as MemberDetail);
       } catch (err: unknown) {
         setError(getErrorMessage(err, "Erro ao carregar perfil."));
@@ -323,8 +324,10 @@ export default function PerfilPage() {
     setRemovingPhoto(true);
     setSaveError(null);
     setSaveSuccess(null);
+    console.log("[remover foto] iniciando remoção", { memberId: member.id, photo_url: member.photo_url });
     try {
-      await updateMember(member.id, { photo_url: null });
+      const result = await updateMember(member.id, { photo_url: null });
+      console.log("[remover foto] PATCH respondeu OK", result);
       setMember((current) => current ? { ...current, photo_url: null } : current);
       setPhotoFile(null);
       setPhotoInputKey((prev) => prev + 1);
@@ -333,8 +336,10 @@ export default function PerfilPage() {
         sessionStorage.setItem("user", JSON.stringify({ ...storedUser, photo_url: null }));
         window.dispatchEvent(new Event("user-updated"));
       }
+      console.log("[remover foto] estado local atualizado, photo_url = null");
       setSaveSuccess("Foto removida com sucesso.");
     } catch (err: unknown) {
+      console.error("[remover foto] ERRO", err);
       setSaveError(getErrorMessage(err, "Erro ao remover foto."));
     } finally {
       setRemovingPhoto(false);

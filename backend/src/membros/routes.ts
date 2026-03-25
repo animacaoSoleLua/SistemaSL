@@ -130,11 +130,11 @@ function resolveImageExtension(
   return undefined;
 }
 
-async function safeUnlink(path: string): Promise<void> {
+async function safeUnlink(path: string, log?: { warn: (msg: string, obj?: object) => void }): Promise<void> {
   try {
     await unlink(path);
-  } catch {
-    // ignore errors while cleaning up temporary files
+  } catch (err) {
+    log?.warn("safeUnlink falhou", { path, err: String(err) });
   }
 }
 
@@ -612,7 +612,7 @@ export async function membrosRoutes(app: FastifyInstance) {
       const relativePath = member.photoUrl.replace(/^\/uploads\//, "");
       const fullPath = join(uploadsRoot, relativePath);
       request.log.info({ uploadsRoot, memberPhotoUrl: member.photoUrl, relativePath, fullPath }, "Tentando deletar foto");
-      await safeUnlink(fullPath);
+      await safeUnlink(fullPath, request.log);
       request.log.info({ fullPath }, "safeUnlink chamado");
     }
 
