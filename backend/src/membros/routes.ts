@@ -597,7 +597,7 @@ export async function membrosRoutes(app: FastifyInstance) {
       region: region?.trim(),
       phone: phone?.trim(),
       role: isAdmin ? role : undefined,
-      photoUrl: photo_url,
+      photoUrl: photo_url ?? undefined,
     });
 
     if (!updated) {
