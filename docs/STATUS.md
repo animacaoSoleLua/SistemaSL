@@ -15,8 +15,8 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 66/66 |
-| Ultima Tarefa | MELHORIA-098 |
+| Tarefas Completas | 67/67 |
+| Ultima Tarefa | MELHORIA-099 |
 
 ---
 
@@ -177,6 +177,27 @@ Ver `backend/.env.example` — configurar `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SEC
 ---
 
 ## Ultima Tarefa Concluida
+
+### MELHORIA-099: Remocao de foto com compatibilidade de versao
+
+**Epic:** Gestao de membros
+**User Story:** Ao remover foto em produção, o sistema deve funcionar mesmo se backend e frontend estiverem em versões diferentes durante o deploy
+**API:** Frontend de perfil
+
+**Descricao:** Ajuste defensivo no frontend para manter o fluxo de remoção funcionando quando a rota nova ainda não estiver disponível no backend em produção.
+
+**O que mudou:**
+- Frontend agora identifica status HTTP no erro de requisição.
+- Na remoção de foto, se `DELETE /api/v1/membros/:id/foto` retornar `404`, o sistema tenta automaticamente o caminho antigo (`PATCH /api/v1/membros/:id` com `photo_url = null`).
+- Evita quebra durante janelas de deploy com versões defasadas.
+
+**Status:** Concluida
+
+**Criterios de Conclusao:**
+- [x] Remover foto não falha com `404` em ambientes com backend antigo.
+- [x] Fluxo continua removendo a foto de forma persistente.
+
+---
 
 ### MELHORIA-098: Remocao de foto de perfil persistente
 

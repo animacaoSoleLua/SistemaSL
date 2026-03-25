@@ -6,6 +6,16 @@ export type ApiError = {
   statusCode?: number;
 };
 
+class ApiRequestError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+  }
+}
+
 export function getErrorMessage(err: unknown, fallback = "Erro desconhecido."): string {
   if (err instanceof Error) return err.message;
   if (typeof err === "object" && err !== null) {
@@ -55,7 +65,10 @@ async function request(endpoint: string, options: RequestInit = {}) {
       window.location.href = "/login";
     }
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || "Erro na requisição à API");
+    throw new ApiRequestError(
+      errorData.message || "Erro na requisição à API",
+      response.status
+    );
   }
 
   // Para requisições que não retornam conteúdo (ex: DELETE)
@@ -285,9 +298,17 @@ export async function uploadMemberPhoto(id: string, file: File) {
 }
 
 export async function deleteMemberPhoto(id: string) {
-  return request(`/membros/${id}/foto`, {
-    method: "DELETE",
-  });
+  try {
+    return await request(`/membros/${id}/foto`, {
+      method: "DELETE",
+    });
+  } catch (err: unknown) {
+    if (err instanceof ApiRequestError && err.status === 404) {
+      // Fallback para compatibilidade com backends antigos sem rota /foto.
+      return updateMember(id, { photo_url: null });
+    }
+    throw err;
+  }
 }
 
 export async function deleteMember(id: string) {
