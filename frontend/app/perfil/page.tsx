@@ -70,6 +70,7 @@ export default function PerfilPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoInputKey, setPhotoInputKey] = useState(0);
   const [removingPhoto, setRemovingPhoto] = useState(false);
+  const [confirmRemovePhoto, setConfirmRemovePhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
@@ -410,21 +411,44 @@ export default function PerfilPage() {
                         />
                       </label>
                       {(member?.photo_url || photoFile) && (
-                        <button
-                          type="button"
-                          className="profile-photo-remove"
-                          onClick={() => {
-                            if (photoFile) {
-                              setPhotoFile(null);
-                              setPhotoInputKey((prev) => prev + 1);
-                            } else {
-                              handleRemovePhoto();
-                            }
-                          }}
-                          disabled={removingPhoto}
-                        >
-                          {removingPhoto ? "Removendo..." : "Remover foto"}
-                        </button>
+                        confirmRemovePhoto ? (
+                          <div className="profile-photo-confirm">
+                            <span className="profile-photo-confirm-text">Remover a foto?</span>
+                            <button
+                              type="button"
+                              className="profile-photo-confirm-yes"
+                              onClick={() => {
+                                setConfirmRemovePhoto(false);
+                                if (photoFile) {
+                                  setPhotoFile(null);
+                                  setPhotoInputKey((prev) => prev + 1);
+                                } else {
+                                  handleRemovePhoto();
+                                }
+                              }}
+                              disabled={removingPhoto}
+                            >
+                              {removingPhoto ? "Removendo..." : "Confirmar"}
+                            </button>
+                            <button
+                              type="button"
+                              className="profile-photo-confirm-no"
+                              onClick={() => setConfirmRemovePhoto(false)}
+                              disabled={removingPhoto}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="profile-photo-remove"
+                            onClick={() => setConfirmRemovePhoto(true)}
+                            disabled={removingPhoto}
+                          >
+                            Remover foto
+                          </button>
+                        )
                       )}
                     </div>
                   </div>
