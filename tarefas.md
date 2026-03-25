@@ -32,18 +32,6 @@ Configurar as variáveis de ambiente no Google Cloud Console e no ambiente de pr
 
 ---
 
-## ~~ACESS-009: aria-activedescendant no autocomplete de membros~~ ✓ CONCLUÍDO
-
-## ~~ACESS-010: Semântica ARIA na grade de membros~~ ✓ CONCLUÍDO
-
-## ~~ACESS-011: Dismiss com tecla Escape no aviso flutuante~~ ✓ CONCLUÍDO
-
-## ~~ACESS-012: Opacidade do outline de foco~~ ✓ CONCLUÍDO
-
-## ~~ACESS-013: Tamanho da fonte da legend~~ ✓ CONCLUÍDO
-
----
-
 ## UI-001: Botão de Dark Mode
 
 **Prioridade:** Média
