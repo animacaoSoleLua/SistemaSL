@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-03-16
+**Ultima Atualizacao:** 2026-03-25
 **Atualizado por:** Codex
 
 ---
@@ -15,8 +15,8 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 65/65 |
-| Ultima Tarefa | MELHORIA-097 |
+| Tarefas Completas | 66/66 |
+| Ultima Tarefa | MELHORIA-098 |
 
 ---
 
@@ -178,25 +178,25 @@ Ver `backend/.env.example` — configurar `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SEC
 
 ## Ultima Tarefa Concluida
 
-### MELHORIA-097: Visualizar foto selecionada no formulário (sem miniatura na listagem)
+### MELHORIA-098: Remocao de foto de perfil persistente
 
-**Epic:** Relatórios de eventos
-**User Story:** Permitir visualizar uma imagem no momento da criação do relatório antes de salvar
-**API:** Frontend (formulário de novo relatório)
+**Epic:** Gestao de membros
+**User Story:** Ao remover a foto de perfil, ela deve continuar removida mesmo após recarregar a página
+**API:** Backend e Frontend de perfil
 
-**Descricao:** Ajustada a experiência de upload para permitir visualização da imagem selecionada no formulário e removida a miniatura da listagem de relatórios.
+**Descricao:** Correção do fluxo de remoção de foto para gravar a exclusão de forma definitiva e usar um endpoint dedicado para apagar a foto.
 
 **O que mudou:**
-- Cada foto selecionada no formulário agora mostra botão "Visualizar".
-- O botão abre a imagem em nova aba para conferência rápida antes de salvar.
-- A miniatura de fotos foi removida dos cards da listagem de relatórios.
+- Criado endpoint `DELETE /api/v1/membros/:id/foto` para remover foto de perfil de forma explícita.
+- Tela de perfil passou a usar esse endpoint ao clicar em "Remover foto".
+- Adicionado teste de integração para garantir que a foto continua nula após nova busca do perfil.
 
 **Status:** Concluida
 
 **Criterios de Conclusao:**
-- [x] Usuário consegue visualizar imagem selecionada durante o preenchimento.
-- [x] Visualização acontece por botão direto em cada item da lista de arquivos.
-- [x] Listagem de relatórios não mostra mais miniaturas no card.
+- [x] Ao remover foto no perfil, o backend salva `photo_url = null`.
+- [x] Após recarregar e buscar perfil novamente, a foto continua removida.
+- [x] Fluxo coberto por teste de integração.
 
 ---
 
@@ -272,6 +272,7 @@ Nenhum bloqueador no momento.
 
 | Data | Task | Descricao |
 |------|------|-----------|
+| 2026-03-25 | MELHORIA-098 | Remocao de foto de perfil agora persiste apos recarregar a pagina (endpoint dedicado + teste de integracao) |
 | 2026-03-05 | MELHORIA-097 | Formulário de relatório agora tem botão para visualizar imagem selecionada e listagem não mostra miniaturas |
 | 2026-03-05 | MELHORIA-096 | Listagem de relatórios agora exibe miniaturas das fotos anexadas em cada card |
 | 2026-03-05 | MELHORIA-095 | Novo relatório agora adiciona fotos uma por vez e mostra lista individual com remoção por item |

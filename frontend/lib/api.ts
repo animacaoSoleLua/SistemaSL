@@ -284,6 +284,12 @@ export async function uploadMemberPhoto(id: string, file: File) {
   });
 }
 
+export async function deleteMemberPhoto(id: string) {
+  return request(`/membros/${id}/foto`, {
+    method: "DELETE",
+  });
+}
+
 export async function deleteMember(id: string) {
   return request(`/membros/${id}`, { method: 'DELETE' });
 }

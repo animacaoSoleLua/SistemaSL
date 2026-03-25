@@ -184,4 +184,43 @@ describe("Membros (integration)", () => {
 
     expect(forbiddenResponse.statusCode).toBe(403);
   });
+
+  it("removes profile photo persistently", async () => {
+    const animador = await getUserByEmail("animador@sol-e-lua.com");
+    expect(animador).toBeDefined();
+
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: {
+        email: "animador@sol-e-lua.com",
+        password: "animador123",
+      },
+    });
+    const token = login.json().data.access_token;
+
+    const setPhotoResponse = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/membros/${animador!.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { photo_url: "https://foto.test/persistente.png" },
+    });
+    expect(setPhotoResponse.statusCode).toBe(200);
+
+    const removePhotoResponse = await app.inject({
+      method: "DELETE",
+      url: `/api/v1/membros/${animador!.id}/foto`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect(removePhotoResponse.statusCode).toBe(200);
+    expect(removePhotoResponse.json().data.photo_url).toBeNull();
+
+    const detailAfterRemove = await app.inject({
+      method: "GET",
+      url: `/api/v1/membros/${animador!.id}`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect(detailAfterRemove.statusCode).toBe(200);
+    expect(detailAfterRemove.json().data.photo_url).toBeNull();
+  });
 });

@@ -138,6 +138,30 @@ async function safeUnlink(path: string, log?: { warn: (msg: string, obj?: object
   }
 }
 
+async function removePersistedMemberPhoto(options: {
+  memberId: string;
+  currentPhotoUrl?: string;
+  uploadsRoot: string;
+  skipDbUpdate?: boolean;
+  log?: {
+    warn: (msg: string, obj?: object) => void;
+  };
+}): Promise<void> {
+  const { memberId, currentPhotoUrl, uploadsRoot, skipDbUpdate, log } = options;
+
+  if (!skipDbUpdate) {
+    await updateUser(memberId, { photoUrl: null });
+  }
+
+  if (!currentPhotoUrl || !currentPhotoUrl.startsWith("/uploads/")) {
+    return;
+  }
+
+  const relativePath = currentPhotoUrl.replace(/^\/uploads\//, "");
+  const fullPath = join(uploadsRoot, relativePath);
+  await safeUnlink(fullPath, log);
+}
+
 async function saveUploadToDisk(options: {
   stream: NodeJS.ReadableStream;
   targetPath: string;
@@ -607,13 +631,14 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
-    request.log.info({ photo_url, memberPhotoUrl: member.photoUrl }, "DEBUG remocao foto");
-    if (photo_url === null && member.photoUrl) {
-      const relativePath = member.photoUrl.replace(/^\/uploads\//, "");
-      const fullPath = join(uploadsRoot, relativePath);
-      request.log.info({ uploadsRoot, memberPhotoUrl: member.photoUrl, relativePath, fullPath }, "Tentando deletar foto");
-      await safeUnlink(fullPath, request.log);
-      request.log.info({ fullPath }, "safeUnlink chamado");
+    if (photo_url === null) {
+      await removePersistedMemberPhoto({
+        memberId: member.id,
+        currentPhotoUrl: member.photoUrl,
+        uploadsRoot,
+        skipDbUpdate: true,
+        log: request.log,
+      });
     }
 
     auditLog(request.log, "MEMBER_UPDATED", request.user.id, {
@@ -740,6 +765,57 @@ export async function membrosRoutes(app: FastifyInstance) {
       data: {
         id: updated.id,
         photo_url: updated.photoUrl ?? null,
+      },
+    });
+  });
+
+  app.delete("/api/v1/membros/:id/foto", async (request, reply) => {
+    const params = request.params as { id?: string };
+    if (!params.id) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Membro invalido",
+      });
+    }
+
+    const member = await getUserById(params.id);
+    if (!member) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Membro nao encontrado",
+      });
+    }
+
+    if (!request.user) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Token ausente",
+      });
+    }
+
+    if (request.user.role !== "admin" && request.user.id !== member.id) {
+      return reply.status(403).send({
+        error: "forbidden",
+        message: "Acesso negado",
+      });
+    }
+
+    await removePersistedMemberPhoto({
+      memberId: member.id,
+      currentPhotoUrl: member.photoUrl,
+      uploadsRoot,
+      log: request.log,
+    });
+
+    auditLog(request.log, "MEMBER_UPDATED", request.user.id, {
+      targetId: member.id,
+      ip: request.ip ?? "unknown",
+    });
+
+    return reply.status(200).send({
+      data: {
+        id: member.id,
+        photo_url: null,
       },
     });
   });

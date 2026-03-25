@@ -42,6 +42,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Listagem de relatórios não exibe mais miniaturas de fotos nos cards
 
 ### Corrigido
+- Remoção de foto de perfil agora persiste após recarregar a página (novo endpoint `DELETE /membros/:id/foto` + uso no frontend)
 - Formulário de novo relatório agora envia de fato as mídias anexadas para `/relatorios/:id/media`, salvando em `uploads`
 - Modal de visualização de relatório com rolagem interna para exibir todos os campos quando houver muito conteúdo
 - Modal de relatório agora exibe o nome do autor no lugar do ID
