@@ -105,7 +105,6 @@ export default function PerfilPage() {
       setError(null);
       try {
         const response = await getMember(user.id);
-        console.log("[perfil] dados do membro carregados", { photo_url: (response.data as MemberDetail).photo_url });
         setMember(response.data as MemberDetail);
       } catch (err: unknown) {
         setError(getErrorMessage(err, "Erro ao carregar perfil."));

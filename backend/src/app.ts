@@ -54,7 +54,14 @@ export function buildServer(): FastifyInstance {
           },
         },
       }
-    : { level: logLevel };
+    : {
+        level: logLevel,
+        formatters: {
+          bindings: () => ({}),
+          level: (label: string) => ({ level: label }),
+        },
+        timestamp: false,
+      };
 
   const app = Fastify({
     logger,
