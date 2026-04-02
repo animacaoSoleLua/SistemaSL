@@ -22,6 +22,7 @@ import {
   getEnrollmentByMember,
   listArchivedCourses,
   listCourses,
+  removeEnrollment,
   updateCourse,
   updateCourseCalendarEventId,
   updateEnrollmentStatus,
@@ -603,6 +604,65 @@ export async function cursosRoutes(app: FastifyInstance) {
           id: updated.id,
           status: updated.status,
         },
+      });
+    }
+  );
+
+  app.delete(
+    "/api/v1/cursos/:id/inscricoes/:inscricaoId",
+    async (request, reply) => {
+      if (!request.user) {
+        return reply.status(401).send({
+          error: "unauthorized",
+          message: "Token ausente",
+        });
+      }
+
+      const params = request.params as { id?: string; inscricaoId?: string };
+      if (!params.id || !params.inscricaoId) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Inscricao invalida",
+        });
+      }
+
+      const course = await getCourseById(params.id);
+      if (!course) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Curso nao encontrado",
+        });
+      }
+
+      const enrollment = getEnrollmentById(course, params.inscricaoId);
+      if (!enrollment) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Inscricao nao encontrada",
+        });
+      }
+
+      if (
+        request.user.role !== "admin" &&
+        request.user.id !== enrollment.memberId
+      ) {
+        return reply.status(403).send({
+          error: "forbidden",
+          message: "Acesso negado",
+        });
+      }
+
+      if (enrollment.status !== "enrolled") {
+        return reply.status(409).send({
+          error: "invalid_request",
+          message: "Apenas inscricoes pendentes podem ser canceladas",
+        });
+      }
+
+      await removeEnrollment(enrollment.id);
+
+      return reply.status(200).send({
+        data: { id: enrollment.id },
       });
     }
   );

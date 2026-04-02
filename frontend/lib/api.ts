@@ -435,6 +435,12 @@ export async function enrollInCourse(courseId: string, memberId: string) {
   });
 }
 
+export async function cancelEnrollment(courseId: string, enrollmentId: string) {
+  return request(`/cursos/${courseId}/inscricoes/${enrollmentId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function updateEnrollmentStatus(
   courseId: string,
   enrollmentId: string,

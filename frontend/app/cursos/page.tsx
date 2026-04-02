@@ -5,6 +5,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiAlertTriangle, FiArchive, FiInfo, FiX } from "react-icons/fi";
 import {
+  cancelEnrollment,
   createCourse,
   deleteCourse,
   enrollInCourse,
@@ -62,12 +63,13 @@ export default function CursosPage() {
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<
-    Record<string, "enrolled" | "attended" | "missed">
+    Record<string, { status: "enrolled" | "attended" | "missed"; enrollmentId: string }>
   >({});
   const [statusFilter, setStatusFilter] = useState<"available" | "full" | "all" | "archived">("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
+  const [unenrollingId, setUnenrollingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -145,12 +147,13 @@ export default function CursosPage() {
       .then((data) => {
         const coursesData = (data.data?.courses ?? []) as Array<{
           id: string;
+          enrollment_id: string;
           status: "enrolled" | "attended" | "missed";
         }>;
-        const next: Record<string, "enrolled" | "attended" | "missed"> = {};
+        const next: Record<string, { status: "enrolled" | "attended" | "missed"; enrollmentId: string }> = {};
         coursesData.forEach((course) => {
           if (course?.id) {
-            next[course.id] = course.status;
+            next[course.id] = { status: course.status, enrollmentId: course.enrollment_id };
           }
         });
         setEnrolledCourses(next);
@@ -226,12 +229,13 @@ export default function CursosPage() {
       setCourses(data.data);
       const coursesData = (profile.data?.courses ?? []) as Array<{
         id: string;
+        enrollment_id: string;
         status: "enrolled" | "attended" | "missed";
       }>;
-      const next: Record<string, "enrolled" | "attended" | "missed"> = {};
+      const next: Record<string, { status: "enrolled" | "attended" | "missed"; enrollmentId: string }> = {};
       coursesData.forEach((entry) => {
         if (entry?.id) {
-          next[entry.id] = entry.status;
+          next[entry.id] = { status: entry.status, enrollmentId: entry.enrollment_id };
         }
       });
       setEnrolledCourses(next);
@@ -248,6 +252,42 @@ export default function CursosPage() {
       });
     } finally {
       setEnrollingId(null);
+    }
+  };
+
+  const handleUnenroll = async (course: Course) => {
+    if (!currentUser) return;
+    const enrollment = enrolledCourses[course.id];
+    if (!enrollment || enrollment.status !== "enrolled") return;
+    setUnenrollingId(course.id);
+    setNotice(null);
+    try {
+      await cancelEnrollment(course.id, enrollment.enrollmentId);
+      const [data, profile] = await Promise.all([
+        getCourses({ status: statusFilter }),
+        getMember(currentUser.id),
+      ]);
+      setCourses(data.data);
+      const coursesData = (profile.data?.courses ?? []) as Array<{
+        id: string;
+        enrollment_id: string;
+        status: "enrolled" | "attended" | "missed";
+      }>;
+      const next: Record<string, { status: "enrolled" | "attended" | "missed"; enrollmentId: string }> = {};
+      coursesData.forEach((entry) => {
+        if (entry?.id) {
+          next[entry.id] = { status: entry.status, enrollmentId: entry.enrollment_id };
+        }
+      });
+      setEnrolledCourses(next);
+      setNotice({ type: "success", message: "Você saiu do curso. A vaga foi liberada." });
+    } catch (err: unknown) {
+      setNotice({
+        type: "error",
+        message: getErrorMessage(err, "Não foi possível cancelar a inscrição."),
+      });
+    } finally {
+      setUnenrollingId(null);
     }
   };
 
@@ -616,7 +656,8 @@ export default function CursosPage() {
           ) : filteredCourses.length > 0 ? (
             <div className="report-list">
               {filteredCourses.map((course) => {
-                const enrolledStatus = enrolledCourses[course.id];
+                const enrolledEntry = enrolledCourses[course.id];
+                const enrolledStatus = enrolledEntry?.status;
                 const isRestricted =
                   currentUser &&
                   (currentUser.id === course.created_by ||
@@ -689,7 +730,21 @@ export default function CursosPage() {
                         </span>
                       )}
                       {statusFilter !== "archived" && (currentRole === "animador" ||
-                        currentRole === "recreador") && (
+                        currentRole === "recreador") && enrolledStatus === "enrolled" && (
+                        <button
+                          type="button"
+                          className="button danger"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleUnenroll(course);
+                          }}
+                          disabled={unenrollingId === course.id}
+                        >
+                          {unenrollingId === course.id ? "Saindo..." : "Sair do Curso"}
+                        </button>
+                      )}
+                      {statusFilter !== "archived" && (currentRole === "animador" ||
+                        currentRole === "recreador") && !enrolledStatus && (
                         <button
                           type="button"
                           className="button secondary"
@@ -700,13 +755,10 @@ export default function CursosPage() {
                           disabled={
                             (course.available_spots !== null && course.available_spots <= 0) ||
                             enrollingId === course.id ||
-                            !!enrolledStatus ||
                             !!isRestricted
                           }
                         >
-                          {enrolledStatus
-                            ? "Inscrito"
-                            : isRestricted
+                          {isRestricted
                             ? "Indisponível"
                             : (course.available_spots !== null && course.available_spots <= 0)
                             ? "Turma cheia"

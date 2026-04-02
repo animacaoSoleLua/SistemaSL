@@ -81,7 +81,14 @@ export function buildServer(): FastifyInstance {
     const ms = reply.elapsedTime.toFixed(0);
     const status = reply.statusCode;
     const actor = req.user ? `[${req.user.name}]` : "[anon]";
-    app.log.info(`${actor} ${req.method} ${req.url} -> ${status} (${ms}ms)`);
+    const msg = `${actor} ${req.method} ${req.url} -> ${status} (${ms}ms)`;
+    if (status >= 500) {
+      app.log.error(msg);
+    } else if (status >= 400) {
+      app.log.warn(msg);
+    } else {
+      app.log.info(msg);
+    }
     done();
   });
 

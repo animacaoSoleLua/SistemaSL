@@ -475,6 +475,7 @@ export async function membrosRoutes(app: FastifyInstance) {
                 }
                 return {
                   id: course.id,
+                  enrollment_id: enrollment.id,
                   title: course.title,
                   course_date: formatDate(course.courseDate),
                   status: enrollment.status,
@@ -487,6 +488,7 @@ export async function membrosRoutes(app: FastifyInstance) {
             entry
           ): entry is {
             id: string;
+            enrollment_id: string;
             title: string;
             course_date: string;
             status: EnrollmentStatus;

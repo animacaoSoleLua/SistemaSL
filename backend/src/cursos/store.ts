@@ -301,6 +301,10 @@ export async function addEnrollment(
   return toEnrollmentRecord(enrollment);
 }
 
+export async function removeEnrollment(enrollmentId: string): Promise<void> {
+  await prisma.courseEnrollment.delete({ where: { id: enrollmentId } });
+}
+
 export async function updateEnrollmentStatus(
   enrollment: EnrollmentRecord,
   status: EnrollmentStatus
