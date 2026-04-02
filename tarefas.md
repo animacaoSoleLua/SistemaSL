@@ -51,6 +51,33 @@ Adicionar botão de alternância entre modo claro e escuro na interface.
 
 ---
 
+## AGENDA-001: Aba de Agenda com Integração Google Calendar
+
+**Prioridade:** Média
+
+Criar uma nova aba **Agenda** no sistema com um calendário visual integrado ao Google Calendar pessoal do usuário, permitindo visualizar, criar e gerenciar eventos diretamente pelo sistema.
+
+**Escopo:**
+- Nova rota `/agenda` no frontend
+- Calendário com views de mês, semana e dia
+- Modal de criação/edição de evento com: título, data/hora, descrição, participantes
+- Sincronização bidirecional com o Google Calendar do usuário logado (OAuth2)
+- Adicionar link "Agenda" no menu de navegação
+
+**Bibliotecas sugeridas:**
+- Frontend: `@fullcalendar/react` + plugins (`daygrid`, `timegrid`, `interaction`, `list`)
+- Backend: `googleapis` (já instalado) — Google Calendar API v3
+
+**Arquivos a criar:**
+- `frontend/app/agenda/page.tsx` — página principal
+- `frontend/components/agenda/CalendarView.tsx` — componente FullCalendar
+- `frontend/components/agenda/EventModal.tsx` — modal de criação/edição
+- `backend/src/app/agenda/routes.ts` — rotas: GET/POST/PATCH/DELETE `/agenda/events`
+
+**Observação:** O módulo `backend/src/app/google/` e as credenciais OAuth2 do INTEGRACAO-001 devem ser reaproveitados para autenticar as chamadas à Google Calendar API de cada usuário.
+
+---
+
 ## Melhorias Recomendadas (sem prazo)
 
 - Implementar storage externo para uploads (S3 ou compatível) — volume Docker atual não escala.

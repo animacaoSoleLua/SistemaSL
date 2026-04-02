@@ -68,6 +68,9 @@ export function buildServer(): FastifyInstance {
     disableRequestLogging: true,
     ignoreTrailingSlash: true,
     ignoreDuplicateSlashes: true,
+    // Necessário para obter o IP real do cliente quando atrás de proxy reverso (nginx/Caddy).
+    // Sem isso, request.ip retorna o IP do proxy e todos os usuários compartilham o mesmo bucket de rate limit.
+    trustProxy: true,
   });
 
   app.addHook("onResponse", (req, reply, done) => {

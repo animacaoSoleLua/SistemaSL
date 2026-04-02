@@ -208,7 +208,7 @@ export default function UsuariosPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await getMembers();
+      const response = await getMembers({ limit: 1000 });
       setUsers(response.data as Member[]);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Erro ao carregar membros."));

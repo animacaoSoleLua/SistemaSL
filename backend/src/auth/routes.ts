@@ -111,10 +111,32 @@ function parseDate(value: string | undefined): Date | undefined {
   return parsed;
 }
 
-const rateLimitAuth = {
+// Rate limit por email para login/register: cada conta tem seu próprio bucket.
+// Isso previne brute-force sem penalizar usuários legítimos em redes compartilhadas (NAT/proxy).
+const rateLimitByEmail = {
   config: {
     rateLimit: {
       max: 10,
+      timeWindow: "15 minutes",
+      keyGenerator: (request: import("fastify").FastifyRequest) => {
+        const body = request.body as Record<string, unknown> | undefined;
+        const email = typeof body?.email === "string" ? body.email.toLowerCase().trim() : "";
+        return email || request.ip;
+      },
+      errorResponseBuilder: () => ({
+        statusCode: 429,
+        error: "too_many_requests",
+        message: "Muitas tentativas. Aguarde 15 minutos e tente novamente.",
+      }),
+    },
+  },
+} as const;
+
+// Rate limit por IP para forgot-password (sem email no contexto de rate limit).
+const rateLimitByIp = {
+  config: {
+    rateLimit: {
+      max: 20,
       timeWindow: "15 minutes",
       errorResponseBuilder: () => ({
         statusCode: 429,
@@ -126,7 +148,7 @@ const rateLimitAuth = {
 } as const;
 
 export async function authRoutes(app: FastifyInstance) {
-  app.post("/login", rateLimitAuth, async (request, reply) => {
+  app.post("/login", rateLimitByEmail, async (request, reply) => {
     const parsed = LoginSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({
@@ -178,7 +200,7 @@ export async function authRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post("/register", rateLimitAuth, async (request, reply) => {
+  app.post("/register", rateLimitByEmail, async (request, reply) => {
     const parsed = RegisterSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({
@@ -246,7 +268,7 @@ export async function authRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post("/forgot-password", rateLimitAuth, async (request, reply) => {
+  app.post("/forgot-password", rateLimitByIp, async (request, reply) => {
     const parsed = ForgotPasswordSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({
