@@ -62,7 +62,7 @@ function toEnrollmentRecord(entry: {
 
 function toCourseRecord(course: {
   id: string;
-  createdBy: string;
+  createdBy: string | null;
   instructorId: string;
   title: string;
   description: string | null;
@@ -75,7 +75,7 @@ function toCourseRecord(course: {
   instructor: {
     id: string;
     name: string;
-  };
+  } | null;
   enrollments: Array<{
     id: string;
     courseId: string;
@@ -86,9 +86,9 @@ function toCourseRecord(course: {
 }): CourseRecord {
   return {
     id: course.id,
-    createdBy: course.createdBy,
+    createdBy: course.createdBy ?? '',
     instructorId: course.instructorId,
-    instructorName: course.instructor.name,
+    instructorName: course.instructor?.name ?? '',
     title: course.title,
     description: course.description ?? undefined,
     courseDate: course.courseDate,
@@ -180,9 +180,9 @@ export async function getCourseWithMembers(id: string): Promise<CourseWithMember
 
   return {
     id: course.id,
-    createdBy: course.createdBy,
+    createdBy: course.createdBy ?? '',
     instructorId: course.instructorId,
-    instructorName: course.instructor.name,
+    instructorName: course.instructor?.name ?? '',
     title: course.title,
     description: course.description ?? undefined,
     courseDate: course.courseDate,

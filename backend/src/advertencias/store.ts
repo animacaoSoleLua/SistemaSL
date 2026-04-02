@@ -122,7 +122,7 @@ export async function createWarning(
     warning: {
       id: warning.id,
       memberId: warning.memberId,
-      createdBy: warning.createdBy,
+      createdBy: warning.createdBy ?? '',
       reason: warning.reason,
       warningDate: warning.warningDate,
       createdAt: warning.createdAt,
@@ -171,7 +171,7 @@ export async function listWarnings(params: ListWarningsParams = {}): Promise<Lis
     warnings: rows.map((warning) => ({
       id: warning.id,
       memberId: warning.memberId,
-      createdBy: warning.createdBy,
+      createdBy: warning.createdBy ?? '',
       reason: warning.reason,
       warningDate: warning.warningDate,
       createdAt: warning.createdAt,
@@ -210,7 +210,7 @@ export async function getWarningById(
   return {
     id: warning.id,
     memberId: warning.memberId,
-    createdBy: warning.createdBy,
+    createdBy: warning.createdBy ?? '',
     reason: warning.reason,
     warningDate: warning.warningDate,
     createdAt: warning.createdAt,
@@ -240,7 +240,7 @@ export async function updateWarning(
   return {
     id: updated.id,
     memberId: updated.memberId,
-    createdBy: updated.createdBy,
+    createdBy: updated.createdBy ?? '',
     reason: updated.reason,
     warningDate: updated.warningDate,
     createdAt: updated.createdAt,
@@ -269,7 +269,7 @@ export async function deleteWarning(
   return {
     id: updated.id,
     memberId: updated.memberId,
-    createdBy: updated.createdBy,
+    createdBy: updated.createdBy ?? '',
     reason: updated.reason,
     warningDate: updated.warningDate,
     createdAt: updated.createdAt,

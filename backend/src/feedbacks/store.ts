@@ -46,12 +46,12 @@ export interface ListFeedbacksResult {
 function mapFeedback(
   row: {
     id: string;
-    createdBy: string;
+    createdBy: string | null;
     type: FeedbackType;
     text: string | null;
     audioUrl: string | null;
     createdAt: Date;
-    creator: { id: string; name: string; lastName: string | null };
+    creator: { id: string; name: string; lastName: string | null } | null;
     members: Array<{
       member: { id: string; name: string; lastName: string | null; role: string };
     }>;
@@ -59,12 +59,12 @@ function mapFeedback(
 ): FeedbackRecord {
   return {
     id: row.id,
-    createdBy: row.createdBy,
+    createdBy: row.createdBy ?? '',
     type: row.type,
     text: row.text,
     audioUrl: row.audioUrl,
     createdAt: row.createdAt,
-    creator: row.creator,
+    creator: row.creator ?? { id: '', name: '', lastName: null },
     members: row.members.map((m) => ({
       id: m.member.id,
       name: m.member.name,
