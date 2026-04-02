@@ -10,7 +10,6 @@ import {
   FiShield,
   FiStar,
   FiTrash2,
-  FiUser,
   FiUserPlus,
   FiUsers,
   FiX,
@@ -140,6 +139,7 @@ export default function UsuariosPage() {
   const memberModalDescriptionId = useId();
   const deleteModalTitleId = useId();
   const deleteModalDescriptionId = useId();
+  const detailsModalTitleId = useId();
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
   const [users, setUsers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,10 +166,13 @@ export default function UsuariosPage() {
   const [cpfGenerating, setCpfGenerating] = useState(false);
   const [cpfActionError, setCpfActionError] = useState<string | null>(null);
   const [photoLightbox, setPhotoLightbox] = useState<{ url: string; name: string } | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [detailsTab, setDetailsTab] = useState<"dados" | "cursos" | "advertencias" | "feedbacks">("dados");
 
   const memberModalTrapRef = useFocusTrap(modalOpen);
   const deleteTrapRef = useFocusTrap(!!deleteTarget);
   const cpfTrapRef = useFocusTrap(cpfModalOpen);
+  const detailsTrapRef = useFocusTrap(detailsModalOpen);
 
   const isAdmin = currentUser?.role === "admin";
 
@@ -269,6 +272,10 @@ export default function UsuariosPage() {
     setModalOpen(false);
   };
 
+  const closeDetailsModal = () => {
+    setDetailsModalOpen(false);
+  };
+
   const handleInputChange = (field: keyof MemberFormState, value: string) => {
     dispatchForm({ type: "SET_FIELD", field, value });
   };
@@ -349,6 +356,7 @@ export default function UsuariosPage() {
       await loadMembers();
       if (selectedMemberId === deleteTarget.id) {
         setSelectedMemberId(null);
+        setDetailsModalOpen(false);
       }
       setDeleteTarget(null);
     } catch (err: unknown) {
@@ -513,7 +521,6 @@ export default function UsuariosPage() {
   const selectedMemberInfo = selectedMemberDetails ?? selectedMember;
   const warnings = selectedMemberDetails?.warnings ?? [];
   const courses = selectedMemberDetails?.courses ?? [];
-  const feedbacks = selectedMemberDetails?.feedbacks ?? [];
   const suspension = selectedMemberDetails?.suspension;
 
   const cpfSelectedIds = useMemo(
@@ -798,11 +805,13 @@ export default function UsuariosPage() {
                       role="button"
                       tabIndex={0}
                       aria-pressed={isSelected}
-                      onClick={() => setSelectedMemberId(user.id)}
+                      onClick={() => { setSelectedMemberId(user.id); setDetailsTab("dados"); setDetailsModalOpen(true); }}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
                           setSelectedMemberId(user.id);
+                          setDetailsTab("dados");
+                          setDetailsModalOpen(true);
                         }
                       }}
                     >
@@ -861,111 +870,145 @@ export default function UsuariosPage() {
             )}
           </div>
 
-          <aside className="card member-panel">
-            <div className="member-panel-header">
-              <h2 className="section-title">Detalhes do membro</h2>
-              <p>Clique em um membro para ver os detalhes.</p>
-            </div>
+        </section>
+      </section>
 
-            {!selectedMember ? (
-              <div className="member-panel-empty">
-                <span className="member-panel-icon" aria-hidden="true">
-                  <FiUser />
-                </span>
-                <p>Selecione um membro para ver detalhes.</p>
+      {detailsModalOpen && selectedMemberInfo && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={detailsModalTitleId}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) closeDetailsModal();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeDetailsModal();
+            }
+          }}
+        >
+          <div className="modal-card modal-lg details-modal" ref={detailsTrapRef}>
+            <header className="modal-header">
+              <div className="member-identity">
+                <div
+                  className={`member-avatar${resolveApiAssetUrl(selectedMemberInfo.photo_url) ? " member-avatar-clickable" : ""}`}
+                  aria-hidden={!resolveApiAssetUrl(selectedMemberInfo.photo_url)}
+                  role={resolveApiAssetUrl(selectedMemberInfo.photo_url) ? "button" : undefined}
+                  tabIndex={resolveApiAssetUrl(selectedMemberInfo.photo_url) ? 0 : undefined}
+                  aria-label={resolveApiAssetUrl(selectedMemberInfo.photo_url) ? `Ver foto de ${getDisplayName(selectedMemberInfo)}` : undefined}
+                  onClick={() => {
+                    const url = resolveApiAssetUrl(selectedMemberInfo.photo_url);
+                    if (url) setPhotoLightbox({ url, name: getDisplayName(selectedMemberInfo) });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      const url = resolveApiAssetUrl(selectedMemberInfo.photo_url);
+                      if (url) setPhotoLightbox({ url, name: getDisplayName(selectedMemberInfo) });
+                    }
+                  }}
+                >
+                  {renderAvatar(getDisplayName(selectedMemberInfo), selectedMemberInfo.photo_url)}
+                </div>
+                <div>
+                  <h2 className="section-title" id={detailsModalTitleId}>
+                    {getDisplayName(selectedMemberInfo)}
+                  </h2>
+                  <span className="member-email">{selectedMemberInfo.email}</span>
+                </div>
               </div>
-            ) : (
-              <div className="member-panel-body">
-                {selectedMemberInfo && (
-                  <div className="member-identity">
-                    <div
-                      className={`member-avatar${resolveApiAssetUrl(selectedMemberInfo.photo_url) ? " member-avatar-clickable" : ""}`}
-                      aria-hidden={!resolveApiAssetUrl(selectedMemberInfo.photo_url)}
-                      role={resolveApiAssetUrl(selectedMemberInfo.photo_url) ? "button" : undefined}
-                      tabIndex={resolveApiAssetUrl(selectedMemberInfo.photo_url) ? 0 : undefined}
-                      aria-label={resolveApiAssetUrl(selectedMemberInfo.photo_url) ? `Ver foto de ${getDisplayName(selectedMemberInfo)}` : undefined}
-                      onClick={() => {
-                        const url = resolveApiAssetUrl(selectedMemberInfo.photo_url);
-                        if (url) setPhotoLightbox({ url, name: getDisplayName(selectedMemberInfo) });
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          const url = resolveApiAssetUrl(selectedMemberInfo.photo_url);
-                          if (url) setPhotoLightbox({ url, name: getDisplayName(selectedMemberInfo) });
-                        }
-                      }}
-                    >
-                      {renderAvatar(
-                        getDisplayName(selectedMemberInfo),
-                        selectedMemberInfo.photo_url
-                      )}
-                    </div>
-                    <div>
-                      <strong className="member-name">
-                        {getDisplayName(selectedMemberInfo)}
-                      </strong>
-                      <span className="member-email">{selectedMemberInfo.email}</span>
-                    </div>
-                  </div>
-                )}
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Fechar detalhes do membro"
+                onClick={closeDetailsModal}
+              >
+                <FiX aria-hidden="true" />
+              </button>
+            </header>
 
-                {selectedMemberInfo && (
-                  <div className="member-meta">
+            {isAdmin && (
+              <div className="details-tabs" role="tablist">
+                {(["dados", "feedbacks", "cursos", "advertencias"] as const).map((tab) => {
+                  const labels = { dados: "Dados", feedbacks: "Feedbacks", cursos: "Cursos", advertencias: "Advertências" };
+                  const counts: Record<string, number | null> = {
+                    dados: null,
+                    feedbacks: feedbackCounts ? feedbackCounts.positive + feedbackCounts.negative : null,
+                    cursos: detailsLoading ? null : courses.length,
+                    advertencias: detailsLoading ? null : warnings.length,
+                  };
+                  return (
+                    <button
+                      key={tab}
+                      role="tab"
+                      aria-selected={detailsTab === tab}
+                      className={`details-tab-btn${detailsTab === tab ? " active" : ""}`}
+                      onClick={() => setDetailsTab(tab)}
+                      type="button"
+                    >
+                      {labels[tab]}
+                      {counts[tab] !== null && (
+                        <span className="details-tab-count">{counts[tab]}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="modal-body details-modal-body">
+              {(!isAdmin || detailsTab === "dados") && (
+                <div className="member-meta">
+                  <div className="member-meta-item">
+                    <span className="member-meta-label">Função</span>
+                    <span className={`role-pill ${selectedMemberInfo.role}`}>
+                      {roleLabels[selectedMemberInfo.role]}
+                    </span>
+                  </div>
+                  {suspension && (
                     <div className="member-meta-item">
-                      <span className="member-meta-label">Função</span>
-                      <span className={`role-pill ${selectedMemberInfo.role}`}>
-                        {roleLabels[selectedMemberInfo.role]}
+                      <span className="member-meta-label">Situação</span>
+                      <span className={`status-pill ${suspension.status === "suspended" ? "inactive" : "active"}`}>
+                        {suspension.status === "suspended" ? "Suspenso" : "Ativo"}
                       </span>
                     </div>
-                    {suspension && (
-                      <div className="member-meta-item">
-                        <span className="member-meta-label">Situação</span>
-                        <span
-                          className={`status-pill ${
-                            suspension.status === "suspended" ? "inactive" : "active"
-                          }`}
-                        >
-                          {suspension.status === "suspended"
-                            ? "Suspenso"
-                            : "Ativo"}
-                        </span>
-                      </div>
-                    )}
-                    {suspension?.start_date && (
-                      <div className="member-meta-item">
-                        <span className="member-meta-label">Início suspensão</span>
-                        <span>{formatDateBR(suspension.start_date)}</span>
-                      </div>
-                    )}
-                    {suspension?.end_date && (
-                      <div className="member-meta-item">
-                        <span className="member-meta-label">Fim suspensão</span>
-                        <span>{formatDateBR(suspension.end_date)}</span>
-                      </div>
-                    )}
-                    {selectedMemberInfo.birth_date && (
-                      <div className="member-meta-item">
-                        <span className="member-meta-label">Nascimento</span>
-                        <span>{formatDateBR(selectedMemberInfo.birth_date)}</span>
-                      </div>
-                    )}
-                    {selectedMemberInfo.region && (
-                      <div className="member-meta-item">
-                        <span className="member-meta-label">Região</span>
-                        <span>{selectedMemberInfo.region}</span>
-                      </div>
-                    )}
-                    {selectedMemberInfo.phone && (
-                      <div className="member-meta-item">
-                        <span className="member-meta-label">Telefone</span>
-                        <span>{selectedMemberInfo.phone}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
+                  {suspension?.start_date && (
+                    <div className="member-meta-item">
+                      <span className="member-meta-label">Início suspensão</span>
+                      <span>{formatDateBR(suspension.start_date)}</span>
+                    </div>
+                  )}
+                  {suspension?.end_date && (
+                    <div className="member-meta-item">
+                      <span className="member-meta-label">Fim suspensão</span>
+                      <span>{formatDateBR(suspension.end_date)}</span>
+                    </div>
+                  )}
+                  {selectedMemberInfo.birth_date && (
+                    <div className="member-meta-item">
+                      <span className="member-meta-label">Nascimento</span>
+                      <span>{formatDateBR(selectedMemberInfo.birth_date)}</span>
+                    </div>
+                  )}
+                  {selectedMemberInfo.region && (
+                    <div className="member-meta-item">
+                      <span className="member-meta-label">Região</span>
+                      <span>{selectedMemberInfo.region}</span>
+                    </div>
+                  )}
+                  {selectedMemberInfo.phone && (
+                    <div className="member-meta-item">
+                      <span className="member-meta-label">Telefone</span>
+                      <span>{selectedMemberInfo.phone}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                {isAdmin && (
+              {isAdmin && detailsTab === "feedbacks" && (
                 <div className="member-section">
                   <div className="member-section-header">
                     <h3 className="section-title">Feedbacks</h3>
@@ -988,122 +1031,69 @@ export default function UsuariosPage() {
                     </div>
                   )}
                 </div>
-                )}
+              )}
 
-                {isAdmin && (
-                  <>
-                    <div className="member-section">
-                      <div className="member-section-header">
-                        <h3 className="section-title">Cursos</h3>
-                        <span className="member-section-count">
-                          {courses.length}
-                        </span>
-                      </div>
-                      {detailsLoading ? (
-                        <p className="member-section-empty">Carregando cursos...</p>
-                      ) : detailsError ? (
-                        <p className="member-section-error">{detailsError}</p>
-                      ) : courses.length === 0 ? (
-                        <p className="member-section-empty">Nenhum curso registrado.</p>
-                      ) : (
-                        <ul className="member-section-list">
-                          {courses.map((course) => (
-                            <li className="member-section-item" key={course.id}>
-                              <div className="member-section-meta">
-                                <strong className="member-section-title">
-                                  {course.title}
-                                </strong>
-                                <span className="member-section-date">
-                                  {formatDateBR(course.course_date)}
-                                </span>
-                              </div>
-                              <span
-                                className={`status-pill ${getCourseStatusClass(
-                                  course.status
-                                )}`}
-                              >
-                                {getCourseStatusLabel(course.status)}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
+              {isAdmin && detailsTab === "cursos" && (
+                <div className="member-section">
+                  <div className="member-section-header">
+                    <h3 className="section-title">Cursos</h3>
+                    <span className="member-section-count">{courses.length}</span>
+                  </div>
+                  {detailsLoading ? (
+                    <p className="member-section-empty">Carregando cursos...</p>
+                  ) : detailsError ? (
+                    <p className="member-section-error">{detailsError}</p>
+                  ) : courses.length === 0 ? (
+                    <p className="member-section-empty">Nenhum curso registrado.</p>
+                  ) : (
+                    <ul className="member-section-list">
+                      {courses.map((course) => (
+                        <li className="member-section-item" key={course.id}>
+                          <div className="member-section-meta">
+                            <strong className="member-section-title">{course.title}</strong>
+                            <span className="member-section-date">{formatDateBR(course.course_date)}</span>
+                          </div>
+                          <span className={`status-pill ${getCourseStatusClass(course.status)}`}>
+                            {getCourseStatusLabel(course.status)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
 
-                    <div className="member-section">
-                      <div className="member-section-header">
-                        <h3 className="section-title">Advertências</h3>
-                        <span className="member-section-count">
-                          {warnings.length}
-                        </span>
-                      </div>
-                      {detailsLoading ? (
-                        <p className="member-section-empty">
-                          Carregando advertências...
-                        </p>
-                      ) : detailsError ? (
-                        <p className="member-section-error">{detailsError}</p>
-                      ) : warnings.length === 0 ? (
-                        <p className="member-section-empty">
-                          Nenhuma advertência registrada.
-                        </p>
-                      ) : (
-                        <ul className="member-section-list">
-                          {warnings.map((entry) => (
-                            <li className="member-section-item" key={entry.id}>
-                              <span className="member-section-date">
-                                {formatDateBR(entry.warning_date)}
-                              </span>
-                              <strong className="member-section-title">
-                                {creatorNameById.get(entry.created_by) ?? "Usuário"}
-                              </strong>
-                              <span className="member-section-text">
-                                {entry.reason}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-
-                    {/* <div className="member-section">
-                      <div className="member-section-header">
-                        <h3 className="section-title">Feedbacks</h3>
-                        <span className="member-section-count">
-                          {feedbacks.length}
-                        </span>
-                      </div>
-                      {detailsLoading ? (
-                        <p className="member-section-empty">Carregando feedbacks...</p>
-                      ) : detailsError ? (
-                        <p className="member-section-error">{detailsError}</p>
-                      ) : feedbacks.length === 0 ? (
-                        <p className="member-section-empty">Nenhum feedback registrado.</p>
-                      ) : (
-                        <ul className="member-section-list">
-                          {feedbacks.map((entry) => (
-                            <li className="member-section-item" key={entry.id}>
-                              <span className="member-section-date">
-                                {formatDateBR(entry.event_date)}
-                              </span>
-                              <strong className="member-section-title">
-                                {entry.contractor_name}
-                              </strong>
-                              <span className="member-section-text">
-                                {entry.feedback}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div> */}
-                  </>
-                )}
-              </div>
-            )}
-          </aside>
-        </section>
-      </section>
+              {isAdmin && detailsTab === "advertencias" && (
+                <div className="member-section">
+                  <div className="member-section-header">
+                    <h3 className="section-title">Advertências</h3>
+                    <span className="member-section-count">{warnings.length}</span>
+                  </div>
+                  {detailsLoading ? (
+                    <p className="member-section-empty">Carregando advertências...</p>
+                  ) : detailsError ? (
+                    <p className="member-section-error">{detailsError}</p>
+                  ) : warnings.length === 0 ? (
+                    <p className="member-section-empty">Nenhuma advertência registrada.</p>
+                  ) : (
+                    <ul className="member-section-list">
+                      {warnings.map((entry) => (
+                        <li className="member-section-item" key={entry.id}>
+                          <span className="member-section-date">{formatDateBR(entry.warning_date)}</span>
+                          <strong className="member-section-title">
+                            {creatorNameById.get(entry.created_by) ?? "Usuário"}
+                          </strong>
+                          <span className="member-section-text">{entry.reason}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalOpen && (
         <div

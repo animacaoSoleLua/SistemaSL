@@ -9,7 +9,7 @@
 
 .users-board {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 440px);
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
@@ -482,6 +482,122 @@
 }
 
 
+/* ── Details Modal com abas ─────────────────────────────────────────────────── */
+
+.details-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  max-height: min(720px, 90vh);
+  width: min(860px, 100%);
+}
+
+.details-modal .modal-header {
+  padding: 20px 24px 16px;
+  flex-shrink: 0;
+}
+
+.details-modal .member-avatar {
+  flex-shrink: 0;
+}
+
+.details-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 16px;
+  border-bottom: 2px solid rgba(111, 76, 255, 0.12);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.details-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.details-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  border-radius: 8px 8px 0 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.details-tab-btn:hover {
+  color: var(--ink);
+  background: rgba(111, 76, 255, 0.06);
+}
+
+.details-tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: rgba(111, 76, 255, 0.08);
+  font-weight: 700;
+}
+
+.details-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(111, 76, 255, 0.1);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.details-tab-btn.active .details-tab-count {
+  background: rgba(111, 76, 255, 0.2);
+}
+
+.details-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+/* dark mode */
+body.theme-purple .details-tabs {
+  border-bottom-color: rgba(161, 97, 255, 0.18);
+}
+
+body.theme-purple .details-tab-btn:hover {
+  background: rgba(161, 97, 255, 0.1);
+}
+
+body.theme-purple .details-tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: rgba(161, 97, 255, 0.12);
+}
+
+body.theme-purple .details-tab-count {
+  background: rgba(161, 97, 255, 0.15);
+  color: var(--accent);
+}
+
+body.theme-purple .details-tab-btn.active .details-tab-count {
+  background: rgba(161, 97, 255, 0.28);
+}
+
 .cpf-modal {
   width: min(720px, 100%);
 }
@@ -737,6 +853,75 @@ body.theme-purple .cpf-selected-item:focus {
 
   .summary-card {
     padding: 14px 16px;
+  }
+}
+
+/* ── Details Modal — responsividade ────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .details-modal .modal-header {
+    padding: 16px 16px 12px;
+    gap: 10px;
+  }
+
+  .details-modal .member-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 14px;
+  }
+
+  .details-modal .member-name {
+    font-size: 14px;
+  }
+
+  .details-modal .member-email {
+    font-size: 12px;
+  }
+
+  .details-tabs {
+    padding: 0 12px;
+    gap: 0;
+  }
+
+  .details-tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 12px;
+    gap: 4px;
+  }
+
+  .details-modal-body {
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .member-section-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .details-modal {
+    max-height: 92vh;
+  }
+
+  .details-tab-btn {
+    padding: 10px 6px;
+    font-size: 11px;
+  }
+
+  .details-tab-count {
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+
+  .details-modal-body {
+    padding: 14px;
   }
 }
 
