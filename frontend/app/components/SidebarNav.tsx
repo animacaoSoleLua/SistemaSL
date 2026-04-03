@@ -7,6 +7,7 @@ import { useId, useRef, useState, useEffect } from "react";
 import {
   FiAlertTriangle,
   FiBookOpen,
+  FiCalendar,
   FiFileText,
   FiGrid,
   FiMenu,
@@ -40,6 +41,12 @@ const navItems = [
     href: "/cursos",
     roles: ["admin", "animador", "recreador"],
     icon: <FiBookOpen aria-hidden="true" />
+  },
+  {
+    label: "Agenda",
+    href: "/agenda",
+    roles: ["admin", "animador", "recreador"],
+    icon: <FiCalendar aria-hidden="true" />,
   },
   {
     label: "Advertências",
