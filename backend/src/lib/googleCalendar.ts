@@ -31,6 +31,14 @@ export interface RefreshedTokens {
   tokenExpiry: Date | null;
 }
 
+export interface AgendaEventData {
+  title: string;
+  start: string;    // ISO 8601 datetime string
+  end: string;      // ISO 8601 datetime string
+  description?: string;
+  attendees?: string[]; // list of email addresses
+}
+
 // ── Config ─────────────────────────────────────────────────────────────────────
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "";
@@ -216,6 +224,67 @@ export async function deleteUserEvent(
   await calendar.events.delete({
     calendarId: "primary",
     eventId,
+  });
+}
+
+export async function listUserEvents(
+  tokens: UserTokens,
+  timeMin: string,
+  timeMax: string
+): Promise<Array<{ id: string; title: string; start: string; end: string; description: string; attendees: string[] }>> {
+  const calendar = await getUserCalendar(tokens);
+  const response = await calendar.events.list({
+    calendarId: "primary",
+    timeMin,
+    timeMax,
+    singleEvents: true,
+    orderBy: "startTime",
+    maxResults: 250,
+  });
+  return (response.data.items ?? []).map((event) => ({
+    id: event.id ?? "",
+    title: event.summary ?? "(sem título)",
+    start: event.start?.dateTime ?? event.start?.date ?? "",
+    end: event.end?.dateTime ?? event.end?.date ?? "",
+    description: event.description ?? "",
+    attendees: (event.attendees ?? []).map((a) => a.email ?? "").filter(Boolean),
+  }));
+}
+
+export async function createUserAgendaEvent(
+  tokens: UserTokens,
+  data: AgendaEventData
+): Promise<string | null> {
+  const calendar = await getUserCalendar(tokens);
+  const event = await calendar.events.insert({
+    calendarId: "primary",
+    requestBody: {
+      summary: data.title,
+      description: data.description,
+      start: { dateTime: data.start, timeZone: "America/Sao_Paulo" },
+      end: { dateTime: data.end, timeZone: "America/Sao_Paulo" },
+      attendees: data.attendees?.map((email) => ({ email })),
+    },
+  });
+  return event.data.id ?? null;
+}
+
+export async function updateUserAgendaEvent(
+  tokens: UserTokens,
+  eventId: string,
+  data: AgendaEventData
+): Promise<void> {
+  const calendar = await getUserCalendar(tokens);
+  await calendar.events.update({
+    calendarId: "primary",
+    eventId,
+    requestBody: {
+      summary: data.title,
+      description: data.description,
+      start: { dateTime: data.start, timeZone: "America/Sao_Paulo" },
+      end: { dateTime: data.end, timeZone: "America/Sao_Paulo" },
+      attendees: data.attendees?.map((email) => ({ email })),
+    },
   });
 }
 
