@@ -7,7 +7,7 @@ export interface EnrollmentRecord {
   courseId: string;
   memberId: string;
   status: EnrollmentStatus;
-  // googleCalendarEventId?: string | null; // GOOGLE_CALENDAR_DISABLED
+  googleCalendarEventId?: string | null;
   createdAt: Date;
 }
 
@@ -22,7 +22,7 @@ export interface CourseRecord {
   location?: string;
   capacity: number | null;
   archivedAt?: Date;
-  // googleCalendarEventId?: string | null; // GOOGLE_CALENDAR_DISABLED
+  googleCalendarEventId?: string | null;
   createdAt: Date;
   enrollments: EnrollmentRecord[];
 }
@@ -50,7 +50,7 @@ function toEnrollmentRecord(entry: {
   courseId: string;
   memberId: string;
   status: EnrollmentStatus;
-  // googleCalendarEventId?: string | null; // GOOGLE_CALENDAR_DISABLED
+  googleCalendarEventId?: string | null;
   createdAt: Date;
 }): EnrollmentRecord {
   return {
@@ -58,7 +58,7 @@ function toEnrollmentRecord(entry: {
     courseId: entry.courseId,
     memberId: entry.memberId,
     status: entry.status,
-    // googleCalendarEventId: entry.googleCalendarEventId ?? null, // GOOGLE_CALENDAR_DISABLED
+    googleCalendarEventId: entry.googleCalendarEventId ?? null,
     createdAt: entry.createdAt,
   };
 }
@@ -73,7 +73,7 @@ function toCourseRecord(course: {
   location: string | null;
   capacity: number | null;
   archivedAt: Date | null;
-  // googleCalendarEventId?: string | null; // GOOGLE_CALENDAR_DISABLED
+  googleCalendarEventId?: string | null;
   createdAt: Date;
   instructor: {
     id: string;
@@ -98,7 +98,7 @@ function toCourseRecord(course: {
     location: course.location ?? undefined,
     capacity: course.capacity ?? null,
     archivedAt: course.archivedAt ?? undefined,
-    // googleCalendarEventId: course.googleCalendarEventId ?? null, // GOOGLE_CALENDAR_DISABLED
+    googleCalendarEventId: course.googleCalendarEventId ?? null,
     createdAt: course.createdAt,
     enrollments: course.enrollments.map((enrollment) =>
       toEnrollmentRecord(enrollment)
@@ -261,17 +261,15 @@ export async function deleteCourse(courseId: string): Promise<void> {
   await prisma.course.delete({ where: { id: courseId } });
 }
 
-// GOOGLE_CALENDAR_DISABLED_START
-// export async function updateCourseCalendarEventId(
-//   courseId: string,
-//   googleCalendarEventId: string | null
-// ): Promise<void> {
-//   await prisma.course.update({
-//     where: { id: courseId },
-//     data: { googleCalendarEventId },
-//   });
-// }
-// GOOGLE_CALENDAR_DISABLED_END
+export async function updateCourseCalendarEventId(
+  courseId: string,
+  googleCalendarEventId: string | null
+): Promise<void> {
+  await prisma.course.update({
+    where: { id: courseId },
+    data: { googleCalendarEventId },
+  });
+}
 
 export function getEnrollmentByMember(
   course: CourseRecord,
@@ -310,17 +308,15 @@ export async function removeEnrollment(enrollmentId: string): Promise<void> {
   await prisma.courseEnrollment.delete({ where: { id: enrollmentId } });
 }
 
-// GOOGLE_CALENDAR_DISABLED_START
-// export async function updateEnrollmentCalendarEventId(
-//   enrollmentId: string,
-//   googleCalendarEventId: string | null
-// ): Promise<void> {
-//   await prisma.courseEnrollment.update({
-//     where: { id: enrollmentId },
-//     data: { googleCalendarEventId },
-//   });
-// }
-// GOOGLE_CALENDAR_DISABLED_END
+export async function updateEnrollmentCalendarEventId(
+  enrollmentId: string,
+  googleCalendarEventId: string | null
+): Promise<void> {
+  await prisma.courseEnrollment.update({
+    where: { id: enrollmentId },
+    data: { googleCalendarEventId },
+  });
+}
 
 export async function updateEnrollmentStatus(
   enrollment: EnrollmentRecord,

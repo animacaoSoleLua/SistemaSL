@@ -19,12 +19,10 @@ export interface UserRecord {
   passwordHash: string;
   role: Role;
   photoUrl?: string;
-  // GOOGLE_CALENDAR_DISABLED_START
-  // googleConnected: boolean;
-  // googleEmail?: string | null;
-  // googleUserId?: string | null;
-  // googleLastSync?: Date | null;
-  // GOOGLE_CALENDAR_DISABLED_END
+  googleConnected: boolean;
+  googleEmail?: string | null;
+  googleUserId?: string | null;
+  googleLastSync?: Date | null;
 }
 
 function normalizeEmail(email: string): string {
@@ -46,12 +44,10 @@ function toUserRecord(user: {
   passwordHash: string;
   role: Role;
   photoUrl: string | null;
-  // GOOGLE_CALENDAR_DISABLED_START
-  // googleAccessToken?: string | null;
-  // googleEmail?: string | null;
-  // googleUserId?: string | null;
-  // googleLastSync?: Date | null;
-  // GOOGLE_CALENDAR_DISABLED_END
+  googleAccessToken?: string | null;
+  googleEmail?: string | null;
+  googleUserId?: string | null;
+  googleLastSync?: Date | null;
 }): UserRecord {
   return {
     id: user.id,
@@ -68,12 +64,10 @@ function toUserRecord(user: {
     passwordHash: user.passwordHash,
     role: user.role,
     photoUrl: user.photoUrl ?? undefined,
-    // GOOGLE_CALENDAR_DISABLED_START
-    // googleConnected: !!user.googleAccessToken,
-    // googleEmail: user.googleEmail ?? null,
-    // googleUserId: user.googleUserId ?? null,
-    // googleLastSync: user.googleLastSync ?? null,
-    // GOOGLE_CALENDAR_DISABLED_END
+    googleConnected: !!user.googleAccessToken,
+    googleEmail: user.googleEmail ?? null,
+    googleUserId: user.googleUserId ?? null,
+    googleLastSync: user.googleLastSync ?? null,
   };
 }
 

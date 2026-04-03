@@ -76,8 +76,15 @@ export async function agendaRoutes(app: FastifyInstance) {
     }
 
     const data: AgendaEventData = parsed.data;
-    const eventId = await createUserAgendaEvent(tokens, data);
-    return reply.status(201).send({ data: { id: eventId } });
+    try {
+      const eventId = await createUserAgendaEvent(tokens, data);
+      return reply.status(201).send({ data: { id: eventId } });
+    } catch {
+      return reply.status(502).send({
+        error: "calendar_error",
+        message: "Erro ao criar evento no Google Calendar. Tente novamente.",
+      });
+    }
   });
 
   // PATCH /api/v1/agenda/events/:id
@@ -100,8 +107,15 @@ export async function agendaRoutes(app: FastifyInstance) {
     }
 
     const data: AgendaEventData = parsed.data;
-    await updateUserAgendaEvent(tokens, id, data);
-    return reply.status(200).send({ data: { id } });
+    try {
+      await updateUserAgendaEvent(tokens, id, data);
+      return reply.status(200).send({ data: { id } });
+    } catch {
+      return reply.status(502).send({
+        error: "calendar_error",
+        message: "Erro ao atualizar evento no Google Calendar. Tente novamente.",
+      });
+    }
   });
 
   // DELETE /api/v1/agenda/events/:id
@@ -116,7 +130,14 @@ export async function agendaRoutes(app: FastifyInstance) {
       });
     }
 
-    await deleteUserEvent(tokens, id);
-    return reply.status(204).send();
+    try {
+      await deleteUserEvent(tokens, id);
+      return reply.status(204).send();
+    } catch {
+      return reply.status(502).send({
+        error: "calendar_error",
+        message: "Erro ao deletar evento no Google Calendar. Tente novamente.",
+      });
+    }
   });
 }

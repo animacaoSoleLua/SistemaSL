@@ -5,11 +5,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   deleteMemberPhoto,
-  // disconnectGoogle, // GOOGLE_CALENDAR_DISABLED
+  disconnectGoogle,
   getErrorMessage,
   getMember,
   resolveApiAssetUrl,
-  // startGoogleOAuth, // GOOGLE_CALENDAR_DISABLED
+  startGoogleOAuth,
   updateMember,
   uploadMemberPhoto,
 } from "../../lib/api";
@@ -46,12 +46,10 @@ interface MemberDetail {
   emergency_contact_phone?: string | null;
   role: Role;
   photo_url?: string | null;
-  // GOOGLE_CALENDAR_DISABLED_START
-  // google_connected?: boolean;
-  // google_email?: string | null;
-  // google_user_id?: string | null;
-  // google_last_sync?: string | null;
-  // GOOGLE_CALENDAR_DISABLED_END
+  google_connected?: boolean;
+  google_email?: string | null;
+  google_user_id?: string | null;
+  google_last_sync?: string | null;
   courses: Array<{
     id: string;
     title: string;
@@ -86,11 +84,9 @@ export default function PerfilPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
-  // GOOGLE_CALENDAR_DISABLED_START
-  // const [googleDisconnecting, setGoogleDisconnecting] = useState(false);
-  // const [googleConnecting, setGoogleConnecting] = useState(false);
-  // const [googleMsg, setGoogleMsg] = useState<string | null>(null);
-  // GOOGLE_CALENDAR_DISABLED_END
+  const [googleDisconnecting, setGoogleDisconnecting] = useState(false);
+  const [googleConnecting, setGoogleConnecting] = useState(false);
+  const [googleMsg, setGoogleMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -102,20 +98,18 @@ export default function PerfilPage() {
       router.push(getDefaultRoute(user.role));
       return;
     }
-    // GOOGLE_CALENDAR_DISABLED_START
-    // // Verifica resultado do OAuth do Google na query string
-    // if (typeof window !== "undefined") {
-    //   const params = new URLSearchParams(window.location.search);
-    //   const googleStatus = params.get("google");
-    //   if (googleStatus === "connected") {
-    //     setGoogleMsg("Google Agenda conectado com sucesso!");
-    //     window.history.replaceState({}, "", "/perfil");
-    //   } else if (googleStatus === "error") {
-    //     setGoogleMsg("Erro ao conectar o Google Agenda. Tente novamente.");
-    //     window.history.replaceState({}, "", "/perfil");
-    //   }
-    // }
-    // GOOGLE_CALENDAR_DISABLED_END
+    // Verifica resultado do OAuth do Google na query string
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const googleStatus = params.get("google");
+      if (googleStatus === "connected") {
+        setGoogleMsg("Google Agenda conectado com sucesso!");
+        window.history.replaceState({}, "", "/perfil");
+      } else if (googleStatus === "error") {
+        setGoogleMsg("Erro ao conectar o Google Agenda. Tente novamente.");
+        window.history.replaceState({}, "", "/perfil");
+      }
+    }
     const loadProfile = async () => {
       setLoading(true);
       setError(null);
@@ -131,22 +125,20 @@ export default function PerfilPage() {
     loadProfile();
   }, [router]);
 
-  // GOOGLE_CALENDAR_DISABLED_START
-  // const handleDisconnectGoogle = async () => {
-  //   if (googleDisconnecting) return;
-  //   setGoogleDisconnecting(true);
-  //   setGoogleMsg(null);
-  //   try {
-  //     await disconnectGoogle();
-  //     setMember((m) => m ? { ...m, google_connected: false } : m);
-  //     setGoogleMsg("Google Agenda desconectado.");
-  //   } catch (err) {
-  //     setGoogleMsg(getErrorMessage(err, "Erro ao desconectar Google Agenda."));
-  //   } finally {
-  //     setGoogleDisconnecting(false);
-  //   }
-  // };
-  // GOOGLE_CALENDAR_DISABLED_END
+  const handleDisconnectGoogle = async () => {
+    if (googleDisconnecting) return;
+    setGoogleDisconnecting(true);
+    setGoogleMsg(null);
+    try {
+      await disconnectGoogle();
+      setMember((m) => m ? { ...m, google_connected: false } : m);
+      setGoogleMsg("Google Agenda desconectado.");
+    } catch (err) {
+      setGoogleMsg(getErrorMessage(err, "Erro ao desconectar Google Agenda."));
+    } finally {
+      setGoogleDisconnecting(false);
+    }
+  };
 
   useEffect(() => {
     if (member) {
@@ -631,7 +623,6 @@ export default function PerfilPage() {
               </article>
             </form>
 
-            {/* GOOGLE_CALENDAR_DISABLED_START
             <section className="report-panel google-panel">
               <div className="google-panel-header">
                 <div className="google-panel-title-row">
@@ -725,7 +716,6 @@ export default function PerfilPage() {
                 </p>
               )}
             </section>
-            GOOGLE_CALENDAR_DISABLED_END */}
 
             <section className="report-panel">
               <div className="report-header">

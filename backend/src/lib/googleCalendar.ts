@@ -251,6 +251,13 @@ export async function listUserEvents(
   }));
 }
 
+// datetime-local inputs produce "YYYY-MM-DDTHH:MM" (no seconds), which is not
+// valid RFC 3339. Google Calendar API requires seconds, so append ":00" if needed.
+function toRfc3339DateTime(dt: string): string {
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dt)) return dt + ":00";
+  return dt;
+}
+
 export async function createUserAgendaEvent(
   tokens: UserTokens,
   data: AgendaEventData
@@ -261,8 +268,8 @@ export async function createUserAgendaEvent(
     requestBody: {
       summary: data.title,
       description: data.description,
-      start: { dateTime: data.start, timeZone: "America/Sao_Paulo" },
-      end: { dateTime: data.end, timeZone: "America/Sao_Paulo" },
+      start: { dateTime: toRfc3339DateTime(data.start), timeZone: "America/Sao_Paulo" },
+      end: { dateTime: toRfc3339DateTime(data.end), timeZone: "America/Sao_Paulo" },
       attendees: data.attendees?.map((email) => ({ email })),
     },
   });
@@ -281,8 +288,8 @@ export async function updateUserAgendaEvent(
     requestBody: {
       summary: data.title,
       description: data.description,
-      start: { dateTime: data.start, timeZone: "America/Sao_Paulo" },
-      end: { dateTime: data.end, timeZone: "America/Sao_Paulo" },
+      start: { dateTime: toRfc3339DateTime(data.start), timeZone: "America/Sao_Paulo" },
+      end: { dateTime: toRfc3339DateTime(data.end), timeZone: "America/Sao_Paulo" },
       attendees: data.attendees?.map((email) => ({ email })),
     },
   });

@@ -476,12 +476,10 @@ export async function membrosRoutes(app: FastifyInstance) {
         emergency_contact_phone: member.emergencyContactPhone ?? null,
         role: member.role,
         photo_url: member.photoUrl ?? null,
-        // GOOGLE_CALENDAR_DISABLED_START
-        // google_connected: member.googleConnected,
-        // google_email: member.googleEmail ?? null,
-        // google_user_id: member.googleUserId ?? null,
-        // google_last_sync: member.googleLastSync ? member.googleLastSync.toISOString() : null,
-        // GOOGLE_CALENDAR_DISABLED_END
+        google_connected: member.googleConnected,
+        google_email: member.googleEmail ?? null,
+        google_user_id: member.googleUserId ?? null,
+        google_last_sync: member.googleLastSync ? member.googleLastSync.toISOString() : null,
         courses: (
           await Promise.all(
             (await listEnrollmentsForMember(member.id)).map(
