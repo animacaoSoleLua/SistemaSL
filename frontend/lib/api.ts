@@ -522,3 +522,48 @@ export async function deleteFeedback(id: string) {
 //   return request("/auth/google", { method: "DELETE" });
 // }
 // GOOGLE_CALENDAR_DISABLED_END
+
+// ── Agenda ─────────────────────────────────────────────────────────────────────
+
+export interface AgendaEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  description: string;
+  attendees: string[];
+}
+
+export interface AgendaEventInput {
+  title: string;
+  start: string;
+  end: string;
+  description?: string;
+  attendees?: string[];
+}
+
+export async function getAgendaEvents(timeMin: string, timeMax: string): Promise<AgendaEvent[]> {
+  const params = new URLSearchParams({ timeMin, timeMax });
+  const res = await request(`/agenda/events?${params.toString()}`, { method: "GET" });
+  return res?.data ?? [];
+}
+
+export async function createAgendaEvent(data: AgendaEventInput) {
+  return request("/agenda/events", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateAgendaEvent(id: string, data: AgendaEventInput) {
+  return request(`/agenda/events/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAgendaEvent(id: string) {
+  return request(`/agenda/events/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
