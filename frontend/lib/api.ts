@@ -508,20 +508,18 @@ export async function deleteFeedback(id: string) {
   return request(`/feedbacks/${id}`, { method: "DELETE" });
 }
 
-// GOOGLE_CALENDAR_DISABLED_START
-// // ── Google Calendar ────────────────────────────────────────────────────────────
+// ── Google Calendar ────────────────────────────────────────────────────────────
 
-// /** Obtém a URL OAuth do Google via API (com autenticação) e redireciona o usuário. */
-// export async function startGoogleOAuth(): Promise<void> {
-//   const res = await request("/auth/google", { method: "GET" });
-//   window.location.href = res.url;
-// }
+/** Obtém a URL OAuth do Google via API (com autenticação) e redireciona o usuário. */
+export async function startGoogleOAuth(): Promise<void> {
+  const res = await request("/auth/google", { method: "GET" });
+  window.location.href = res.url;
+}
 
-// /** Desconecta a conta Google do usuário logado. */
-// export async function disconnectGoogle() {
-//   return request("/auth/google", { method: "DELETE" });
-// }
-// GOOGLE_CALENDAR_DISABLED_END
+/** Desconecta a conta Google do usuário logado. */
+export async function disconnectGoogle() {
+  return request("/auth/google", { method: "DELETE" });
+}
 
 // ── Agenda ─────────────────────────────────────────────────────────────────────
 
