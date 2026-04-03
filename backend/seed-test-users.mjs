@@ -15,7 +15,7 @@ function hashPassword(password) {
 const PASSWORD = "Senha123";
 
 const members = [
-  { name: "Ana",       last_name: "Souza",      email: "ana.souza@teste.com",        role: "recreador", region: "Asa Norte",         phone: "(61) 99100-0001", birth_date: "2000-03-15", cpf: "111.111.111-01" },
+  { name: "Ana",       last_name: "Souza",      email: "a@teste.com",        role: "recreador", region: "Asa Norte",         phone: "(61) 99100-0001", birth_date: "2000-03-15", cpf: "111.111.111-01" },
   { name: "Bruno",     last_name: "Lima",        email: "bruno.lima@teste.com",       role: "animador",  region: "Asa Sul",           phone: "(61) 99100-0002", birth_date: "1998-07-22", cpf: "111.111.111-02" },
   { name: "Carla",     last_name: "Ferreira",    email: "carla.ferreira@teste.com",   role: "recreador", region: "Taguatinga",        phone: "(61) 99100-0003", birth_date: "2001-01-10", cpf: "111.111.111-03" },
   { name: "Diego",     last_name: "Oliveira",    email: "diego.oliveira@teste.com",   role: "animador",  region: "Ceilândia",         phone: "(61) 99100-0004", birth_date: "1999-11-05", cpf: "111.111.111-04" },

@@ -278,6 +278,9 @@ export async function updateMember(
     birth_date?: string;
     region?: string;
     phone?: string;
+    pix?: string | null;
+    emergency_contact_name?: string | null;
+    emergency_contact_phone?: string | null;
     role?: string;
     photo_url?: string | null;
   }
@@ -365,6 +368,9 @@ export async function registerUser(input: {
   birth_date: string;
   region: string;
   phone: string;
+  pix?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
   role: string;
   password: string;
 }) {
@@ -502,17 +508,17 @@ export async function deleteFeedback(id: string) {
   return request(`/feedbacks/${id}`, { method: "DELETE" });
 }
 
-// ── Google Calendar ────────────────────────────────────────────────────────────
+// GOOGLE_CALENDAR_DISABLED_START
+// // ── Google Calendar ────────────────────────────────────────────────────────────
 
-/**
- * Retorna a URL para iniciar o fluxo OAuth do Google.
- * O usuário deve ser redirecionado para essa URL.
- */
-export function getGoogleAuthUrl(): string {
-  return `${API_ORIGIN}/api/v1/auth/google`;
-}
+// /** Obtém a URL OAuth do Google via API (com autenticação) e redireciona o usuário. */
+// export async function startGoogleOAuth(): Promise<void> {
+//   const res = await request("/auth/google", { method: "GET" });
+//   window.location.href = res.url;
+// }
 
-/** Desconecta a conta Google do usuário logado. */
-export async function disconnectGoogle() {
-  return request("/auth/google", { method: "DELETE" });
-}
+// /** Desconecta a conta Google do usuário logado. */
+// export async function disconnectGoogle() {
+//   return request("/auth/google", { method: "DELETE" });
+// }
+// GOOGLE_CALENDAR_DISABLED_END

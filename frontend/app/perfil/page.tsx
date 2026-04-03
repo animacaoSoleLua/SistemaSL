@@ -5,11 +5,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   deleteMemberPhoto,
-  disconnectGoogle,
+  // disconnectGoogle, // GOOGLE_CALENDAR_DISABLED
   getErrorMessage,
-  getGoogleAuthUrl,
   getMember,
   resolveApiAssetUrl,
+  // startGoogleOAuth, // GOOGLE_CALENDAR_DISABLED
   updateMember,
   uploadMemberPhoto,
 } from "../../lib/api";
@@ -41,9 +41,17 @@ interface MemberDetail {
   birth_date?: string | null;
   region?: string | null;
   phone?: string | null;
+  pix?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
   role: Role;
   photo_url?: string | null;
-  google_connected?: boolean;
+  // GOOGLE_CALENDAR_DISABLED_START
+  // google_connected?: boolean;
+  // google_email?: string | null;
+  // google_user_id?: string | null;
+  // google_last_sync?: string | null;
+  // GOOGLE_CALENDAR_DISABLED_END
   courses: Array<{
     id: string;
     title: string;
@@ -67,6 +75,9 @@ export default function PerfilPage() {
   const [editBirthDate, setEditBirthDate] = useState("");
   const [editRegion, setEditRegion] = useState("");
   const [editPhone, setEditPhone] = useState("");
+  const [editPix, setEditPix] = useState("");
+  const [editEmergencyContactName, setEditEmergencyContactName] = useState("");
+  const [editEmergencyContactPhone, setEditEmergencyContactPhone] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoInputKey, setPhotoInputKey] = useState(0);
@@ -75,8 +86,11 @@ export default function PerfilPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
-  const [googleDisconnecting, setGoogleDisconnecting] = useState(false);
-  const [googleMsg, setGoogleMsg] = useState<string | null>(null);
+  // GOOGLE_CALENDAR_DISABLED_START
+  // const [googleDisconnecting, setGoogleDisconnecting] = useState(false);
+  // const [googleConnecting, setGoogleConnecting] = useState(false);
+  // const [googleMsg, setGoogleMsg] = useState<string | null>(null);
+  // GOOGLE_CALENDAR_DISABLED_END
 
   useEffect(() => {
     const user = getStoredUser();
@@ -88,18 +102,20 @@ export default function PerfilPage() {
       router.push(getDefaultRoute(user.role));
       return;
     }
-    // Verifica resultado do OAuth do Google na query string
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const googleStatus = params.get("google");
-      if (googleStatus === "connected") {
-        setGoogleMsg("Google Agenda conectado com sucesso!");
-        window.history.replaceState({}, "", "/perfil");
-      } else if (googleStatus === "error") {
-        setGoogleMsg("Erro ao conectar o Google Agenda. Tente novamente.");
-        window.history.replaceState({}, "", "/perfil");
-      }
-    }
+    // GOOGLE_CALENDAR_DISABLED_START
+    // // Verifica resultado do OAuth do Google na query string
+    // if (typeof window !== "undefined") {
+    //   const params = new URLSearchParams(window.location.search);
+    //   const googleStatus = params.get("google");
+    //   if (googleStatus === "connected") {
+    //     setGoogleMsg("Google Agenda conectado com sucesso!");
+    //     window.history.replaceState({}, "", "/perfil");
+    //   } else if (googleStatus === "error") {
+    //     setGoogleMsg("Erro ao conectar o Google Agenda. Tente novamente.");
+    //     window.history.replaceState({}, "", "/perfil");
+    //   }
+    // }
+    // GOOGLE_CALENDAR_DISABLED_END
     const loadProfile = async () => {
       setLoading(true);
       setError(null);
@@ -115,20 +131,22 @@ export default function PerfilPage() {
     loadProfile();
   }, [router]);
 
-  const handleDisconnectGoogle = async () => {
-    if (googleDisconnecting) return;
-    setGoogleDisconnecting(true);
-    setGoogleMsg(null);
-    try {
-      await disconnectGoogle();
-      setMember((m) => m ? { ...m, google_connected: false } : m);
-      setGoogleMsg("Google Agenda desconectado.");
-    } catch (err) {
-      setGoogleMsg(getErrorMessage(err, "Erro ao desconectar Google Agenda."));
-    } finally {
-      setGoogleDisconnecting(false);
-    }
-  };
+  // GOOGLE_CALENDAR_DISABLED_START
+  // const handleDisconnectGoogle = async () => {
+  //   if (googleDisconnecting) return;
+  //   setGoogleDisconnecting(true);
+  //   setGoogleMsg(null);
+  //   try {
+  //     await disconnectGoogle();
+  //     setMember((m) => m ? { ...m, google_connected: false } : m);
+  //     setGoogleMsg("Google Agenda desconectado.");
+  //   } catch (err) {
+  //     setGoogleMsg(getErrorMessage(err, "Erro ao desconectar Google Agenda."));
+  //   } finally {
+  //     setGoogleDisconnecting(false);
+  //   }
+  // };
+  // GOOGLE_CALENDAR_DISABLED_END
 
   useEffect(() => {
     if (member) {
@@ -139,6 +157,9 @@ export default function PerfilPage() {
       setEditBirthDate(member.birth_date ?? "");
       setEditRegion(member.region ?? "");
       setEditPhone(formatPhone(member.phone ?? ""));
+      setEditPix(member.pix ?? "");
+      setEditEmergencyContactName(member.emergency_contact_name ?? "");
+      setEditEmergencyContactPhone(formatPhone(member.emergency_contact_phone ?? ""));
       setPhotoFile(null);
     }
   }, [member]);
@@ -203,7 +224,10 @@ export default function PerfilPage() {
       editEmail.trim() !== member.email ||
       editBirthDate !== (member.birth_date ?? "") ||
       editRegion.trim() !== (member.region ?? "") ||
-      editPhone.trim() !== (member.phone ?? ""));
+      editPhone.trim() !== (member.phone ?? "") ||
+      editPix.trim() !== (member.pix ?? "") ||
+      editEmergencyContactName.trim() !== (member.emergency_contact_name ?? "") ||
+      editEmergencyContactPhone.trim() !== (member.emergency_contact_phone ?? ""));
   const hasPhotoChange = !!photoFile;
   const hasChanges = !!hasProfileChanges || hasPhotoChange;
 
@@ -218,6 +242,9 @@ export default function PerfilPage() {
     const trimmedEmail = editEmail.trim();
     const trimmedRegion = editRegion.trim();
     const trimmedPhone = editPhone.trim();
+    const trimmedPix = editPix.trim();
+    const trimmedEmergencyContactName = editEmergencyContactName.trim();
+    const trimmedEmergencyContactPhone = editEmergencyContactPhone.trim();
     const birthDateValue = editBirthDate;
 
     if (
@@ -253,6 +280,9 @@ export default function PerfilPage() {
           birth_date: birthDateValue,
           region: trimmedRegion,
           phone: trimmedPhone,
+          pix: trimmedPix || null,
+          emergency_contact_name: trimmedEmergencyContactName || null,
+          emergency_contact_phone: trimmedEmergencyContactPhone || null,
         });
         setMember((current) =>
           current
@@ -265,6 +295,9 @@ export default function PerfilPage() {
                 birth_date: birthDateValue,
                 region: trimmedRegion,
                 phone: trimmedPhone,
+                pix: trimmedPix || null,
+                emergency_contact_name: trimmedEmergencyContactName || null,
+                emergency_contact_phone: trimmedEmergencyContactPhone || null,
               }
             : current
         );
@@ -539,6 +572,39 @@ export default function PerfilPage() {
                       placeholder="(61) 99999-9999"
                     />
                   </label>
+                  <label className="field full" htmlFor="profilePix">
+                    <span>Chave Pix</span>
+                    <input
+                      id="profilePix"
+                      className="input"
+                      value={editPix}
+                      onChange={(e) => setEditPix(e.target.value)}
+                      placeholder="CPF, e-mail, celular ou chave aleatória"
+                    />
+                  </label>
+                  <label className="field full" htmlFor="profileEmergencyContactName">
+                    <span>Contato de emergência — quem é</span>
+                    <input
+                      id="profileEmergencyContactName"
+                      className="input"
+                      value={editEmergencyContactName}
+                      onChange={(e) => setEditEmergencyContactName(e.target.value)}
+                      placeholder="Ex: Mãe, Pai, Cônjuge..."
+                    />
+                  </label>
+                  <label className="field full" htmlFor="profileEmergencyContactPhone">
+                    <span>Contato de emergência — telefone</span>
+                    <input
+                      id="profileEmergencyContactPhone"
+                      className="input"
+                      type="tel"
+                      inputMode="tel"
+                      value={editEmergencyContactPhone}
+                      onChange={(e) => setEditEmergencyContactPhone(formatPhone(e.target.value))}
+                      onBlur={(e) => setEditEmergencyContactPhone(formatPhone(e.target.value))}
+                      placeholder="(61) 99999-9999"
+                    />
+                  </label>
                 </div>
                 <div className="form-actions">
                   <p className="helper">Revise antes de salvar.</p>
@@ -564,6 +630,102 @@ export default function PerfilPage() {
                 )}
               </article>
             </form>
+
+            {/* GOOGLE_CALENDAR_DISABLED_START
+            <section className="report-panel google-panel">
+              <div className="google-panel-header">
+                <div className="google-panel-title-row">
+                  <h2 className="section-title">Google Agenda</h2>
+                  {member.google_connected && (
+                    <span className="google-badge-connected">Conectado</span>
+                  )}
+                </div>
+                <p className="google-panel-subtitle">
+                  {member.google_connected
+                    ? "Sua conta Google está conectada e sincronizando eventos."
+                    : "Conecte sua conta Google para sincronizar eventos."}
+                </p>
+              </div>
+
+              {member.google_connected ? (
+                <>
+                  <div className="google-info-grid">
+                    <div>
+                      <p className="google-info-item">
+                        <span className="google-info-label">Conta conectada:</span>{" "}
+                        <span className="google-info-value">{member.google_email ?? "—"}</span>
+                      </p>
+                      <p className="google-info-item">
+                        <span className="google-info-label">Última sincronização:</span>{" "}
+                        <span className="google-info-value">
+                          {member.google_last_sync
+                            ? new Date(member.google_last_sync).toLocaleString("pt-BR")
+                            : "—"}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="google-actions">
+                    <button
+                      type="button"
+                      className="button secondary"
+                      disabled={googleConnecting}
+                      onClick={async () => {
+                        setGoogleConnecting(true);
+                        setGoogleMsg(null);
+                        try {
+                          await startGoogleOAuth();
+                        } catch {
+                          setGoogleMsg("Erro ao iniciar reconexão com Google Agenda.");
+                          setGoogleConnecting(false);
+                        }
+                      }}
+                    >
+                      {googleConnecting ? "Redirecionando..." : "Reconectar conta"}
+                    </button>
+                    <button
+                      type="button"
+                      className="button danger"
+                      onClick={handleDisconnectGoogle}
+                      disabled={googleDisconnecting}
+                    >
+                      {googleDisconnecting ? "Desconectando..." : "Desconectar"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    className="button"
+                    disabled={googleConnecting}
+                    onClick={async () => {
+                      setGoogleConnecting(true);
+                      setGoogleMsg(null);
+                      try {
+                        await startGoogleOAuth();
+                      } catch {
+                        setGoogleMsg("Erro ao iniciar conexão com Google Agenda.");
+                        setGoogleConnecting(false);
+                      }
+                    }}
+                  >
+                    {googleConnecting ? "Redirecionando..." : "Conectar Google Agenda"}
+                  </button>
+                </div>
+              )}
+
+              {googleMsg && (
+                <p
+                  className={googleMsg.includes("sucesso") || googleMsg.includes("desconectado") ? "text-green-600" : "text-red-500"}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {googleMsg}
+                </p>
+              )}
+            </section>
+            GOOGLE_CALENDAR_DISABLED_END */}
 
             <section className="report-panel">
               <div className="report-header">

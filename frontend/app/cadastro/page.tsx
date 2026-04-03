@@ -3,7 +3,7 @@
 import './page.css';
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getErrorMessage, registerUser } from "../../lib/api";
 import { isStrongPassword, isValidCPF } from "../../lib/validators";
 import logo from "../../assets/logo.png";
@@ -18,6 +18,9 @@ export default function CadastroPage() {
     birth_date: "",
     region: "",
     phone: "",
+    pix: "",
+    emergency_contact_name: "",
+    emergency_contact_phone: "",
     role: "recreador",
     password: "",
     confirmPassword: "",
@@ -62,27 +65,23 @@ export default function CadastroPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const canSubmit = useMemo(() => {
-    return (
-      formData.name.trim() &&
-      formData.last_name.trim() &&
-      formData.cpf.trim() &&
-      formData.email.trim() &&
-      formData.birth_date &&
-      formData.region.trim() &&
-      formData.phone.trim() &&
-      formData.role &&
-      formData.password.trim() &&
-      formData.confirmPassword.trim()
-    );
-  }, [formData]);
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (loading) return;
 
     setError(null);
     setSuccess(null);
+
+    if (!formData.name.trim()) { setError("Nome é obrigatório."); return; }
+    if (!formData.last_name.trim()) { setError("Sobrenome é obrigatório."); return; }
+    if (!formData.cpf.trim()) { setError("CPF é obrigatório."); return; }
+    if (!formData.birth_date) { setError("Data de nascimento é obrigatória."); return; }
+    if (!formData.region.trim()) { setError("Região / Cidade é obrigatória."); return; }
+    if (!formData.phone.trim()) { setError("Telefone é obrigatório."); return; }
+    if (!formData.pix.trim()) { setError("Chave Pix é obrigatória."); return; }
+    if (!formData.email.trim()) { setError("E-mail é obrigatório."); return; }
+    if (!formData.password.trim()) { setError("Senha é obrigatória."); return; }
+    if (!formData.confirmPassword.trim()) { setError("Confirme a senha."); return; }
 
     if (!isValidCPF(formData.cpf)) {
       setError("CPF inválido. Verifique os dígitos.");
@@ -110,6 +109,9 @@ export default function CadastroPage() {
         birth_date: formData.birth_date,
         region: formData.region.trim(),
         phone: formData.phone.trim(),
+        pix: formData.pix.trim(),
+        emergency_contact_name: formData.emergency_contact_name.trim() || undefined,
+        emergency_contact_phone: formData.emergency_contact_phone.trim() || undefined,
         role: formData.role,
         password: formData.password,
       });
@@ -219,6 +221,20 @@ export default function CadastroPage() {
                 disabled={loading}
               />
             </label>
+            <label className="login-field" htmlFor="reg-pix">
+              Chave Pix
+              <input
+                id="reg-pix"
+                type="text"
+                name="pix"
+                required
+                aria-required="true"
+                placeholder="CPF, e-mail, celular ou chave aleatória"
+                value={formData.pix}
+                onChange={(e) => handleChange("pix", e.target.value)}
+                disabled={loading}
+              />
+            </label>
             <label className="login-field" htmlFor="reg-role">
               Função
               <select
@@ -233,6 +249,31 @@ export default function CadastroPage() {
                 <option value="recreador">Recreador</option>
                 <option value="animador">Animador</option>
               </select>
+            </label>
+            <label className="login-field" htmlFor="reg-emergency-contact-name">
+              Contato de emergência<span style={{ fontWeight: 400, color: "#888" }}>(opcional)</span>
+              <input
+                id="reg-emergency-contact-name"
+                type="text"
+                name="emergency_contact_name"
+                placeholder="Mãe, Pai, Cônjuge..."
+                value={formData.emergency_contact_name}
+                onChange={(e) => handleChange("emergency_contact_name", e.target.value)}
+                disabled={loading}
+              />
+            </label>
+            <label className="login-field" htmlFor="reg-emergency-contact-phone">
+              Contato de emergência<span style={{ fontWeight: 400, color: "#888" }}>(opcional)</span>
+              <input
+                id="reg-emergency-contact-phone"
+                type="tel"
+                name="emergency_contact_phone"
+                placeholder="(61) 99999-9999"
+                inputMode="numeric"
+                value={formData.emergency_contact_phone}
+                onChange={(e) => handleChange("emergency_contact_phone", formatPhone(e.target.value))}
+                disabled={loading}
+              />
             </label>
           </fieldset>
           <fieldset className="register-fieldset">
@@ -293,7 +334,7 @@ export default function CadastroPage() {
               {success}
             </p>
           )}
-          <button className="login-button full" type="submit" disabled={!canSubmit || loading}>
+          <button className="login-button full" type="submit" disabled={loading}>
             {loading ? "Enviando..." : "Finalizar cadastro"}
           </button>
         </form>

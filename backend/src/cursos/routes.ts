@@ -3,12 +3,15 @@ import { z } from "zod";
 import { requireRole } from "../auth/guard.js";
 import { getUserById } from "../auth/store.js";
 import { prisma } from "../db/prisma.js";
-import {
-  createOrgEvent,
-  createUserEvent,
-  deleteOrgEvent,
-  updateOrgEvent,
-} from "../lib/googleCalendar.js";
+// GOOGLE_CALENDAR_DISABLED_START
+// import {
+//   createOrgEvent,
+//   createUserEvent,
+//   deleteOrgEvent,
+//   deleteUserEvent,
+//   updateOrgEvent,
+// } from "../lib/googleCalendar.js";
+// GOOGLE_CALENDAR_DISABLED_END
 import {
   addEnrollment,
   archiveCourse,
@@ -24,7 +27,8 @@ import {
   listCourses,
   removeEnrollment,
   updateCourse,
-  updateCourseCalendarEventId,
+  // updateCourseCalendarEventId, // GOOGLE_CALENDAR_DISABLED
+  // updateEnrollmentCalendarEventId, // GOOGLE_CALENDAR_DISABLED
   updateEnrollmentStatus,
 } from "./store.js";
 
@@ -211,12 +215,14 @@ export async function cursosRoutes(app: FastifyInstance) {
         capacity,
       });
 
-      // Cria evento no Google Calendar da organização (não-bloqueante)
-      createOrgEvent({ title, description, location, courseDate }).then(
-        (eventId) => {
-          if (eventId) updateCourseCalendarEventId(course.id, eventId).catch(() => {});
-        }
-      ).catch(() => {});
+      // GOOGLE_CALENDAR_DISABLED_START
+      // // Cria evento no Google Calendar da organização (não-bloqueante)
+      // createOrgEvent({ title, description, location, courseDate }).then(
+      //   (eventId) => {
+      //     if (eventId) updateCourseCalendarEventId(course.id, eventId).catch(() => {});
+      //   }
+      // ).catch(() => {});
+      // GOOGLE_CALENDAR_DISABLED_END
 
       return reply.status(201).send({
         data: { id: course.id },
@@ -307,15 +313,17 @@ export async function cursosRoutes(app: FastifyInstance) {
         capacity,
       });
 
-      // Atualiza evento no Google Calendar da organização (não-bloqueante)
-      if (updated.googleCalendarEventId) {
-        updateOrgEvent(updated.googleCalendarEventId, {
-          title: updated.title,
-          description: updated.description,
-          location: updated.location,
-          courseDate: updated.courseDate,
-        }).catch(() => {});
-      }
+      // GOOGLE_CALENDAR_DISABLED_START
+      // // Atualiza evento no Google Calendar da organização (não-bloqueante)
+      // if (updated.googleCalendarEventId) {
+      //   updateOrgEvent(updated.googleCalendarEventId, {
+      //     title: updated.title,
+      //     description: updated.description,
+      //     location: updated.location,
+      //     courseDate: updated.courseDate,
+      //   }).catch(() => {});
+      // }
+      // GOOGLE_CALENDAR_DISABLED_END
 
       return reply.status(200).send({
         data: {
@@ -359,10 +367,12 @@ export async function cursosRoutes(app: FastifyInstance) {
         });
       }
 
-      // Remove evento do Google Calendar da organização (não-bloqueante)
-      if (course.googleCalendarEventId) {
-        deleteOrgEvent(course.googleCalendarEventId).catch(() => {});
-      }
+      // GOOGLE_CALENDAR_DISABLED_START
+      // // Remove evento do Google Calendar da organização (não-bloqueante)
+      // if (course.googleCalendarEventId) {
+      //   deleteOrgEvent(course.googleCalendarEventId).catch(() => {});
+      // }
+      // GOOGLE_CALENDAR_DISABLED_END
 
       await deleteCourse(course.id);
 
@@ -514,33 +524,36 @@ export async function cursosRoutes(app: FastifyInstance) {
 
     const enrollment = await addEnrollment(course, member_id);
 
-    // Adiciona evento no Google Calendar pessoal do membro (não-bloqueante)
-    prisma.user.findUnique({
-      where: { id: member_id },
-      select: { googleAccessToken: true, googleRefreshToken: true, googleTokenExpiry: true },
-    }).then((member) => {
-      if (member?.googleAccessToken && member.googleRefreshToken) {
-        createUserEvent(
-          {
-            accessToken: member.googleAccessToken,
-            refreshToken: member.googleRefreshToken,
-            tokenExpiry: member.googleTokenExpiry,
-          },
-          {
-            title: course.title,
-            description: course.description,
-            location: course.location,
-            courseDate: course.courseDate,
-          }
-        ).catch(() => {});
-      }
-    }).catch(() => {});
+    // GOOGLE_CALENDAR_DISABLED_START
+    // // Adiciona evento no Google Calendar pessoal do membro (não-bloqueante)
+    // prisma.user.findUnique({
+    //   where: { id: member_id },
+    //   select: { googleAccessToken: true, googleRefreshToken: true, googleTokenExpiry: true },
+    // }).then((member) => {
+    //   if (member?.googleAccessToken && member.googleRefreshToken) {
+    //     createUserEvent(
+    //       {
+    //         accessToken: member.googleAccessToken,
+    //         refreshToken: member.googleRefreshToken,
+    //         tokenExpiry: member.googleTokenExpiry,
+    //       },
+    //       {
+    //         title: course.title,
+    //         description: course.description,
+    //         location: course.location,
+    //         courseDate: course.courseDate,
+    //       }
+    //     ).then((eventId) => {
+    //       if (eventId) updateEnrollmentCalendarEventId(enrollment.id, eventId).catch(() => {});
+    //     }).catch(() => {});
+    //   }
+    // }).catch(() => {});
+    // GOOGLE_CALENDAR_DISABLED_END
 
     return reply.status(201).send({
       data: {
         id: enrollment.id,
         status: enrollment.status,
-        google_calendar_synced: false, // será true assim que o evento for criado de forma assíncrona
       },
     });
   });
@@ -660,6 +673,28 @@ export async function cursosRoutes(app: FastifyInstance) {
       }
 
       await removeEnrollment(enrollment.id);
+
+      // GOOGLE_CALENDAR_DISABLED_START
+      // // Remove evento do Google Calendar pessoal do membro (não-bloqueante)
+      // if (enrollment.googleCalendarEventId) {
+      //   const calEventId = enrollment.googleCalendarEventId;
+      //   prisma.user.findUnique({
+      //     where: { id: enrollment.memberId },
+      //     select: { googleAccessToken: true, googleRefreshToken: true, googleTokenExpiry: true },
+      //   }).then((member) => {
+      //     if (member?.googleAccessToken && member.googleRefreshToken) {
+      //       deleteUserEvent(
+      //         {
+      //           accessToken: member.googleAccessToken,
+      //           refreshToken: member.googleRefreshToken,
+      //           tokenExpiry: member.googleTokenExpiry,
+      //         },
+      //         calEventId
+      //       ).catch(() => {});
+      //     }
+      //   }).catch(() => {});
+      // }
+      // GOOGLE_CALENDAR_DISABLED_END
 
       return reply.status(200).send({
         data: { id: enrollment.id },

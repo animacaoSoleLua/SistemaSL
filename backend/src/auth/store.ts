@@ -13,10 +13,18 @@ export interface UserRecord {
   birthDate?: Date;
   region?: string;
   phone?: string;
+  pix?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
   passwordHash: string;
   role: Role;
   photoUrl?: string;
-  googleConnected: boolean;
+  // GOOGLE_CALENDAR_DISABLED_START
+  // googleConnected: boolean;
+  // googleEmail?: string | null;
+  // googleUserId?: string | null;
+  // googleLastSync?: Date | null;
+  // GOOGLE_CALENDAR_DISABLED_END
 }
 
 function normalizeEmail(email: string): string {
@@ -32,10 +40,18 @@ function toUserRecord(user: {
   birthDate: Date | null;
   region: string | null;
   phone: string | null;
+  pix?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
   passwordHash: string;
   role: Role;
   photoUrl: string | null;
-  googleAccessToken?: string | null;
+  // GOOGLE_CALENDAR_DISABLED_START
+  // googleAccessToken?: string | null;
+  // googleEmail?: string | null;
+  // googleUserId?: string | null;
+  // googleLastSync?: Date | null;
+  // GOOGLE_CALENDAR_DISABLED_END
 }): UserRecord {
   return {
     id: user.id,
@@ -46,10 +62,18 @@ function toUserRecord(user: {
     birthDate: user.birthDate ?? undefined,
     region: user.region ?? undefined,
     phone: user.phone ?? undefined,
+    pix: user.pix ?? null,
+    emergencyContactName: user.emergencyContactName ?? null,
+    emergencyContactPhone: user.emergencyContactPhone ?? null,
     passwordHash: user.passwordHash,
     role: user.role,
     photoUrl: user.photoUrl ?? undefined,
-    googleConnected: !!user.googleAccessToken,
+    // GOOGLE_CALENDAR_DISABLED_START
+    // googleConnected: !!user.googleAccessToken,
+    // googleEmail: user.googleEmail ?? null,
+    // googleUserId: user.googleUserId ?? null,
+    // googleLastSync: user.googleLastSync ?? null,
+    // GOOGLE_CALENDAR_DISABLED_END
   };
 }
 
@@ -92,6 +116,9 @@ export async function createUser(input: {
   birthDate?: Date | null;
   region?: string;
   phone?: string;
+  pix?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
   role: Role;
   password?: string;
   photoUrl?: string;
@@ -113,6 +140,9 @@ export async function createUser(input: {
       birthDate: input.birthDate ?? null,
       region: input.region ?? null,
       phone: input.phone ?? null,
+      pix: input.pix ?? null,
+      emergencyContactName: input.emergencyContactName ?? null,
+      emergencyContactPhone: input.emergencyContactPhone ?? null,
       passwordHash,
       role: input.role,
       photoUrl: input.photoUrl,
@@ -142,6 +172,9 @@ export async function updateUser(
     birthDate?: Date | null;
     region?: string | null;
     phone?: string | null;
+    pix?: string | null;
+    emergencyContactName?: string | null;
+    emergencyContactPhone?: string | null;
     role?: Role;
     photoUrl?: string | null;
     passwordHash?: string;
@@ -167,6 +200,15 @@ export async function updateUser(
   }
   if (updates.phone !== undefined) {
     data.phone = updates.phone ?? null;
+  }
+  if (updates.pix !== undefined) {
+    data.pix = updates.pix ?? null;
+  }
+  if (updates.emergencyContactName !== undefined) {
+    data.emergencyContactName = updates.emergencyContactName ?? null;
+  }
+  if (updates.emergencyContactPhone !== undefined) {
+    data.emergencyContactPhone = updates.emergencyContactPhone ?? null;
   }
   if (updates.role !== undefined) {
     data.role = updates.role;
