@@ -1,0 +1,137 @@
+/* Agenda Page */
+
+.agenda-page {
+  padding: 20px 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.agenda-calendar-wrapper {
+  background: var(--panel);
+  border-radius: 16px;
+  border: 1px solid rgba(111, 76, 255, 0.12);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+/* Override FullCalendar styles to match app theme */
+.agenda-calendar-wrapper .fc {
+  font-family: inherit;
+  color: var(--text);
+}
+
+.agenda-calendar-wrapper .fc-toolbar-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.agenda-calendar-wrapper .fc-button {
+  background: var(--accent, #6f4cff);
+  border-color: var(--accent, #6f4cff);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+  transition: opacity 0.15s;
+}
+
+.agenda-calendar-wrapper .fc-button:hover:not(:disabled) {
+  opacity: 0.85;
+  background: var(--accent, #6f4cff);
+  border-color: var(--accent, #6f4cff);
+}
+
+.agenda-calendar-wrapper .fc-button-active,
+.agenda-calendar-wrapper .fc-button:not(:disabled).fc-button-active {
+  background: var(--accent, #6f4cff);
+  border-color: var(--accent, #6f4cff);
+  opacity: 1;
+  filter: brightness(0.85);
+}
+
+.agenda-calendar-wrapper .fc-day-today {
+  background: rgba(111, 76, 255, 0.07) !important;
+}
+
+.agenda-calendar-wrapper .fc-event {
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  background: var(--accent, #6f4cff);
+  cursor: pointer;
+}
+
+.agenda-calendar-wrapper .fc-col-header-cell {
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Modal overlay */
+.agenda-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.agenda-modal {
+  background: var(--panel);
+  border-radius: 18px;
+  border: 1px solid rgba(111, 76, 255, 0.18);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  padding: 28px 28px 24px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agenda-modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.agenda-modal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agenda-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.agenda-modal-field span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.agenda-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.agenda-modal-error {
+  font-size: 13px;
+  color: var(--color-danger, #e53e3e);
+}
