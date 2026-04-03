@@ -16,7 +16,7 @@
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
 | Tarefas Completas | 68/68 |
-| Ultima Tarefa | MELHORIA-100 |
+| Ultima Tarefa | MELHORIA-101 |
 
 ---
 
@@ -177,6 +177,26 @@ Ver `backend/.env.example` — configurar `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SEC
 ---
 
 ## Ultima Tarefa Concluida
+
+### MELHORIA-101: Correcao final de comentario quebrado no backend
+
+**Epic:** Integracao com Google Calendar
+**User Story:** O backend deve compilar no deploy sem travar por erro de sintaxe
+**API:** Backend (modulo Google)
+
+**Descricao:** Ajuste dos comentarios no topo dos arquivos do Google para remover o erro `TS1010: '*/' expected` durante o `npm run build`.
+
+**O que mudou:**
+- Corrigido o comentario inicial de `backend/src/google/routes.ts`.
+- Corrigido o comentario inicial de `backend/src/lib/googleCalendar.ts`.
+- Fechado corretamente o bloco de documentacao acima de `resolveUserId`.
+- Build do backend validado com sucesso apos a correcao.
+
+**Status:** Concluida
+
+**Criterios de Conclusao:**
+- [x] Erro `TS1010: '*/' expected` removido.
+- [x] Comando `npm run build` finaliza com sucesso no backend.
 
 ### MELHORIA-100: Correcao de build do backend no deploy
 

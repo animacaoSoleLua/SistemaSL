@@ -1,4 +1,4 @@
-/* GOOGLE_CALENDAR_DISABLED_START
+/*
  * Serviço do Google Calendar
  *
  * Dois fluxos:
@@ -7,6 +7,7 @@
  *
  * Todos os erros são logados mas NÃO bloqueiam a operação principal.
  *
+ */
 
 import { google } from "googleapis";
 
