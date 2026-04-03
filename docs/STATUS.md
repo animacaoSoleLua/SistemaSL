@@ -16,11 +16,37 @@
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
 | Tarefas Completas | 68/68 |
-| Ultima Tarefa | MELHORIA-101 |
+| Ultima Tarefa | MELHORIA-102 |
 
 ---
 
 ## Tarefa Atual
+
+### MELHORIA-102: Correcao de schema Prisma para deploy do Google
+
+**Epic:** Integracao com Google Calendar
+**User Story:** O backend deve compilar no deploy sem falhar ao salvar dados do Google
+
+**Descricao:**
+Alinhamento do arquivo `backend/prisma/schema.prisma` com as migrations ja existentes para que o Prisma Client reconheca os campos do Google usados no backend durante o build.
+
+**O que mudou:**
+- Reativados no schema os campos de tokens e dados do Google no usuario.
+- Reativado no schema o campo de evento do Google em cursos.
+- Reativado no schema o campo de evento do Google em inscricoes.
+- Cliente do Prisma regenerado com o schema corrigido.
+- Build do backend validado com sucesso apos o ajuste.
+
+**Status:** Concluida
+
+**Criterios de Conclusao:**
+- [x] Erro `googleAccessToken does not exist in type UserUpdateInput` removido.
+- [x] Comando `npm run build` finaliza com sucesso no backend.
+
+**Próximo passo (manual):**
+Rodar novo deploy. Se o ambiente de producao ainda nao tiver aplicado as migrations mais recentes, executar `npx prisma migrate deploy` antes de subir a aplicacao.
+
+---
 
 ### INTEGRACAO-001: Google Agenda nos Cursos
 
