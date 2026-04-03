@@ -6,7 +6,7 @@
  * 2. Calendário pessoal do membro (OAuth 2.0) — evento após inscrição
  *
  * Todos os erros são logados mas NÃO bloqueiam a operação principal.
- */
+ *
 
 import { google } from "googleapis";
 
@@ -227,4 +227,3 @@ export function isGoogleCalendarConfigured(): boolean {
 export function isServiceAccountConfigured(): boolean {
   return !!GOOGLE_SERVICE_ACCOUNT_JSON;
 }
-GOOGLE_CALENDAR_DISABLED_END */

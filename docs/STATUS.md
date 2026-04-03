@@ -1,6 +1,6 @@
 # Status do Projeto - Sol e Lua
 
-**Ultima Atualizacao:** 2026-03-25
+**Ultima Atualizacao:** 2026-04-03
 **Atualizado por:** Codex
 
 ---
@@ -15,8 +15,8 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 67/67 |
-| Ultima Tarefa | MELHORIA-099 |
+| Tarefas Completas | 68/68 |
+| Ultima Tarefa | MELHORIA-100 |
 
 ---
 
@@ -177,6 +177,27 @@ Ver `backend/.env.example` — configurar `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SEC
 ---
 
 ## Ultima Tarefa Concluida
+
+### MELHORIA-100: Correcao de build do backend no deploy
+
+**Epic:** Integracao com Google Calendar
+**User Story:** O deploy do backend deve compilar sem erro para publicar a versao
+**API:** Backend (modulo Google)
+
+**Descricao:** Remocao de marcadores de comentario invalidos que quebravam a compilacao TypeScript durante o `npm run build` no Docker.
+
+**O que mudou:**
+- Removida linha invalida no final de `backend/src/google/routes.ts`.
+- Removida linha invalida no final de `backend/src/lib/googleCalendar.ts`.
+- Build do backend validado com sucesso apos a correcao.
+
+**Status:** Concluida
+
+**Criterios de Conclusao:**
+- [x] Erro `TS1161: Unterminated regular expression literal` removido.
+- [x] Comando `npm run build` finaliza com sucesso no backend.
+
+---
 
 ### MELHORIA-099: Remocao de foto com compatibilidade de versao
 

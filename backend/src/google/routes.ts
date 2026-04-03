@@ -1,5 +1,5 @@
 /* GOOGLE_CALENDAR_DISABLED_START
-/**
+/*
  * Rotas OAuth do Google Calendar
  *
  * GET  /api/v1/auth/google          — inicia fluxo OAuth (redireciona para Google)
@@ -19,7 +19,7 @@ import { verifyAccessToken } from "../auth/token.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? "http://localhost:3000";
 
-/** Resolve o userId a partir do cookie ou header Authorization (authGuard pula /api/v1/auth/*) */
+/** Resolve o userId a partir do cookie ou header Authorization (authGuard pula /api/v1/auth/*) 
 function resolveUserId(request: { cookies?: Record<string, string | undefined>; headers: Record<string, string | string[] | undefined> }): string | null {
   const cookieToken = request.cookies?.["auth_token"];
   const header = request.headers["authorization"];
@@ -120,4 +120,3 @@ export async function googleRoutes(app: FastifyInstance) {
     return reply.status(204).send();
   });
 }
-GOOGLE_CALENDAR_DISABLED_END */

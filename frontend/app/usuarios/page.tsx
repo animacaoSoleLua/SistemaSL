@@ -82,6 +82,9 @@ interface Member {
   birth_date?: string | null;
   region?: string | null;
   phone?: string | null;
+  pix?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
   role: Role;
   photo_url?: string | null;
 }
