@@ -1,9 +1,10 @@
 "use client";
 
 import "./page.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
+import { useFocusTrap } from "../../lib/useFocusTrap";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -36,9 +37,9 @@ const EMPTY_FORM: EventForm = {
   attendees: "",
 };
 
-function toDatetimeLocal(iso: string): string {
+function toDatetimeLocal(iso: string, defaultTime = "09:00"): string {
   if (!iso) return "";
-  // ISO 8601 → datetime-local input value (YYYY-MM-DDTHH:mm)
+  if (iso.length === 10) return `${iso}T${defaultTime}`;
   return iso.slice(0, 16);
 }
 
@@ -65,6 +66,9 @@ export default function AgendaPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [googleNotConnected, setGoogleNotConnected] = useState(false);
+  const trapRef = useFocusTrap(modalOpen, () => setModalOpen(false));
+  const modalTitleId = useId();
 
   useEffect(() => {
     const user = getStoredUser();
@@ -96,7 +100,7 @@ export default function AgendaPage() {
     setForm({
       title: "",
       start: toDatetimeLocal(info.startStr),
-      end: toDatetimeLocal(info.endStr),
+      end: toDatetimeLocal(info.endStr, "10:00"),
       description: "",
       attendees: "",
     });
@@ -123,6 +127,10 @@ export default function AgendaPage() {
     }
     if (!form.start || !form.end) {
       setModalError("Data/hora de início e fim são obrigatórias.");
+      return;
+    }
+    if (form.start >= form.end) {
+      setModalError("A data de fim deve ser posterior à data de início.");
       return;
     }
 
@@ -154,7 +162,13 @@ export default function AgendaPage() {
         await loadEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
       }
     } catch (err) {
-      setModalError(getErrorMessage(err, "Erro ao salvar evento."));
+      const msg = getErrorMessage(err, "Erro ao salvar evento.");
+      if (msg.includes("Conecte sua conta Google")) {
+        setGoogleNotConnected(true);
+        setModalOpen(false);
+      } else {
+        setModalError(msg);
+      }
     } finally {
       setSaving(false);
     }
@@ -181,6 +195,13 @@ export default function AgendaPage() {
 
   return (
     <main className="app-page agenda-page">
+      {googleNotConnected && (
+        <div className="agenda-notice">
+          Conecte sua conta Google no{" "}
+          <a href="/perfil" className="agenda-notice-link">Perfil</a>
+          {" "}para criar e editar eventos.
+        </div>
+      )}
       <div className="agenda-calendar-wrapper">
         <FullCalendar
           ref={calendarRef}
@@ -210,8 +231,8 @@ export default function AgendaPage() {
             if (e.target === e.currentTarget) setModalOpen(false);
           }}
         >
-          <div className="agenda-modal" role="dialog" aria-modal="true" aria-label="Evento">
-            <h2 className="agenda-modal-title">
+          <div className="agenda-modal" role="dialog" aria-modal="true" aria-labelledby={modalTitleId} ref={trapRef}>
+            <h2 className="agenda-modal-title" id={modalTitleId}>
               {editingEventId ? "Editar evento" : "Novo evento"}
             </h2>
 
