@@ -15,12 +15,37 @@
 |---------|-------|
 | Progresso Total | 100% |
 | Fase Atual | Fase 4 - Estabilidade e Produto |
-| Tarefas Completas | 68/68 |
-| Ultima Tarefa | MELHORIA-102 |
+| Tarefas Completas | 69/69 |
+| Ultima Tarefa | MELHORIA-103 |
 
 ---
 
 ## Tarefa Atual
+
+### MELHORIA-103: Atalhos de ligacao e WhatsApp no contato de emergencia
+
+**Epic:** Perfis de membros
+**User Story:** Na tela de detalhe, a equipe deve conseguir acionar rapidamente o contato de emergencia sem copiar o numero
+
+**Descricao:**
+Transformacao do numero de emergencia na tela de detalhes do membro em atalhos diretos para ligacao e WhatsApp quando o numero estiver preenchido.
+
+**O que mudou:**
+- Tela de detalhe do membro agora mostra botoes de `Ligar` e `WhatsApp` abaixo do contato de emergencia.
+- O sistema limpa o numero salvo e monta automaticamente os links no formato aceito pelo celular e pelo WhatsApp.
+- O bloco ganhou ajuste visual para manter os atalhos organizados no modal de detalhes.
+
+**Status:** Concluida
+
+**Criterios de Conclusao:**
+- [x] Quando houver numero de emergencia, aparece atalho para ligacao.
+- [x] Quando houver numero de emergencia, aparece atalho para abrir conversa no WhatsApp.
+- [x] A tela de detalhe continua abrindo normalmente sem quebrar o layout.
+
+**Próximo passo (manual):**
+Validar em celular e em WhatsApp Web se o comportamento desejado esta correto para os numeros ja cadastrados.
+
+---
 
 ### MELHORIA-102: Correcao de schema Prisma para deploy do Google
 
@@ -204,7 +229,7 @@ Ver `backend/.env.example` — configurar `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SEC
 
 ## Ultima Tarefa Concluida
 
-### MELHORIA-101: Correcao final de comentario quebrado no backend
+### MELHORIA-102: Correcao de schema Prisma para deploy do Google
 
 **Epic:** Integracao com Google Calendar
 **User Story:** O backend deve compilar no deploy sem travar por erro de sintaxe

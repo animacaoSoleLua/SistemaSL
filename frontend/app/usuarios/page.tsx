@@ -209,6 +209,32 @@ export default function UsuariosPage() {
     return formatCpf(value);
   };
 
+  const getPhoneDigits = (value?: string | null) => value?.replace(/\D/g, "") ?? "";
+
+  const getBrazilPhoneForLink = (value?: string | null) => {
+    const digits = getPhoneDigits(value);
+
+    if (digits.length === 10 || digits.length === 11) {
+      return `55${digits}`;
+    }
+
+    if (digits.length === 12 || digits.length === 13) {
+      return digits;
+    }
+
+    return "";
+  };
+
+  const getTelHref = (value?: string | null) => {
+    const digits = getBrazilPhoneForLink(value);
+    return digits ? `tel:+${digits}` : null;
+  };
+
+  const getWhatsAppHref = (value?: string | null) => {
+    const digits = getBrazilPhoneForLink(value);
+    return digits ? `https://wa.me/${digits}` : null;
+  };
+
   const loadMembers = async () => {
     setLoading(true);
     setError(null);
@@ -521,6 +547,8 @@ export default function UsuariosPage() {
   }, [users]);
 
   const selectedMemberInfo = selectedMemberDetails ?? selectedMember;
+  const emergencyTelHref = getTelHref(selectedMemberInfo?.emergency_contact_phone);
+  const emergencyWhatsAppHref = getWhatsAppHref(selectedMemberInfo?.emergency_contact_phone);
   const warnings = selectedMemberDetails?.warnings ?? [];
   const courses = selectedMemberDetails?.courses ?? [];
   const suspension = selectedMemberDetails?.suspension;
@@ -1014,13 +1042,37 @@ export default function UsuariosPage() {
                     </div>
                   )}
                   {(selectedMemberInfo.emergency_contact_name || selectedMemberInfo.emergency_contact_phone) && (
-                    <div className="member-meta-item">
+                    <div className="member-meta-item member-meta-item-emergency">
                       <span className="member-meta-label">Contato de emergência</span>
-                      <span>
-                        {[selectedMemberInfo.emergency_contact_name, selectedMemberInfo.emergency_contact_phone]
-                          .filter(Boolean)
-                          .join(" — ")}
-                      </span>
+                      <div className="member-meta-emergency">
+                        <span>
+                          {[selectedMemberInfo.emergency_contact_name, selectedMemberInfo.emergency_contact_phone]
+                            .filter(Boolean)
+                            .join(" — ")}
+                        </span>
+                        {selectedMemberInfo.emergency_contact_phone && (
+                          <div className="member-meta-actions">
+                            {emergencyTelHref && (
+                              <a
+                                className="member-meta-link"
+                                href={emergencyTelHref}
+                              >
+                                Ligar
+                              </a>
+                            )}
+                            {emergencyWhatsAppHref && (
+                              <a
+                                className="member-meta-link"
+                                href={emergencyWhatsAppHref}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                WhatsApp
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
