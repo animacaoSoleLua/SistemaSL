@@ -12,7 +12,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { advertenciasRoutes } from "./advertencias/routes.js";
 import { feedbacksRoutes } from "./feedbacks/routes.js";
-import { googleRoutes } from "./google/routes.js";
+// import { googleRoutes } from "./google/routes.js"; // GOOGLE_CALENDAR_DISABLED
 import { authGuard, requireRole } from "./auth/guard.js";
 import { authRoutes } from "./auth/routes.js";
 import { cursosRoutes } from "./cursos/routes.js";
@@ -191,7 +191,7 @@ export function buildServer(): FastifyInstance {
   app.register(relatoriosRoutes);
   app.register(advertenciasRoutes);
   app.register(feedbacksRoutes);
-  app.register(googleRoutes);
+  // app.register(googleRoutes); // GOOGLE_CALENDAR_DISABLED
   app.register(dashboardRoutes);
 
   app.get("/api/v1/secure/ping", async () => ({ status: "ok" }));

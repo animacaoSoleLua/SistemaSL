@@ -38,6 +38,9 @@ const RegisterSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Data de nascimento invalida"),
   region: z.string().min(1, "Regiao invalida"),
   phone: z.string().min(1, "Telefone invalido"),
+  pix: z.string().optional(),
+  emergency_contact_name: z.string().optional(),
+  emergency_contact_phone: z.string().optional(),
   role: z.enum(["animador", "recreador"] as const, {
     message: "Papel invalido",
   }),
@@ -217,6 +220,9 @@ export async function authRoutes(app: FastifyInstance) {
       birth_date,
       region,
       phone,
+      pix,
+      emergency_contact_name,
+      emergency_contact_phone,
       role,
       password,
     } = parsed.data;
@@ -247,6 +253,9 @@ export async function authRoutes(app: FastifyInstance) {
       birthDate: parsedBirthDate,
       region: region.trim(),
       phone: phone.trim(),
+      pix: pix?.trim() || undefined,
+      emergencyContactName: emergency_contact_name?.trim() || undefined,
+      emergencyContactPhone: emergency_contact_phone?.trim() || undefined,
       role,
       password,
     });

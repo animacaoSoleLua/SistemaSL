@@ -70,6 +70,9 @@ const UpdateMemberSchema = z.object({
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   region: z.string().min(1).optional(),
   phone: z.string().min(1).optional(),
+  pix: z.string().nullable().optional(),
+  emergency_contact_name: z.string().nullable().optional(),
+  emergency_contact_phone: z.string().nullable().optional(),
   role: z.enum(["admin", "animador", "recreador"] as const).optional(),
   photo_url: z.string().nullable().optional(),
 });
@@ -232,6 +235,9 @@ function toMemberSummary(user: {
   birthDate?: Date;
   region?: string;
   phone?: string;
+  pix?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
   role: Role;
   photoUrl?: string;
 }) {
@@ -244,6 +250,9 @@ function toMemberSummary(user: {
     birth_date: user.birthDate ? formatDate(user.birthDate) : null,
     region: user.region ?? null,
     phone: user.phone ?? null,
+    pix: user.pix ?? null,
+    emergency_contact_name: user.emergencyContactName ?? null,
+    emergency_contact_phone: user.emergencyContactPhone ?? null,
     role: user.role,
     photo_url: user.photoUrl ?? null,
   };
@@ -462,9 +471,17 @@ export async function membrosRoutes(app: FastifyInstance) {
         birth_date: member.birthDate ? formatDate(member.birthDate) : null,
         region: member.region ?? null,
         phone: member.phone ?? null,
+        pix: member.pix ?? null,
+        emergency_contact_name: member.emergencyContactName ?? null,
+        emergency_contact_phone: member.emergencyContactPhone ?? null,
         role: member.role,
         photo_url: member.photoUrl ?? null,
-        google_connected: member.googleConnected,
+        // GOOGLE_CALENDAR_DISABLED_START
+        // google_connected: member.googleConnected,
+        // google_email: member.googleEmail ?? null,
+        // google_user_id: member.googleUserId ?? null,
+        // google_last_sync: member.googleLastSync ? member.googleLastSync.toISOString() : null,
+        // GOOGLE_CALENDAR_DISABLED_END
         courses: (
           await Promise.all(
             (await listEnrollmentsForMember(member.id)).map(
@@ -571,6 +588,9 @@ export async function membrosRoutes(app: FastifyInstance) {
       birth_date,
       region,
       phone,
+      pix,
+      emergency_contact_name,
+      emergency_contact_phone,
       role,
       photo_url,
     } = parsedBody.data;
@@ -583,6 +603,9 @@ export async function membrosRoutes(app: FastifyInstance) {
       !birth_date &&
       !region &&
       !phone &&
+      pix === undefined &&
+      emergency_contact_name === undefined &&
+      emergency_contact_phone === undefined &&
       !role &&
       photo_url === undefined
     ) {
@@ -622,6 +645,9 @@ export async function membrosRoutes(app: FastifyInstance) {
       birthDate: parsedBirthDate,
       region: region?.trim(),
       phone: phone?.trim(),
+      pix: pix !== undefined ? (pix?.trim() || null) : undefined,
+      emergencyContactName: emergency_contact_name !== undefined ? (emergency_contact_name?.trim() || null) : undefined,
+      emergencyContactPhone: emergency_contact_phone !== undefined ? (emergency_contact_phone?.trim() || null) : undefined,
       role: isAdmin ? role : undefined,
       photoUrl: photo_url,
     });

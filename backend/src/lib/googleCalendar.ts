@@ -1,4 +1,4 @@
-/**
+/* GOOGLE_CALENDAR_DISABLED_START
  * Serviço do Google Calendar
  *
  * Dois fluxos:
@@ -38,7 +38,10 @@ const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI ?? "";
 const GOOGLE_CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID ?? "primary";
 const GOOGLE_SERVICE_ACCOUNT_JSON = process.env.GOOGLE_SERVICE_ACCOUNT_JSON ?? "";
 
-const SCOPES = ["https://www.googleapis.com/auth/calendar.events"];
+const SCOPES = [
+  "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/userinfo.email",
+];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -49,7 +52,11 @@ function makeEndTime(start: Date): Date {
 }
 
 function toRfc3339(date: Date): string {
-  return date.toISOString();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}` +
+    `T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`
+  );
 }
 
 function buildEventBody(data: CourseEventData) {
@@ -92,6 +99,19 @@ export async function exchangeCodeForTokens(
     accessToken: tokens.access_token ?? "",
     refreshToken: tokens.refresh_token ?? "",
     expiry: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+  };
+}
+
+export async function fetchGoogleUserInfo(
+  accessToken: string
+): Promise<{ email: string | null; userId: string | null }> {
+  const client = getOAuthClient();
+  client.setCredentials({ access_token: accessToken });
+  const oauth2 = google.oauth2({ version: "v2", auth: client });
+  const { data } = await oauth2.userinfo.get();
+  return {
+    email: data.email ?? null,
+    userId: data.id ?? null,
   };
 }
 
@@ -207,3 +227,4 @@ export function isGoogleCalendarConfigured(): boolean {
 export function isServiceAccountConfigured(): boolean {
   return !!GOOGLE_SERVICE_ACCOUNT_JSON;
 }
+GOOGLE_CALENDAR_DISABLED_END */

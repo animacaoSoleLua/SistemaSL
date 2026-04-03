@@ -51,9 +51,17 @@ model User {
   warnings             Warning[]              @relation("WarningsForMember")
   warningsMade         Warning[]              @relation("WarningsByCreator")
   suspensions          Suspension[]
-  googleAccessToken    String?                @map("google_access_token") @db.Text
-  googleRefreshToken   String?                @map("google_refresh_token") @db.Text
-  googleTokenExpiry    DateTime?              @map("google_token_expiry")
+  pix                  String?                @map("pix") @db.VarChar(255)
+  emergencyContactName String?                @map("emergency_contact_name") @db.VarChar(100)
+  emergencyContactPhone String?               @map("emergency_contact_phone") @db.VarChar(40)
+  // GOOGLE_CALENDAR_DISABLED_START
+  // googleAccessToken    String?                @map("google_access_token") @db.Text
+  // googleRefreshToken   String?                @map("google_refresh_token") @db.Text
+  // googleTokenExpiry    DateTime?              @map("google_token_expiry")
+  // googleEmail          String?                @map("google_email") @db.Text
+  // googleUserId         String?                @map("google_user_id") @db.Text
+  // googleLastSync       DateTime?              @map("google_last_sync")
+  // GOOGLE_CALENDAR_DISABLED_END
   createdFeedbacks     ClientFeedback[]       @relation("FeedbacksCreatedBy")
   clientFeedbacks      ClientFeedbackMember[] @relation("ClientFeedbacksForMember")
 
@@ -129,7 +137,7 @@ model Course {
   location     String?            @db.VarChar(150)
   capacity                Int?
   archivedAt              DateTime?          @map("archived_at")
-  googleCalendarEventId   String?            @map("google_calendar_event_id") @db.Text
+  // googleCalendarEventId   String?            @map("google_calendar_event_id") @db.Text // GOOGLE_CALENDAR_DISABLED
   createdAt               DateTime           @default(now()) @map("created_at")
   creator      User?              @relation("CoursesByCreator", fields: [createdBy], references: [id], onDelete: SetNull)
   instructor   User?              @relation("CoursesByInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
@@ -139,13 +147,14 @@ model Course {
 }
 
 model CourseEnrollment {
-  id        String           @id @default(uuid()) @db.Uuid
-  courseId  String           @map("course_id") @db.Uuid
-  memberId  String           @map("member_id") @db.Uuid
-  status    EnrollmentStatus
-  createdAt DateTime         @default(now()) @map("created_at")
-  course    Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  member    User             @relation("EnrollmentsByMember", fields: [memberId], references: [id], onDelete: Cascade)
+  id                    String           @id @default(uuid()) @db.Uuid
+  courseId              String           @map("course_id") @db.Uuid
+  memberId              String           @map("member_id") @db.Uuid
+  status                EnrollmentStatus
+  // googleCalendarEventId String?          @map("google_calendar_event_id") @db.Text // GOOGLE_CALENDAR_DISABLED
+  createdAt             DateTime         @default(now()) @map("created_at")
+  course                Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  member                User             @relation("EnrollmentsByMember", fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([memberId], map: "idx_course_member")
   @@map("course_enrollments")

@@ -59,6 +59,8 @@ export default function CursosPage() {
   const modalDescriptionId = useId();
   const deleteModalTitleId = useId();
   const deleteModalDescriptionId = useId();
+  const unenrollModalTitleId = useId();
+  const unenrollModalDescriptionId = useId();
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -99,6 +101,7 @@ export default function CursosPage() {
     id: string;
     title: string;
   } | null>(null);
+  const [unenrollTarget, setUnenrollTarget] = useState<Course | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const finalizeModalTitleId = useId();
@@ -119,6 +122,7 @@ export default function CursosPage() {
   const createEditTrapRef = useFocusTrap(modalOpen);
   const viewTrapRef = useFocusTrap(viewModalOpen);
   const deleteTrapRef = useFocusTrap(!!deleteTarget);
+  const unenrollTrapRef = useFocusTrap(!!unenrollTarget);
   const finalizeTrapRef = useFocusTrap(finalizeModalOpen);
 
   useEffect(() => {
@@ -255,8 +259,9 @@ export default function CursosPage() {
     }
   };
 
-  const handleUnenroll = async (course: Course) => {
-    if (!currentUser) return;
+  const confirmUnenroll = async () => {
+    if (!currentUser || !unenrollTarget) return;
+    const course = unenrollTarget;
     const enrollment = enrolledCourses[course.id];
     if (!enrollment || enrollment.status !== "enrolled") return;
     setUnenrollingId(course.id);
@@ -288,6 +293,7 @@ export default function CursosPage() {
       });
     } finally {
       setUnenrollingId(null);
+      setUnenrollTarget(null);
     }
   };
 
@@ -736,7 +742,7 @@ export default function CursosPage() {
                           className="button danger"
                           onClick={(event) => {
                             event.stopPropagation();
-                            handleUnenroll(course);
+                            setUnenrollTarget(course);
                           }}
                           disabled={unenrollingId === course.id}
                         >
@@ -891,6 +897,67 @@ export default function CursosPage() {
                 disabled={deletingId === deleteTarget.id}
               >
                 {deletingId === deleteTarget.id ? "Apagando..." : "Apagar curso"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {unenrollTarget && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={unenrollModalTitleId}
+          aria-describedby={unenrollModalDescriptionId}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              if (!unenrollingId) setUnenrollTarget(null);
+            }
+          }}
+        >
+          <div className="modal-card confirm-modal" ref={unenrollTrapRef}>
+            <header className="modal-header">
+              <div>
+                <h2 className="section-title" id={unenrollModalTitleId}>
+                  Sair do curso
+                </h2>
+                <p id={unenrollModalDescriptionId}>
+                  Você perderá sua vaga e precisará se inscrever novamente.
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Fechar modal de confirmação"
+                onClick={() => setUnenrollTarget(null)}
+                disabled={!!unenrollingId}
+              >
+                <FiX aria-hidden="true" />
+              </button>
+            </header>
+            <div className="confirm-body">
+              <div className="confirm-text">
+                <p>
+                  Tem certeza que deseja sair do curso{" "}
+                  <strong>{unenrollTarget.title}</strong>?
+                </p>
+              </div>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setUnenrollTarget(null)}
+                disabled={!!unenrollingId}
+              >
+                Cancelar
+              </button>
+              <button
+                className="button danger"
+                type="button"
+                onClick={confirmUnenroll}
+                disabled={!!unenrollingId}
+              >
+                {unenrollingId ? "Saindo..." : "Sair do curso"}
               </button>
             </div>
           </div>

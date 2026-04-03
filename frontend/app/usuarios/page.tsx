@@ -28,8 +28,6 @@ import { getStoredUser, roleLabels, type Role, type StoredUser } from "../../lib
 import { useFocusTrap } from "../../lib/useFocusTrap";
 import { isStrongPassword, isValidCPF } from "../../lib/validators";
 
-// ── Reducer: formulário de membro ───────────────────────────────────────────
-
 interface MemberFormState {
   name: string;
   last_name: string;
@@ -125,6 +123,9 @@ interface MemberDetails {
   birth_date?: string | null;
   region?: string | null;
   phone?: string | null;
+  pix?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
   role: Role;
   photo_url?: string | null;
   courses?: MemberCourse[];
@@ -168,12 +169,10 @@ export default function UsuariosPage() {
   const [photoLightbox, setPhotoLightbox] = useState<{ url: string; name: string } | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [detailsTab, setDetailsTab] = useState<"dados" | "cursos" | "advertencias" | "feedbacks">("dados");
-
   const memberModalTrapRef = useFocusTrap(modalOpen);
   const deleteTrapRef = useFocusTrap(!!deleteTarget);
   const cpfTrapRef = useFocusTrap(cpfModalOpen);
   const detailsTrapRef = useFocusTrap(detailsModalOpen);
-
   const isAdmin = currentUser?.role === "admin";
 
   const formatPhone = (value: string) => {
@@ -1003,6 +1002,22 @@ export default function UsuariosPage() {
                     <div className="member-meta-item">
                       <span className="member-meta-label">Telefone</span>
                       <span>{selectedMemberInfo.phone}</span>
+                    </div>
+                  )}
+                  {selectedMemberInfo.pix && (
+                    <div className="member-meta-item">
+                      <span className="member-meta-label">Pix</span>
+                      <span>{selectedMemberInfo.pix}</span>
+                    </div>
+                  )}
+                  {(selectedMemberInfo.emergency_contact_name || selectedMemberInfo.emergency_contact_phone) && (
+                    <div className="member-meta-item">
+                      <span className="member-meta-label">Contato de emergência</span>
+                      <span>
+                        {[selectedMemberInfo.emergency_contact_name, selectedMemberInfo.emergency_contact_phone]
+                          .filter(Boolean)
+                          .join(" — ")}
+                      </span>
                     </div>
                   )}
                 </div>

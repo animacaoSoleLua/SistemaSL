@@ -1,3 +1,4 @@
+/* GOOGLE_CALENDAR_DISABLED_START
 /**
  * Rotas OAuth do Google Calendar
  *
@@ -10,16 +11,31 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "../db/prisma.js";
 import {
   exchangeCodeForTokens,
+  fetchGoogleUserInfo,
   generateAuthUrl,
   isGoogleCalendarConfigured,
 } from "../lib/googleCalendar.js";
+import { verifyAccessToken } from "../auth/token.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? "http://localhost:3000";
 
+/** Resolve o userId a partir do cookie ou header Authorization (authGuard pula /api/v1/auth/*) */
+function resolveUserId(request: { cookies?: Record<string, string | undefined>; headers: Record<string, string | string[] | undefined> }): string | null {
+  const cookieToken = request.cookies?.["auth_token"];
+  const header = request.headers["authorization"];
+  const raw = typeof header === "string" ? header : undefined;
+  const token = cookieToken ?? (raw?.startsWith("Bearer ") ? raw.slice(7) : undefined);
+  if (!token) return null;
+  const payload = verifyAccessToken(token);
+  return payload?.sub ?? null;
+}
+
 export async function googleRoutes(app: FastifyInstance) {
-  // GET /api/v1/auth/google — inicia OAuth, precisa estar logado
+  // GET /api/v1/auth/google — retorna a URL OAuth para o frontend redirecionar
+  // (authGuard pula /api/v1/auth/*, então verificamos o token manualmente)
   app.get("/api/v1/auth/google", async (request, reply) => {
-    if (!request.user) {
+    const userId = resolveUserId(request as never);
+    if (!userId) {
       return reply.status(401).send({ error: "unauthorized", message: "Token ausente" });
     }
 
@@ -30,14 +46,11 @@ export async function googleRoutes(app: FastifyInstance) {
       });
     }
 
-    // Estado = userId codificado em base64 (sistema interno, sem dados sensíveis na URL)
-    const state = Buffer.from(JSON.stringify({ userId: request.user.id, ts: Date.now() })).toString("base64url");
-
+    const state = Buffer.from(JSON.stringify({ userId, ts: Date.now() })).toString("base64url");
     const authUrl = generateAuthUrl();
-    // Adiciona state na URL (generateAuthUrl() não inclui state, fazemos manualmente)
     const urlWithState = `${authUrl}&state=${encodeURIComponent(state)}`;
 
-    return reply.redirect(urlWithState);
+    return reply.send({ url: urlWithState });
   });
 
   // GET /api/v1/auth/google/callback — callback do Google
@@ -65,6 +78,7 @@ export async function googleRoutes(app: FastifyInstance) {
 
     try {
       const tokens = await exchangeCodeForTokens(query.code);
+      const userInfo = await fetchGoogleUserInfo(tokens.accessToken).catch(() => ({ email: null, userId: null }));
 
       await prisma.user.update({
         where: { id: userId },
@@ -72,6 +86,9 @@ export async function googleRoutes(app: FastifyInstance) {
           googleAccessToken: tokens.accessToken,
           googleRefreshToken: tokens.refreshToken,
           googleTokenExpiry: tokens.expiry,
+          googleEmail: userInfo.email,
+          googleUserId: userInfo.userId,
+          googleLastSync: new Date(),
         },
       });
 
@@ -83,19 +100,24 @@ export async function googleRoutes(app: FastifyInstance) {
 
   // DELETE /api/v1/auth/google — desconecta conta Google
   app.delete("/api/v1/auth/google", async (request, reply) => {
-    if (!request.user) {
+    const userId = resolveUserId(request as never);
+    if (!userId) {
       return reply.status(401).send({ error: "unauthorized", message: "Token ausente" });
     }
 
     await prisma.user.update({
-      where: { id: request.user.id },
+      where: { id: userId },
       data: {
         googleAccessToken: null,
         googleRefreshToken: null,
         googleTokenExpiry: null,
+        googleEmail: null,
+        googleUserId: null,
+        googleLastSync: null,
       },
     });
 
     return reply.status(204).send();
   });
 }
+GOOGLE_CALENDAR_DISABLED_END */
