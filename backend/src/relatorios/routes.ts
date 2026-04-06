@@ -17,7 +17,7 @@ import {
 } from "./store.js";
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
-const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
+const MAX_VIDEO_SIZE_BYTES = 15 * 1024 * 1024;
 const uploadsRoot = process.env.UPLOADS_DIR
   ? resolve(process.env.UPLOADS_DIR)
   : join(process.cwd(), "uploads");

@@ -2,9 +2,9 @@
 
 import './page.css';
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getErrorMessage, login } from "../../lib/api";
+import { login } from "../../lib/api";
 import { getDefaultRoute, type Role } from "../../lib/auth";
 import logo from "../../assets/logo.png";
 
@@ -14,6 +14,37 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const credentialRequestInFlight = useRef(false);
+
+  // Auto-preencher credenciais salvas ao carregar a página
+  useEffect(() => {
+    const loadSavedCredentials = async () => {
+      // Evitar múltiplas requisições concorrentes à Credential API
+      if (credentialRequestInFlight.current) {
+        return;
+      }
+
+      if ("PasswordCredential" in window && navigator.credentials) {
+        try {
+          credentialRequestInFlight.current = true;
+          const credential = await navigator.credentials.get({
+            password: true,
+          });
+
+          if (credential && credential instanceof PasswordCredential) {
+            setEmail(credential.id);
+            setPassword(credential.password);
+          }
+        } catch (err) {
+          // Silently fail if credentials can't be retrieved
+        } finally {
+          credentialRequestInFlight.current = false;
+        }
+      }
+    };
+
+    loadSavedCredentials();
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -27,7 +58,25 @@ export default function LoginPage() {
       sessionStorage.setItem("authToken", response.data.access_token);
       sessionStorage.setItem("user", JSON.stringify(response.data.user));
       window.dispatchEvent(new Event("user-updated"));
+
       const role = response.data.user.role as Role;
+
+      // Salvar credencial usando Credential Management API
+      if ("PasswordCredential" in window && navigator.credentials) {
+        try {
+          const credential = new PasswordCredential({
+            id: email,
+            password: password,
+            name: response.data.user.name,
+          });
+          await navigator.credentials.store(credential);
+        } catch (err) {
+          // Silently fail if credentials can't be stored
+        }
+      }
+
+      // Aguardar um pouco para o navegador exibir prompt de salvar senha
+      await new Promise(resolve => setTimeout(resolve, 500));
       router.push(getDefaultRoute(role));
     } catch (err: unknown) {
       setError("Credenciais invalidas.");

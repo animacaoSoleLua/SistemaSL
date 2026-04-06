@@ -29,7 +29,8 @@ export function getStoredUser(): StoredUser | null {
 }
 
 export function getDefaultRoute(role: Role): string {
-  if (role === "admin") return "/usuarios";
+  if (role === "admin") return "/dashboard";
+  if (role === "animador") return "/relatorios";
   return "/perfil";
 }
 

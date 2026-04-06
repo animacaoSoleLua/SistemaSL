@@ -1,3 +1,10 @@
+export function normalizeString(str: string): string {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 export function isValidCPF(cpf: string): boolean {
   const cleaned = cpf.replace(/\D/g, "");
   if (cleaned.length !== 11) return false;

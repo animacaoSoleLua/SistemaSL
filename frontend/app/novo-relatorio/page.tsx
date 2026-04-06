@@ -179,6 +179,7 @@ function MediaUploadField(props: {
               className="profile-photo-input"
               type="file"
               accept={props.accept}
+              multiple
               onChange={(event) => {
                 props.onAddFiles(event.target.files);
                 event.target.value = "";

@@ -14,6 +14,7 @@ import {
   updateWarning,
 } from "../../lib/api";
 import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { normalizeString } from "../../lib/validators";
 
 interface Warning {
   id: string;
@@ -178,7 +179,7 @@ export default function WarningsPage() {
   }, [warnings, memberMap]);
 
   const filteredMembers = groupedMembers.filter((member) =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase())
+    normalizeString(member.name).includes(normalizeString(searchTerm))
   );
 
   const formatDateBR = (value: string) => {

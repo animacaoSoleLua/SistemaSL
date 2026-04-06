@@ -26,7 +26,7 @@ import {
 } from "../../lib/api";
 import { getStoredUser, roleLabels, type Role, type StoredUser } from "../../lib/auth";
 import { useFocusTrap } from "../../lib/useFocusTrap";
-import { isStrongPassword, isValidCPF } from "../../lib/validators";
+import { isStrongPassword, isValidCPF, normalizeString } from "../../lib/validators";
 
 interface MemberFormState {
   name: string;
@@ -395,15 +395,15 @@ export default function UsuariosPage() {
   };
 
   const filteredUsers = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
+    const search = normalizeString(searchTerm.trim());
     if (!search) {
       return users;
     }
     return users.filter(
       (user) =>
-        user.name.toLowerCase().includes(search) ||
-        (user.last_name ?? "").toLowerCase().includes(search) ||
-        user.email.toLowerCase().includes(search)
+        normalizeString(user.name).includes(search) ||
+        normalizeString(user.last_name ?? "").includes(search) ||
+        normalizeString(user.email).includes(search)
     );
   }, [users, searchTerm]);
 

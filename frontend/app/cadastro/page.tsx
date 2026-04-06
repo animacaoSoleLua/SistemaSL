@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getErrorMessage, registerUser } from "../../lib/api";
 import { isStrongPassword, isValidCPF } from "../../lib/validators";
+import { formatDateInput, isValidBirthDate } from "../../lib/dateValidators";
 import logo from "../../assets/logo.png";
 
 export default function CadastroPage() {
@@ -88,6 +89,11 @@ export default function CadastroPage() {
       return;
     }
 
+    if (!isValidBirthDate(formData.birth_date)) {
+      setError("Data de nascimento inválida. Verifique o formato DD/MM/AAAA.");
+      return;
+    }
+
     const pwdError = isStrongPassword(formData.password);
     if (pwdError) {
       setError(pwdError);
@@ -156,7 +162,7 @@ export default function CadastroPage() {
                 id="reg-last-name"
                 type="text"
                 name="last_name"
-                placeholder="Último nome"
+                placeholder="Sobrenome"
                 required
                 aria-required="true"
                 value={formData.last_name}
@@ -183,12 +189,15 @@ export default function CadastroPage() {
               Data de nascimento
               <input
                 id="reg-birth-date"
-                type="date"
+                type="text"
                 name="birth_date"
                 required
                 aria-required="true"
+                placeholder="DD/MM/AAAA"
+                inputMode="numeric"
+                maxLength={10}
                 value={formData.birth_date}
-                onChange={(e) => handleChange("birth_date", e.target.value)}
+                onChange={(e) => handleChange("birth_date", formatDateInput(e.target.value))}
                 disabled={loading}
               />
             </label>

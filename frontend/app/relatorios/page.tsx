@@ -12,6 +12,7 @@ import {
   resolveApiAssetUrl,
 } from "../../lib/api";
 import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { normalizeString } from "../../lib/validators";
 
 interface Report {
   id: string;
@@ -185,16 +186,16 @@ export default function RelatoriosPage() {
     };
   }, [viewModalOpen, selectedReportId]);
 
-  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const normalizedSearch = normalizeString(searchTerm.trim());
   const filteredReports = reports.filter((report) => {
     if (!normalizedSearch) {
       return true;
     }
 
     return (
-      report.contractor_name.toLowerCase().includes(normalizedSearch) ||
-      (report.title_schedule?.toLowerCase().includes(normalizedSearch) ?? false) ||
-      (report.author_name?.toLowerCase().includes(normalizedSearch) ?? false)
+      normalizeString(report.contractor_name).includes(normalizedSearch) ||
+      (report.title_schedule ? normalizeString(report.title_schedule).includes(normalizedSearch) : false) ||
+      (report.author_name ? normalizeString(report.author_name).includes(normalizedSearch) : false)
     );
   });
 
