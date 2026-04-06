@@ -799,7 +799,7 @@ export default function CursosPage() {
                           </button>
                         </>
                       )}
-                      {statusFilter === "archived" && currentRole === "administrador" && (
+                      {statusFilter === "archived" && currentRole === "admin" && (
                         <button
                           type="button"
                           className="button danger"
