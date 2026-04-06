@@ -3,7 +3,7 @@
 import './page.css';
 import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiAlertTriangle, FiArchive, FiInfo, FiX } from "react-icons/fi";
+import { FiAlertTriangle, FiArchive, FiInfo, FiTrash2, FiX } from "react-icons/fi";
 import {
   cancelEnrollment,
   createCourse,
@@ -25,6 +25,7 @@ import {
   type StoredUser,
 } from "../../lib/auth";
 import { useFocusTrap } from "../../lib/useFocusTrap";
+import { normalizeString } from "../../lib/validators";
 
 interface Course {
   id: string;
@@ -538,9 +539,9 @@ export default function CursosPage() {
   };
 
   const filteredCourses = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
+    const term = normalizeString(searchTerm.trim());
     if (!term) return courses;
-    return courses.filter((course) => course.title.toLowerCase().includes(term));
+    return courses.filter((course) => normalizeString(course.title).includes(term));
   }, [courses, searchTerm]);
 
   const stats = useMemo(() => {
@@ -797,6 +798,21 @@ export default function CursosPage() {
                             {deletingId === course.id ? "Apagando..." : "Apagar"}
                           </button>
                         </>
+                      )}
+                      {statusFilter === "archived" && currentRole === "administrador" && (
+                        <button
+                          type="button"
+                          className="button danger"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleDeleteCourse(course.id, course.title);
+                          }}
+                          disabled={deletingId === course.id}
+                          aria-label={`Deletar curso ${course.title}`}
+                        >
+                          <FiTrash2 style={{ marginRight: "4px" }} />
+                          {deletingId === course.id ? "Apagando..." : "Apagar"}
+                        </button>
                       )}
                       {statusFilter !== "archived" && canFinalize && (
                         <button
