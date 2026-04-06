@@ -889,11 +889,14 @@ export default function CursosPage() {
               </div>
               <div className="confirm-text">
                 <p>
-                  Tem certeza que deseja apagar o curso{" "}
-                  <strong>{deleteTarget.title}</strong>?
+                  {statusFilter === "archived"
+                    ? `Tem certeza que deseja deletar permanentemente o curso ${deleteTarget.title}?`
+                    : `Tem certeza que deseja apagar o curso ${deleteTarget.title}?`}
                 </p>
                 <p className="confirm-muted">
-                  O curso será removido e todas as inscrições canceladas.
+                  {statusFilter === "archived"
+                    ? "Esta ação não pode ser desfeita."
+                    : "O curso será removido e todas as inscrições canceladas."}
                 </p>
               </div>
             </div>
