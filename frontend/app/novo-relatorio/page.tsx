@@ -33,6 +33,14 @@ type TeamMemberFeedback = {
 
 const MAX_EVENT_PHOTOS_PER_TOPIC = 5;
 
+type ReportMedia = {
+  id: string;
+  url: string;
+  media_type: "image" | "video";
+  topic?: string | null;
+  size_bytes: number;
+};
+
 type ReportDetail = {
   event_date: string;
   contractor_name: string;
@@ -54,6 +62,7 @@ type ReportDetail = {
   quality_microphone?: number | null;
   speaker_number?: number | null;
   electronics_notes?: string | null;
+  media?: ReportMedia[];
   feedbacks?: Array<{
     member_id: string;
     member_name?: string | null;
@@ -150,12 +159,17 @@ function MediaUploadField(props: {
   name: string;
   label?: string;
   files: File[];
+  existingMedia?: ReportMedia[];
   onAddFiles: (files: FileList | null) => void;
   onRemoveFile: (index: number) => void;
+  onRemoveExistingMedia?: (mediaId: string) => void;
   accept?: string;
   helperText?: string;
   maxFiles?: number;
 }) {
+  const existingMedia = props.existingMedia ?? [];
+  const totalMediaCount = props.files.length + existingMedia.length;
+
   const handlePreviewFile = (file: File) => {
     const previewUrl = URL.createObjectURL(file);
     window.open(previewUrl, "_blank", "noopener,noreferrer");
@@ -164,7 +178,11 @@ function MediaUploadField(props: {
     }, 60_000);
   };
 
-  const isAtLimit = props.maxFiles !== undefined && props.files.length >= props.maxFiles;
+  const handlePreviewUrl = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const isAtLimit = props.maxFiles !== undefined && totalMediaCount >= props.maxFiles;
 
   return (
     <div className="field full">
@@ -188,10 +206,33 @@ function MediaUploadField(props: {
           </label>
         )}
         {props.helperText ? <small className="helper">{props.helperText}</small> : null}
-        {props.files.length === 0 ? (
+        {props.files.length === 0 && existingMedia.length === 0 ? (
           <small className="helper media-upload-file-name">Nenhuma foto adicionada.</small>
         ) : (
           <ul className="media-upload-list">
+            {/* Existing media */}
+            {existingMedia.map((media) => (
+              <li key={`existing-${media.id}`} className="media-upload-item">
+                <span className="media-upload-file-name">{media.url.split("/").pop()}</span>
+                <div className="media-upload-actions">
+                  <button
+                    type="button"
+                    className="button secondary small"
+                    onClick={() => handlePreviewUrl(media.url)}
+                  >
+                    Visualizar
+                  </button>
+                  <button
+                    type="button"
+                    className="button secondary small"
+                    onClick={() => props.onRemoveExistingMedia?.(media.id)}
+                  >
+                    Remover
+                  </button>
+                </div>
+              </li>
+            ))}
+            {/* New files */}
             {props.files.map((file, index) => (
               <li key={`${file.name}-${file.lastModified}-${index}`} className="media-upload-item">
                 <span className="media-upload-file-name">{file.name}</span>
@@ -257,12 +298,23 @@ function NovoRelatorioContent() {
   const [speakerNumber, setSpeakerNumber] = useState("");
   const [electronicsNotes, setElectronicsNotes] = useState("");
   const [damageImages, setDamageImages] = useState<File[]>([]);
+  const [existingDamageMedia, setExistingDamageMedia] = useState<ReportMedia[]>([]);
 
   const [paintingFiles, setPaintingFiles] = useState<File[]>([]);
+  const [existingPaintingMedia, setExistingPaintingMedia] = useState<ReportMedia[]>([]);
+
   const [balloonFiles, setBalloonFiles] = useState<File[]>([]);
+  const [existingBalloonMedia, setExistingBalloonMedia] = useState<ReportMedia[]>([]);
+
   const [animationFiles, setAnimationFiles] = useState<File[]>([]);
+  const [existingAnimationMedia, setExistingAnimationMedia] = useState<ReportMedia[]>([]);
+
   const [charactersFiles, setCharactersFiles] = useState<File[]>([]);
+  const [existingCharactersMedia, setExistingCharactersMedia] = useState<ReportMedia[]>([]);
+
   const [workshopsFiles, setWorkshopsFiles] = useState<File[]>([]);
+  const [existingWorkshopsMedia, setExistingWorkshopsMedia] = useState<ReportMedia[]>([]);
+
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
@@ -327,6 +379,15 @@ function NovoRelatorioContent() {
             feedback: item.feedback,
           }))
         );
+
+        // Restore existing media
+        const media = report.media ?? [];
+        setExistingDamageMedia(media.filter((m) => !m.topic));
+        setExistingPaintingMedia(media.filter((m) => m.topic === "Pintura"));
+        setExistingBalloonMedia(media.filter((m) => m.topic === "Balão"));
+        setExistingAnimationMedia(media.filter((m) => m.topic === "Animação"));
+        setExistingCharactersMedia(media.filter((m) => m.topic === "Personagens"));
+        setExistingWorkshopsMedia(media.filter((m) => m.topic === "Oficinas"));
       })
       .catch((error) => {
         if (!mounted) return;
@@ -403,9 +464,10 @@ function NovoRelatorioContent() {
     setTeamMemberFeedbacks((prev) => prev.filter((member) => member.id !== memberId));
   };
 
-  const addFilesWithoutDuplicates = (currentFiles: File[], incomingFiles: FileList | null) => {
+  const addFilesWithoutDuplicates = (currentFiles: File[], incomingFiles: FileList | File[] | null) => {
     const nextFiles = [...currentFiles];
-    for (const incomingFile of toFiles(incomingFiles)) {
+    const incomingFileArray = Array.isArray(incomingFiles) ? incomingFiles : toFiles(incomingFiles);
+    for (const incomingFile of incomingFileArray) {
       const alreadyAdded = nextFiles.some((existingFile) => areSameFile(existingFile, incomingFile));
       if (!alreadyAdded) {
         nextFiles.push(incomingFile);
@@ -533,18 +595,20 @@ function NovoRelatorioContent() {
       return;
     }
 
-    const mediaFiles = [
-      ...damageImages,
-      ...eventPhotoTopics.flatMap((topic) => topic.files),
+    const mediaFilesWithTopic: Array<{ file: File; topic?: string }> = [
+      ...damageImages.map((file) => ({ file, topic: undefined })),
+      ...eventPhotoTopics.flatMap(({ topic, files }) =>
+        files.map((file) => ({ file, topic }))
+      ),
     ];
 
-    const invalidFiles = mediaFiles.filter((file) => {
+    const invalidFiles = mediaFilesWithTopic.filter(({ file }) => {
       const mimeType = (file.type || "").toLowerCase();
       return !mimeType.startsWith("image/") && !mimeType.startsWith("video/");
     });
 
     if (invalidFiles.length > 0) {
-      const invalidNames = invalidFiles.map((file) => file.name).join(", ");
+      const invalidNames = invalidFiles.map(({ file }) => file.name).join(", ");
       setSubmitError(
         `Alguns arquivos nao sao imagem/video: ${invalidNames}. Remova esses arquivos e tente novamente.`
       );
@@ -569,8 +633,8 @@ function NovoRelatorioContent() {
         throw new Error("Relatorio sem identificador.");
       }
 
-      for (const file of mediaFiles) {
-        await uploadReportMedia(reportId, file);
+      for (const { file, topic } of mediaFilesWithTopic) {
+        await uploadReportMedia(reportId, file, topic);
       }
 
       router.push("/relatorios");
@@ -950,9 +1014,13 @@ function NovoRelatorioContent() {
                 name="damageImages"
                 label="Imagens de avaria no material (caso tenha)"
                 files={damageImages}
+                existingMedia={existingDamageMedia}
                 onAddFiles={handleDamageImagesAdd}
                 onRemoveFile={(index) =>
                   setDamageImages((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
+                }
+                onRemoveExistingMedia={(mediaId) =>
+                  setExistingDamageMedia((prev) => prev.filter((m) => m.id !== mediaId))
                 }
                 accept="image/*,video/*"
               />
@@ -969,11 +1037,15 @@ function NovoRelatorioContent() {
                 name="paintingFiles"
                 label="Pintura (caso tenha)"
                 files={paintingFiles}
+                existingMedia={existingPaintingMedia}
                 onAddFiles={(files) =>
                   handleEventPhotosTopicAdd("Pintura", files, paintingFiles, setPaintingFiles)
                 }
                 onRemoveFile={(index) =>
                   setPaintingFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
+                }
+                onRemoveExistingMedia={(mediaId) =>
+                  setExistingPaintingMedia((prev) => prev.filter((m) => m.id !== mediaId))
                 }
                 accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
@@ -984,11 +1056,15 @@ function NovoRelatorioContent() {
                 name="balloonFiles"
                 label="Balão (caso tenha)"
                 files={balloonFiles}
+                existingMedia={existingBalloonMedia}
                 onAddFiles={(files) =>
                   handleEventPhotosTopicAdd("Balão", files, balloonFiles, setBalloonFiles)
                 }
                 onRemoveFile={(index) =>
                   setBalloonFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
+                }
+                onRemoveExistingMedia={(mediaId) =>
+                  setExistingBalloonMedia((prev) => prev.filter((m) => m.id !== mediaId))
                 }
                 accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
@@ -999,11 +1075,15 @@ function NovoRelatorioContent() {
                 name="animationFiles"
                 label="Animação (caso tenha)"
                 files={animationFiles}
+                existingMedia={existingAnimationMedia}
                 onAddFiles={(files) =>
                   handleEventPhotosTopicAdd("Animação", files, animationFiles, setAnimationFiles)
                 }
                 onRemoveFile={(index) =>
                   setAnimationFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
+                }
+                onRemoveExistingMedia={(mediaId) =>
+                  setExistingAnimationMedia((prev) => prev.filter((m) => m.id !== mediaId))
                 }
                 accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
@@ -1014,6 +1094,7 @@ function NovoRelatorioContent() {
                 name="charactersFiles"
                 label="Personagens (caso tenha)"
                 files={charactersFiles}
+                existingMedia={existingCharactersMedia}
                 onAddFiles={(files) =>
                   handleEventPhotosTopicAdd(
                     "Personagens",
@@ -1025,6 +1106,9 @@ function NovoRelatorioContent() {
                 onRemoveFile={(index) =>
                   setCharactersFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
                 }
+                onRemoveExistingMedia={(mediaId) =>
+                  setExistingCharactersMedia((prev) => prev.filter((m) => m.id !== mediaId))
+                }
                 accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
                 maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
@@ -1034,11 +1118,15 @@ function NovoRelatorioContent() {
                 name="workshopsFiles"
                 label="Oficinas (caso tenha)"
                 files={workshopsFiles}
+                existingMedia={existingWorkshopsMedia}
                 onAddFiles={(files) =>
                   handleEventPhotosTopicAdd("Oficinas", files, workshopsFiles, setWorkshopsFiles)
                 }
                 onRemoveFile={(index) =>
                   setWorkshopsFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
+                }
+                onRemoveExistingMedia={(mediaId) =>
+                  setExistingWorkshopsMedia((prev) => prev.filter((m) => m.id !== mediaId))
                 }
                 accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}

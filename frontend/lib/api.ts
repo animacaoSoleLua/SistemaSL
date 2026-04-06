@@ -172,7 +172,7 @@ export async function updateReport(id: string, input: ReportPayload) {
   });
 }
 
-export async function uploadReportMedia(reportId: string, file: File) {
+export async function uploadReportMedia(reportId: string, file: File, topic?: string) {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -182,6 +182,14 @@ export async function uploadReportMedia(reportId: string, file: File) {
   } else if (mimeType.startsWith("video/")) {
     formData.append("media_type", "video");
   }
+
+  if (topic) {
+    formData.append("topic", topic);
+  } else {
+    console.warn(`[MEDIA_UPLOAD] No topic provided for file: ${file.name}`);
+  }
+
+  console.log(`[MEDIA_UPLOAD] Uploading ${file.name} with topic: ${topic || 'NONE'}`);
 
   return request(`/relatorios/${reportId}/media`, {
     method: "POST",

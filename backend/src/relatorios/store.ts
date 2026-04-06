@@ -6,6 +6,7 @@ export interface MediaRecord {
   id: string;
   reportId: string;
   type: MediaType;
+  topic?: string;
   url: string;
   sizeBytes: number;
   createdAt: Date;
@@ -96,6 +97,7 @@ function toMediaRecord(entry: {
   id: string;
   reportId: string;
   mediaType: MediaType;
+  topic?: string | null;
   url: string;
   sizeBytes: number;
   createdAt: Date;
@@ -104,6 +106,7 @@ function toMediaRecord(entry: {
     id: entry.id,
     reportId: entry.reportId,
     type: entry.mediaType,
+    topic: entry.topic ?? undefined,
     url: entry.url,
     sizeBytes: entry.sizeBytes,
     createdAt: entry.createdAt,
@@ -555,6 +558,7 @@ export async function addMediaToReport(
     data: {
       reportId,
       mediaType: input.type,
+      topic: input.topic,
       url: input.url,
       sizeBytes: input.sizeBytes,
     },

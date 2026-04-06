@@ -402,6 +402,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
           id: media.id,
           url: media.url,
           media_type: media.type,
+          topic: media.topic,
           size_bytes: media.sizeBytes,
         })),
       })),
@@ -621,6 +622,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
           id: media.id,
           url: media.url,
           media_type: media.type,
+          topic: media.topic,
           size_bytes: media.sizeBytes,
         })),
         feedbacks: report.feedbacks.map((feedback) => ({
@@ -980,6 +982,12 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
+    const topic = getMultipartFieldValue(fileData.fields?.topic);
+
+    // Log available fields for debugging
+    const fieldKeys = fileData.fields ? Object.keys(fileData.fields) : [];
+    console.log(`[MEDIA_UPLOAD] file: ${fileData.filename}, fields: ${fieldKeys.join(', ')}, topic: ${topic}`);
+
     const extension = resolveExtension(
       fileData.filename ?? "",
       mediaType,
@@ -1030,6 +1038,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
 
     const media = await addMediaToReport(report.id, {
       type: mediaType,
+      topic,
       url,
       sizeBytes,
     });
@@ -1046,6 +1055,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
         id: media.id,
         url: media.url,
         media_type: media.type,
+        topic: media.topic,
         size_bytes: media.sizeBytes,
       },
     });
