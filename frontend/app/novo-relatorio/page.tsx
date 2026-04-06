@@ -13,6 +13,7 @@ import {
   updateReport,
   uploadReportMedia,
 } from "../../lib/api";
+import { getMediaValidationError } from "../../lib/mediaValidators";
 
 type TransportType = "" | "uber99" | "carro_empresa" | "outro";
 type YesNo = "" | "sim" | "nao";
@@ -418,7 +419,18 @@ function NovoRelatorioContent() {
     currentFiles: File[],
     setFiles: (nextFiles: File[]) => void
   ) => {
-    const nextFiles = addFilesWithoutDuplicates(currentFiles, files);
+    const fileArray = toFiles(files);
+
+    // Validate each file
+    for (const file of fileArray) {
+      const error = getMediaValidationError(file);
+      if (error) {
+        setSubmitError(error);
+        return;
+      }
+    }
+
+    const nextFiles = addFilesWithoutDuplicates(currentFiles, fileArray);
     if (nextFiles.length > MAX_EVENT_PHOTOS_PER_TOPIC) {
       setSubmitError(
         `${topicName}: o máximo permitido é ${MAX_EVENT_PHOTOS_PER_TOPIC} imagens por tópico.`
@@ -430,8 +442,19 @@ function NovoRelatorioContent() {
   };
 
   const handleDamageImagesAdd = (files: FileList | null) => {
+    const fileArray = toFiles(files);
+
+    // Validate each file
+    for (const file of fileArray) {
+      const error = getMediaValidationError(file);
+      if (error) {
+        setSubmitError(error);
+        return;
+      }
+    }
+
     setSubmitError("");
-    setDamageImages((prev) => addFilesWithoutDuplicates(prev, files));
+    setDamageImages((prev) => addFilesWithoutDuplicates(prev, fileArray));
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -930,7 +953,7 @@ function NovoRelatorioContent() {
                 onRemoveFile={(index) =>
                   setDamageImages((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
                 }
-                accept="image/*"
+                accept="image/*,video/*"
               />
             </div>
           </article>
@@ -951,7 +974,7 @@ function NovoRelatorioContent() {
                 onRemoveFile={(index) =>
                   setPaintingFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
                 }
-                accept="image/*"
+                accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
                 maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
@@ -966,7 +989,7 @@ function NovoRelatorioContent() {
                 onRemoveFile={(index) =>
                   setBalloonFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
                 }
-                accept="image/*"
+                accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
                 maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
@@ -981,7 +1004,7 @@ function NovoRelatorioContent() {
                 onRemoveFile={(index) =>
                   setAnimationFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
                 }
-                accept="image/*"
+                accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
                 maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
@@ -1001,7 +1024,7 @@ function NovoRelatorioContent() {
                 onRemoveFile={(index) =>
                   setCharactersFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
                 }
-                accept="image/*"
+                accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
                 maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
@@ -1016,7 +1039,7 @@ function NovoRelatorioContent() {
                 onRemoveFile={(index) =>
                   setWorkshopsFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))
                 }
-                accept="image/*"
+                accept="image/*,video/*"
                 helperText={`Máximo de ${MAX_EVENT_PHOTOS_PER_TOPIC} fotos.`}
                 maxFiles={MAX_EVENT_PHOTOS_PER_TOPIC}
               />
