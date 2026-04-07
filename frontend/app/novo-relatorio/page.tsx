@@ -14,6 +14,7 @@ import {
   uploadReportMedia,
 } from "../../lib/api";
 import { getMediaValidationError } from "../../lib/mediaValidators";
+import { normalizeString } from "../../lib/validators";
 
 type TransportType = "" | "uber99" | "carro_empresa" | "outro";
 type YesNo = "" | "sim" | "nao";
@@ -437,12 +438,12 @@ function NovoRelatorioContent() {
   );
 
   const filteredMembers = useMemo(() => {
-    const search = memberSearch.trim().toLowerCase();
+    const search = normalizeString(memberSearch.trim());
     return members
       .filter((member) => !selectedMemberIds.has(member.id))
       .filter((member) => {
         if (!search) return true;
-        return formatMemberName(member).toLowerCase().includes(search);
+        return normalizeString(formatMemberName(member)).includes(search);
       });
   }, [memberSearch, members, selectedMemberIds]);
 

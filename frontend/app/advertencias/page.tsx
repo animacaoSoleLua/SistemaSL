@@ -138,7 +138,7 @@ export default function WarningsPage() {
           currentRole === "animador" ? { created_by: "me" } : {};
         const [warningsResponse, membersResponse] = await Promise.all([
           getWarnings(warningsParams),
-          getMembers(),
+          getMembers({ limit: 200 }),
         ]);
         const members = membersResponse.data as MemberSummary[];
         const map: Record<string, string> = {};
@@ -326,9 +326,9 @@ export default function WarningsPage() {
   };
 
   const filteredMemberOptions = useMemo(() => {
-    const term = memberSearch.trim().toLowerCase();
+    const term = normalizeString(memberSearch.trim());
     if (!term) return members;
-    return members.filter((member) => member.name.toLowerCase().includes(term));
+    return members.filter((member) => normalizeString(member.name).includes(term));
   }, [memberSearch, members]);
 
   const handleMemberSearchChange = (value: string) => {
@@ -648,7 +648,7 @@ export default function WarningsPage() {
                 }}
                 disabled={actionLoadingId === "new"}
               />
-              {memberSearch.trim().length > 0 && (
+              {memberSearch.trim().length > 0 && !newMemberId && (
                 <div
                   id={`${autocompleteId}-listbox`}
                   className="member-autocomplete"
