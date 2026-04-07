@@ -174,8 +174,9 @@ export async function updateReport(id: string, input: ReportPayload) {
 
 export async function uploadReportMedia(reportId: string, file: File, topic?: string) {
   const formData = new FormData();
-  formData.append("file", file);
 
+  // Text fields must come BEFORE the file so @fastify/multipart can read them
+  // from fileData.fields when using request.file() (streaming parser)
   const mimeType = (file.type || "").toLowerCase();
   if (mimeType.startsWith("image/")) {
     formData.append("media_type", "image");
@@ -185,11 +186,9 @@ export async function uploadReportMedia(reportId: string, file: File, topic?: st
 
   if (topic) {
     formData.append("topic", topic);
-  } else {
-    console.warn(`[MEDIA_UPLOAD] No topic provided for file: ${file.name}`);
   }
 
-  console.log(`[MEDIA_UPLOAD] Uploading ${file.name} with topic: ${topic || 'NONE'}`);
+  formData.append("file", file);
 
   return request(`/relatorios/${reportId}/media`, {
     method: "POST",

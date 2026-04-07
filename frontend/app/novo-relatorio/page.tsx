@@ -602,6 +602,9 @@ function NovoRelatorioContent() {
       ),
     ];
 
+    // Debug logging
+    console.log(`[SUBMIT] Total media files: ${mediaFilesWithTopic.length}, Painting files: ${paintingFiles.length}, Damage files: ${damageImages.length}`, mediaFilesWithTopic.map(m => ({ name: m.file.name, topic: m.topic })));
+
     const invalidFiles = mediaFilesWithTopic.filter(({ file }) => {
       const mimeType = (file.type || "").toLowerCase();
       return !mimeType.startsWith("image/") && !mimeType.startsWith("video/");
