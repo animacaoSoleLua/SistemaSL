@@ -112,7 +112,7 @@ export default function CadastroPage() {
         last_name: formData.last_name.trim(),
         cpf: formData.cpf.trim(),
         email: formData.email.trim(),
-        birth_date: formData.birth_date,
+        birth_date: formData.birth_date.split('/').reverse().join('-'),
         region: formData.region.trim(),
         phone: formData.phone.trim(),
         pix: formData.pix.trim(),
