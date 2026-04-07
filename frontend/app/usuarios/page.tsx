@@ -452,7 +452,7 @@ export default function UsuariosPage() {
   }, [isAdmin, selectedMemberId]);
 
   useEffect(() => {
-    if (!selectedMemberId) {
+    if (!isAdmin || !selectedMemberId) {
       setFeedbackCounts(null);
       return;
     }
@@ -480,7 +480,7 @@ export default function UsuariosPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedMemberId]);
+  }, [isAdmin, selectedMemberId]);
 
   const getInitials = (name: string) =>
     name
