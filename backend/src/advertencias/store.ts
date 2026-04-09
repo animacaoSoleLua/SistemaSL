@@ -41,7 +41,7 @@ function isSuspensionActive(suspension: SuspensionRecord, now: Date): boolean {
   );
 }
 
-async function countWarningsInWindow(
+export async function countWarningsInWindow(
   memberId: string,
   startDate: Date,
   endDate: Date
