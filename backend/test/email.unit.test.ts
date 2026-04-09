@@ -112,6 +112,13 @@ describe("email", () => {
     expect(body.html).toContain("3 advertências");
   });
 
+  it("sendEmail lanca erro se a API retorna status de erro", async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 422, text: async () => "Unprocessable" });
+    await expect(sendEnrollmentConfirmationEmail(fakeCourse, fakeMember)).rejects.toThrow(
+      "resend_failed_422"
+    );
+  });
+
   it("sendEmail lanca erro se RESEND_API_KEY ausente", async () => {
     delete process.env.RESEND_API_KEY;
     await expect(sendEnrollmentConfirmationEmail(fakeCourse, fakeMember)).rejects.toThrow(

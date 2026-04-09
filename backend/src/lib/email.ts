@@ -173,7 +173,7 @@ export async function sendSuspensionEmail(
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
       <h2>Você foi suspenso</h2>
       <p>Olá, <strong>${memberName}</strong>.</p>
-      <p><strong>Motivo:</strong> Você acumulou 3 advertências no período de 1 mês.</p>
+      <p><strong>Motivo:</strong> ${suspension.reason} — Você acumulou 3 advertências no período de 1 mês.</p>
       <p><strong>Início da suspensão:</strong> ${startStr}</p>
       <p><strong>Fim da suspensão:</strong> ${endStr}</p>
     </div>
@@ -182,7 +182,7 @@ export async function sendSuspensionEmail(
   const text = [
     "Você foi suspenso.",
     `Olá, ${memberName}.`,
-    "Motivo: Você acumulou 3 advertências no período de 1 mês.",
+    `Motivo: ${suspension.reason} — Você acumulou 3 advertências no período de 1 mês.`,
     `Início da suspensão: ${startStr}`,
     `Fim da suspensão: ${endStr}`,
   ].join("\n");
