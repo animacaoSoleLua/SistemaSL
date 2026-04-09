@@ -1,8 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireRole } from "../auth/guard.js";
-import { getUserById } from "../auth/store.js";
+import { getUserById, listUsers } from "../auth/store.js";
 import { prisma } from "../db/prisma.js";
+import {
+  sendCourseCreatedEmail,
+  sendEnrollmentConfirmationEmail,
+} from "../lib/email.js";
 // GOOGLE_CALENDAR_DISABLED_START
 // import {
 //   createOrgEvent,
@@ -214,6 +218,12 @@ export async function cursosRoutes(app: FastifyInstance) {
         location,
         capacity,
       });
+
+      listUsers().then((members) =>
+        sendCourseCreatedEmail(course, members).catch((err) =>
+          console.error("sendCourseCreatedEmail failed", err)
+        )
+      ).catch((err) => console.error("listUsers failed for course email", err));
 
       // GOOGLE_CALENDAR_DISABLED_START
       // // Cria evento no Google Calendar da organização (não-bloqueante)
@@ -523,6 +533,14 @@ export async function cursosRoutes(app: FastifyInstance) {
     }
 
     const enrollment = await addEnrollment(course, member_id);
+
+    getUserById(member_id).then((member) => {
+      if (member) {
+        sendEnrollmentConfirmationEmail(course, member).catch((err) =>
+          console.error("sendEnrollmentConfirmationEmail failed", err)
+        );
+      }
+    }).catch((err) => console.error("getUserById failed for enrollment email", err));
 
     // GOOGLE_CALENDAR_DISABLED_START
     // // Adiciona evento no Google Calendar pessoal do membro (não-bloqueante)
