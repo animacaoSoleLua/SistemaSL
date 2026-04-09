@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { subMonths } from "date-fns";
 import { requireRole } from "../auth/guard.js";
 import { auditLog } from "../lib/audit.js";
 import { getUserById } from "../auth/store.js";
@@ -194,13 +195,11 @@ export async function advertenciasRoutes(app: FastifyInstance) {
         warningDate: parsedDate,
       });
 
-      const windowStart = new Date(parsedDate);
-      windowStart.setMonth(windowStart.getMonth() - 1);
-      countWarningsInWindow(member.id, windowStart, parsedDate).then((warningCount) =>
+      countWarningsInWindow(member.id, subMonths(parsedDate, 1), parsedDate).then((warningCount) => {
         sendWarningEmail(member, result.warning, warningCount).catch((err) =>
           console.error("sendWarningEmail failed", err)
-        )
-      ).catch((err) => console.error("countWarningsInWindow failed for warning email", err));
+        );
+      }).catch((err) => console.error("countWarningsInWindow failed for warning email", err));
 
       if (result.suspensionApplied) {
         getActiveSuspension(member.id).then((suspension) => {
