@@ -5,11 +5,14 @@ import { auditLog } from "../lib/audit.js";
 import { getUserById } from "../auth/store.js";
 import {
   createWarning,
+  countWarningsInWindow,
   deleteWarning,
+  getActiveSuspension,
   getWarningById,
   listWarnings,
   updateWarning,
 } from "./store.js";
+import { sendWarningEmail, sendSuspensionEmail } from "../lib/email.js";
 
 const todayDateString = () => new Date().toISOString().slice(0, 10);
 
@@ -190,6 +193,24 @@ export async function advertenciasRoutes(app: FastifyInstance) {
         reason: reason.trim(),
         warningDate: parsedDate,
       });
+
+      const windowStart = new Date(parsedDate);
+      windowStart.setMonth(windowStart.getMonth() - 1);
+      countWarningsInWindow(member.id, windowStart, parsedDate).then((warningCount) =>
+        sendWarningEmail(member, result.warning, warningCount).catch((err) =>
+          console.error("sendWarningEmail failed", err)
+        )
+      ).catch((err) => console.error("countWarningsInWindow failed for warning email", err));
+
+      if (result.suspensionApplied) {
+        getActiveSuspension(member.id).then((suspension) => {
+          if (suspension) {
+            sendSuspensionEmail(member, suspension).catch((err) =>
+              console.error("sendSuspensionEmail failed", err)
+            );
+          }
+        }).catch((err) => console.error("getActiveSuspension failed for suspension email", err));
+      }
 
       auditLog(request.log, "WARNING_CREATED", request.user!.id, {
         targetId: member.id,
