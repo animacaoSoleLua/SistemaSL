@@ -116,6 +116,7 @@ describe("email", () => {
     expect(mockFetch).toHaveBeenCalledOnce();
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
     expect(body.html).not.toContain("Registrada por:");
+    expect(body.text).not.toContain("Registrada por:");
   });
 
   it("sendSuspensionEmail envia para o membro suspenso", async () => {
