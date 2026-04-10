@@ -196,7 +196,7 @@ export async function advertenciasRoutes(app: FastifyInstance) {
       });
 
       countWarningsInWindow(member.id, subMonths(parsedDate, 1), parsedDate).then((warningCount) => {
-        sendWarningEmail(member, result.warning, warningCount).catch((err) =>
+        sendWarningEmail(member, result.warning, warningCount, request.user!.name).catch((err) =>
           console.error("sendWarningEmail failed", err)
         );
       }).catch((err) => console.error("countWarningsInWindow failed for warning email", err));
