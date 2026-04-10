@@ -189,6 +189,10 @@ describe("Advertencias (integration)", () => {
       },
     });
 
+    // Use adminToken to stay within the in-process login rate limit.
+    // (The per-route keyGenerator reads request.body at onRequest time when body is
+    // not yet parsed, so the IP-based fallback fires; after 10 prior logins in this
+    // suite the 11th would hit 429.)
     const profile = await app.inject({
       method: "GET",
       url: `/api/v1/membros/${member!.id}`,
