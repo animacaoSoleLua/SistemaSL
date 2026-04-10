@@ -103,6 +103,21 @@ describe("email", () => {
     expect(body.html).toContain("2ª advertência");
   });
 
+  it("sendWarningEmail inclui nome do autor quando fornecido", async () => {
+    await sendWarningEmail(fakeMember, fakeWarning, 1, "Carlos Oliveira");
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body.html).toContain("Carlos Oliveira");
+    expect(body.text).toContain("Carlos Oliveira");
+  });
+
+  it("sendWarningEmail nao inclui linha de autor quando nao fornecido", async () => {
+    await sendWarningEmail(fakeMember, fakeWarning, 1);
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body.html).not.toContain("Registrada por:");
+  });
+
   it("sendSuspensionEmail envia para o membro suspenso", async () => {
     await sendSuspensionEmail(fakeMember, fakeSuspension);
     expect(mockFetch).toHaveBeenCalledOnce();
