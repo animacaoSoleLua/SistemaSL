@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { prisma } from "../db/prisma.js";
 
 const TOKEN_BYTES = 3;
-const TOKEN_TTL_MS = 60 * 60 * 1000;
+const TOKEN_TTL_MS = 15 * 60 * 1000;
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();

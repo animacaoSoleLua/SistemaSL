@@ -475,6 +475,20 @@ export async function finalizeCourse(
   });
 }
 
+export async function importCourse(input: {
+  title: string;
+  description?: string;
+  course_date: string;
+  location?: string;
+  instructor_id: string;
+  members: Array<{ member_id: string; status: "attended" | "missed" }>;
+}) {
+  return request("/cursos/importar", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export async function getFeedbacks(params: {
   type?: "positive" | "negative";
   member_id?: string;

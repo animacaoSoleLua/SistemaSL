@@ -150,3 +150,290 @@ body.theme-purple .confirm-icon {
     flex: 1;
   }
 }
+
+/* ── Modal de Importação ──────────────────────────────────── */
+
+/* Accent bar no topo */
+.import-modal {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.import-modal::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, #6f4cff 0%, #a78bfa 50%, #6f4cff 100%);
+  background-size: 200% 100%;
+  animation: import-shimmer 3s ease infinite;
+}
+
+@keyframes import-shimmer {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 0%; }
+  100% { background-position: 0% 0%; }
+}
+
+.import-modal .modal-header {
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid rgba(111, 76, 255, 0.09);
+  background: linear-gradient(135deg, rgba(111, 76, 255, 0.03) 0%, transparent 70%);
+}
+
+.import-modal .modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  max-height: calc(80vh - 140px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(111, 76, 255, 0.2) transparent;
+}
+
+.import-modal .modal-footer {
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(111, 76, 255, 0.09);
+  background: rgba(111, 76, 255, 0.015);
+  margin-top: 0;
+}
+
+/* Campos do formulário */
+.form-group {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.form-input {
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(111, 76, 255, 0.16);
+  background: rgba(111, 76, 255, 0.025);
+  font-size: 14.5px;
+  font-weight: 400;
+  color: var(--ink);
+  font-family: inherit;
+  width: 100%;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: rgba(111, 76, 255, 0.5);
+  background: rgba(111, 76, 255, 0.04);
+  box-shadow: 0 0 0 3px rgba(111, 76, 255, 0.1);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 18px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.form-section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(111, 76, 255, 0.12);
+}
+
+.form-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.form-error {
+  font-size: 13px;
+  color: #c84343;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(208, 75, 75, 0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(208, 75, 75, 0.18);
+  margin-top: 6px;
+}
+
+/* Variantes de botão usadas no modal */
+.button-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid rgba(111, 76, 255, 0.3);
+  box-shadow: none;
+}
+
+.button-secondary:hover:not(:disabled) {
+  background: rgba(111, 76, 255, 0.06);
+  box-shadow: none;
+  filter: none;
+}
+
+.button-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1.5px solid rgba(111, 76, 255, 0.14);
+  box-shadow: none;
+}
+
+.button-ghost:hover:not(:disabled) {
+  background: rgba(111, 76, 255, 0.06);
+  color: var(--accent);
+  box-shadow: none;
+  filter: none;
+}
+
+.button-danger {
+  background: rgba(208, 75, 75, 0.1) !important;
+  color: #c84343 !important;
+  border: 1.5px solid rgba(208, 75, 75, 0.25) !important;
+  box-shadow: none !important;
+}
+
+.button-sm {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
+}
+
+/* Resultados de busca */
+.member-search-results {
+  list-style: none;
+  padding: 6px;
+  margin: 0 0 14px;
+  border: 1.5px solid rgba(111, 76, 255, 0.14);
+  border-radius: 12px;
+  max-height: 192px;
+  overflow-y: auto;
+  background: rgba(111, 76, 255, 0.015);
+  box-shadow: 0 8px 20px rgba(22, 16, 40, 0.07);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(111, 76, 255, 0.2) transparent;
+}
+
+.member-search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  border-radius: 9px;
+  gap: 8px;
+  transition: background 0.12s ease;
+}
+
+.member-search-item:hover {
+  background: rgba(111, 76, 255, 0.07);
+}
+
+.member-search-item > span {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Lista de participantes adicionados */
+.import-participants-list {
+  margin-bottom: 14px;
+}
+
+.import-participants-list ul {
+  list-style: none;
+  padding: 6px;
+  margin: 8px 0 0;
+  border: 1.5px solid rgba(111, 76, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(111, 76, 255, 0.015);
+  display: grid;
+  gap: 4px;
+}
+
+.import-participant-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid rgba(111, 76, 255, 0.08);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.import-participant-item:hover {
+  border-color: rgba(111, 76, 255, 0.18);
+  box-shadow: 0 4px 12px rgba(22, 16, 40, 0.07);
+}
+
+.import-participant-item > span {
+  font-size: 13.5px;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.participant-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Dark mode */
+body.theme-purple .form-input {
+  background: rgba(161, 97, 255, 0.06);
+  border-color: rgba(161, 97, 255, 0.2);
+  color: var(--ink);
+}
+
+body.theme-purple .form-input:focus {
+  border-color: rgba(161, 97, 255, 0.5);
+  background: rgba(161, 97, 255, 0.1);
+}
+
+body.theme-purple .import-modal .modal-header {
+  background: linear-gradient(135deg, rgba(161, 97, 255, 0.06) 0%, transparent 70%);
+}
+
+body.theme-purple .import-modal .modal-footer {
+  background: rgba(161, 97, 255, 0.025);
+}
+
+body.theme-purple .import-participant-item {
+  background: rgba(21, 11, 34, 0.7);
+  border-color: rgba(161, 97, 255, 0.12);
+}
+
+body.theme-purple .member-search-results,
+body.theme-purple .import-participants-list ul {
+  background: rgba(161, 97, 255, 0.03);
+  border-color: rgba(161, 97, 255, 0.15);
+}

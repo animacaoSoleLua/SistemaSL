@@ -1281,6 +1281,7 @@ p {
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
+  margin-top: 8px;
 }
 
 /* confirm-modal, confirm-body, confirm-icon, confirm-text, confirm-muted → movidos para usuarios/page.css */

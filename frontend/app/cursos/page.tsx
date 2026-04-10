@@ -15,6 +15,7 @@ import {
   getErrorMessage,
   getMember,
   getMembers,
+  importCourse,
   updateCourse,
 } from "../../lib/api";
 import {
@@ -120,6 +121,23 @@ export default function CursosPage() {
   } | null>(null);
   const [finalizing, setFinalizing] = useState(false);
 
+  // --- modal importar curso ---
+  const importModalTitleId = useId();
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importSaving, setImportSaving] = useState(false);
+  const [importFormError, setImportFormError] = useState<string | null>(null);
+  const [importTitle, setImportTitle] = useState("");
+  const [importDescription, setImportDescription] = useState("");
+  const [importDate, setImportDate] = useState("");
+  const [importTime, setImportTime] = useState("");
+  const [importLocation, setImportLocation] = useState("");
+  const [importInstructorId, setImportInstructorId] = useState("");
+  const [importSearch, setImportSearch] = useState("");
+  const [importParticipants, setImportParticipants] = useState<
+    Array<{ id: string; name: string; status: "attended" | "missed" }>
+  >([]);
+  const importTrapRef = useFocusTrap(importModalOpen);
+
   const createEditTrapRef = useFocusTrap(modalOpen);
   const viewTrapRef = useFocusTrap(viewModalOpen);
   const deleteTrapRef = useFocusTrap(!!deleteTarget);
@@ -169,7 +187,7 @@ export default function CursosPage() {
   }, [currentUser]);
 
   useEffect(() => {
-    if (!modalOpen) return;
+    if (!modalOpen && !importModalOpen) return;
     if (members.length > 0) return;
     setMembersLoading(true);
     getMembers({ limit: 200 })
@@ -179,6 +197,9 @@ export default function CursosPage() {
         if (!editingCourseId && !instructorId && list.length > 0) {
           setInstructorId(list[0].id);
         }
+        if (importModalOpen && !importInstructorId && list.length > 0) {
+          setImportInstructorId(list[0].id);
+        }
       })
       .catch(() => {
         setMembers([]);
@@ -186,7 +207,7 @@ export default function CursosPage() {
       .finally(() => {
         setMembersLoading(false);
       });
-  }, [modalOpen, members.length, instructorId]);
+  }, [modalOpen, importModalOpen, members.length, instructorId, importInstructorId]);
 
   useEffect(() => {
     if (!currentRole) return;
@@ -248,7 +269,7 @@ export default function CursosPage() {
       if (googleConnected) {
         setNotice({ type: "success", message: "Vaga reservada! Evento adicionado ao seu Google Agenda." });
       } else {
-        setNotice({ type: "success", message: "Vaga reservada com sucesso. Conecte o Google Agenda no Perfil para adicionar eventos automaticamente." });
+        setNotice({ type: "success", message: "Vaga reservada com sucesso." });
       }
     } catch (err: unknown) {
       setNotice({
@@ -452,6 +473,59 @@ export default function CursosPage() {
     setViewLoading(false);
   };
 
+  function resetImportModal() {
+    setImportTitle("");
+    setImportDescription("");
+    setImportDate("");
+    setImportTime("");
+    setImportLocation("");
+    setImportInstructorId(members[0]?.id ?? "");
+    setImportSearch("");
+    setImportParticipants([]);
+    setImportFormError(null);
+  }
+
+  async function handleImportSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setImportFormError(null);
+
+    if (!importTitle.trim()) {
+      setImportFormError("Título é obrigatório");
+      return;
+    }
+    if (!importDate || !importTime) {
+      setImportFormError("Data e hora são obrigatórias");
+      return;
+    }
+    if (!importInstructorId) {
+      setImportFormError("Instrutor é obrigatório");
+      return;
+    }
+
+    setImportSaving(true);
+    try {
+      await importCourse({
+        title: importTitle.trim(),
+        description: importDescription.trim() || undefined,
+        course_date: `${importDate}T${importTime}`,
+        location: importLocation.trim() || undefined,
+        instructor_id: importInstructorId,
+        members: importParticipants.map((p) => ({
+          member_id: p.id,
+          status: p.status,
+        })),
+      });
+      setImportModalOpen(false);
+      resetImportModal();
+      setNotice({ type: "success", message: "Curso importado com sucesso!" });
+      getCourses({ status: statusFilter }).then((data) => setCourses(data.data));
+    } catch (err) {
+      setImportFormError(getErrorMessage(err));
+    } finally {
+      setImportSaving(false);
+    }
+  }
+
   const handleCreateCourse = async (event: React.FormEvent) => {
     event.preventDefault();
     if (saving) return;
@@ -593,9 +667,21 @@ export default function CursosPage() {
             <p className="hero-copy">Acompanhe turmas, vagas e datas principais.</p>
           </div>
           {(currentRole === "admin" || currentRole === "animador") && (
-            <button className="button" type="button" onClick={openModal}>
-              + Novo Curso
-            </button>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button className="button" type="button" onClick={openModal}>
+                + Novo Curso
+              </button>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => {
+                  setImportInstructorId(members[0]?.id ?? "");
+                  setImportModalOpen(true);
+                }}
+              >
+                Importar Curso
+              </button>
+            </div>
           )}
         </header>
 
@@ -1399,6 +1485,251 @@ export default function CursosPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal: Importar Curso Histórico */}
+      {importModalOpen && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={importModalTitleId}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setImportModalOpen(false);
+              resetImportModal();
+            }
+          }}
+        >
+          <div className="modal-card modal-lg import-modal" ref={importTrapRef}>
+            <header className="modal-header">
+              <h2 className="section-title" id={importModalTitleId}>
+                Importar Curso Histórico
+              </h2>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Fechar modal"
+                onClick={() => {
+                  setImportModalOpen(false);
+                  resetImportModal();
+                }}
+              >
+                <FiX aria-hidden="true" />
+              </button>
+            </header>
+
+            <div className="modal-body">
+              <form id="import-course-form" onSubmit={handleImportSubmit}>
+                <div className="form-group">
+                  <label htmlFor="import-title">Título *</label>
+                  <input
+                    id="import-title"
+                    type="text"
+                    className="form-input"
+                    value={importTitle}
+                    onChange={(e) => setImportTitle(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="import-description">Descrição</label>
+                  <input
+                    id="import-description"
+                    type="text"
+                    className="form-input"
+                    value={importDescription}
+                    onChange={(e) => setImportDescription(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="import-date">Data *</label>
+                    <input
+                      id="import-date"
+                      type="date"
+                      className="form-input"
+                      value={importDate}
+                      onChange={(e) => setImportDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="import-time">Hora *</label>
+                    <input
+                      id="import-time"
+                      type="time"
+                      className="form-input"
+                      value={importTime}
+                      onChange={(e) => setImportTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="import-location">Local</label>
+                  <input
+                    id="import-location"
+                    type="text"
+                    className="form-input"
+                    value={importLocation}
+                    onChange={(e) => setImportLocation(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="import-instructor">Instrutor *</label>
+                  <select
+                    id="import-instructor"
+                    className="form-input"
+                    value={importInstructorId}
+                    onChange={(e) => setImportInstructorId(e.target.value)}
+                    required
+                  >
+                    {members.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-section-divider">Participantes</div>
+
+                <div className="form-group">
+                  <label htmlFor="import-search">Buscar membro</label>
+                  <input
+                    id="import-search"
+                    type="text"
+                    className="form-input"
+                    placeholder="Digite o nome para pesquisar..."
+                    value={importSearch}
+                    onChange={(e) => setImportSearch(e.target.value)}
+                  />
+                </div>
+
+                {importSearch.trim() && (
+                  <ul className="member-search-results">
+                    {members
+                      .filter((m) =>
+                        normalizeString(m.name).includes(normalizeString(importSearch))
+                      )
+                      .slice(0, 8)
+                      .map((m) => {
+                        const alreadyAdded = importParticipants.some((p) => p.id === m.id);
+                        return (
+                          <li key={m.id} className="member-search-item">
+                            <span>{m.name}</span>
+                            <button
+                              type="button"
+                              className="button button-sm button-secondary"
+                              disabled={alreadyAdded}
+                              onClick={() => {
+                                if (!alreadyAdded) {
+                                  setImportParticipants((prev) => [
+                                    ...prev,
+                                    { id: m.id, name: m.name, status: "attended" },
+                                  ]);
+                                  setImportSearch("");
+                                }
+                              }}
+                            >
+                              {alreadyAdded ? "Adicionado" : "Adicionar"}
+                            </button>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                )}
+
+                {importParticipants.length > 0 && (
+                  <div className="import-participants-list">
+                    <p className="form-label">
+                      Participantes ({importParticipants.length})
+                    </p>
+                    <ul>
+                      {importParticipants.map((p) => (
+                        <li key={p.id} className="import-participant-item">
+                          <span>{p.name}</span>
+                          <div className="participant-controls">
+                            <button
+                              type="button"
+                              className={`button button-sm ${p.status === "attended" ? "" : "button-ghost"}`}
+                              onClick={() =>
+                                setImportParticipants((prev) =>
+                                  prev.map((x) =>
+                                    x.id === p.id ? { ...x, status: "attended" } : x
+                                  )
+                                )
+                              }
+                            >
+                              Compareceu
+                            </button>
+                            <button
+                              type="button"
+                              className={`button button-sm ${p.status === "missed" ? "button-danger" : "button-ghost"}`}
+                              onClick={() =>
+                                setImportParticipants((prev) =>
+                                  prev.map((x) =>
+                                    x.id === p.id ? { ...x, status: "missed" } : x
+                                  )
+                                )
+                              }
+                            >
+                              Faltou
+                            </button>
+                            <button
+                              type="button"
+                              className="icon-button"
+                              aria-label={`Remover ${p.name}`}
+                              onClick={() =>
+                                setImportParticipants((prev) =>
+                                  prev.filter((x) => x.id !== p.id)
+                                )
+                              }
+                            >
+                              <FiX aria-hidden="true" />
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {importFormError && (
+                  <p className="form-error" role="alert">
+                    {importFormError}
+                  </p>
+                )}
+              </form>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={() => {
+                  setImportModalOpen(false);
+                  resetImportModal();
+                }}
+                disabled={importSaving}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                form="import-course-form"
+                className="button"
+                disabled={importSaving}
+              >
+                {importSaving ? "Importando..." : "Importar Curso"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,3 +1,11 @@
+# Documentation
+.claude/
+docs/
+AGENTS.md
+AI-START.md
+tarefas.md
+.ai-instructions.md
+
 # Dependencies
 node_modules/
 vendor/
@@ -42,6 +50,7 @@ coverage/
 .cache/
 .parcel-cache/
 .turbo/
+.vite/
 tsconfig.tsbuildinfo
 *.tsbuildinfo
 

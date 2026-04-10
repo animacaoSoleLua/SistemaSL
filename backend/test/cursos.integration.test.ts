@@ -412,4 +412,135 @@ describe("Cursos (integration)", () => {
 
     expect(deleteResponse.statusCode).toBe(403);
   });
+
+  it("allows admin to import a historical course with attendees", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminToken = loginAdmin.json().data.access_token;
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
+
+    const importResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos/importar",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        title: "Curso Histórico",
+        description: "Importado manualmente",
+        course_date: "2024-06-15T10:00",
+        location: "Sala A",
+        instructor_id: adminUser!.id,
+        members: [
+          { member_id: adminUser!.id, status: "attended" },
+        ],
+      },
+    });
+
+    expect(importResponse.statusCode).toBe(201);
+    const body = importResponse.json();
+    expect(body.data.id).toBeDefined();
+    expect(body.data.imported_count).toBe(1);
+
+    // Curso deve aparecer nos arquivados
+    const listArchived = await app.inject({
+      method: "GET",
+      url: "/api/v1/cursos?status=archived",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(listArchived.statusCode).toBe(200);
+    const archivedList = listArchived.json().data;
+    expect(archivedList.some((c: { id: string }) => c.id === body.data.id)).toBe(true);
+  });
+
+  it("rejects import with duplicate member_id", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminToken = loginAdmin.json().data.access_token;
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
+
+    const importResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos/importar",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        title: "Curso Duplicado",
+        course_date: "2024-05-01T08:00",
+        instructor_id: adminUser!.id,
+        members: [
+          { member_id: adminUser!.id, status: "attended" },
+          { member_id: adminUser!.id, status: "missed" },
+        ],
+      },
+    });
+
+    expect(importResponse.statusCode).toBe(400);
+    expect(importResponse.json().error).toBe("invalid_request");
+  });
+
+  it("rejects import without authentication", async () => {
+    const importResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos/importar",
+      payload: {
+        title: "Sem auth",
+        course_date: "2024-01-01T10:00",
+        instructor_id: "00000000-0000-0000-0000-000000000000",
+        members: [],
+      },
+    });
+    expect(importResponse.statusCode).toBe(401);
+  });
+
+  it("rejects import by recreador", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminToken = loginAdmin.json().data.access_token;
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
+
+    // Cria um recreador
+    const createRecreador = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/register",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        name: "Recreador Teste",
+        email: "recreador@teste.com",
+        password: "Senha123",
+        role: "recreador",
+        cpf: "000.000.000-00",
+        region: "DF",
+        phone: "(61) 00000-0001",
+        birthDate: "2000-01-01",
+      },
+    });
+    expect(createRecreador.statusCode).toBe(201);
+
+    const loginRecredor = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "recreador@teste.com", password: "Senha123" },
+    });
+    const recreadorToken = loginRecredor.json().data.access_token;
+
+    const importResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos/importar",
+      headers: { authorization: `Bearer ${recreadorToken}` },
+      payload: {
+        title: "Tentativa",
+        course_date: "2024-01-01T10:00",
+        instructor_id: adminUser!.id,
+        members: [],
+      },
+    });
+    expect(importResponse.statusCode).toBe(403);
+  });
 });

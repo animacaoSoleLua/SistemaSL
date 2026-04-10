@@ -27,6 +27,7 @@ import {
   getCourseWithMembers,
   getEnrollmentById,
   getEnrollmentByMember,
+  importCourse,
   listArchivedCourses,
   listCourses,
   removeEnrollment,
@@ -52,6 +53,22 @@ const UpdateCourseSchema = z.object({
   location: z.string().optional(),
   capacity: z.number().int().positive().nullable().optional(),
   instructor_id: z.string().min(1).optional(),
+});
+
+const ImportCourseSchema = z.object({
+  title: z.string().min(1, "Titulo obrigatorio"),
+  description: z.string().optional(),
+  course_date: z.string().min(1, "Data obrigatoria"),
+  location: z.string().optional(),
+  instructor_id: z.string().min(1, "Instrutor obrigatorio"),
+  members: z
+    .array(
+      z.object({
+        member_id: z.string().min(1),
+        status: z.enum(["attended", "missed"]),
+      })
+    )
+    .default([]),
 });
 
 interface EnrollmentBody {
@@ -388,6 +405,77 @@ export async function cursosRoutes(app: FastifyInstance) {
 
       return reply.status(200).send({
         data: { id: course.id },
+      });
+    }
+  );
+
+  app.post(
+    "/api/v1/cursos/importar",
+    { preHandler: requireRole(["admin", "animador"]) },
+    async (request, reply) => {
+      const parsedBody = ImportCourseSchema.safeParse(request.body);
+      if (!parsedBody.success) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: parsedBody.error.issues[0].message,
+        });
+      }
+
+      const { title, description, course_date, location, instructor_id, members } =
+        parsedBody.data;
+
+      const courseDate = parseDate(course_date);
+      if (!courseDate) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Data do curso invalida",
+        });
+      }
+
+      if (!(await getUserById(instructor_id))) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Instrutor nao encontrado",
+        });
+      }
+
+      // Verificar duplicatas na lista de membros
+      const memberIds = members.map((m) => m.member_id);
+      const uniqueIds = new Set(memberIds);
+      if (uniqueIds.size !== memberIds.length) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Membros duplicados na lista",
+        });
+      }
+
+      // Verificar que todos os membros existem
+      for (const memberId of memberIds) {
+        if (!(await getUserById(memberId))) {
+          return reply.status(404).send({
+            error: "not_found",
+            message: "Membro nao encontrado",
+          });
+        }
+      }
+
+      const course = await importCourse(request.user!.id, {
+        instructorId: instructor_id,
+        title,
+        description,
+        courseDate,
+        location,
+        members: members.map((m) => ({
+          memberId: m.member_id,
+          status: m.status,
+        })),
+      });
+
+      return reply.status(201).send({
+        data: {
+          id: course.id,
+          imported_count: course.enrollments.length,
+        },
       });
     }
   );

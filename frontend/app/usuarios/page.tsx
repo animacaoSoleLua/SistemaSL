@@ -736,42 +736,22 @@ export default function UsuariosPage() {
 
         <section className="users-summary">
           <article className="summary-card">
-            <div className="summary-head">
-              <span className="summary-label">Total de Membros</span>
-              <span className="summary-icon" aria-hidden="true">
-                <FiUsers />
-              </span>
-            </div>
+            <span className="summary-label">Total de Membros</span>
             <strong className="summary-value">{totalUsers}</strong>
           </article>
 
           <article className="summary-card">
-            <div className="summary-head">
-              <span className="summary-label">Administradores</span>
-              <span className="summary-icon" aria-hidden="true">
-                <FiShield />
-              </span>
-            </div>
+            <span className="summary-label">Administradores</span>
             <strong className="summary-value">{totalAdmins}</strong>
           </article>
 
           <article className="summary-card">
-            <div className="summary-head">
-              <span className="summary-label">Animadores</span>
-              <span className="summary-icon gold" aria-hidden="true">
-                <FiStar />
-              </span>
-            </div>
+            <span className="summary-label">Animadores</span>
             <strong className="summary-value">{totalAnimadores}</strong>
           </article>
 
           <article className="summary-card">
-            <div className="summary-head">
-              <span className="summary-label">Recreadores</span>
-              <span className="summary-icon" aria-hidden="true">
-                <FiUsers />
-              </span>
-            </div>
+            <span className="summary-label">Recreadores</span>
             <strong className="summary-value">{totalRecreadores}</strong>
           </article>
         </section>

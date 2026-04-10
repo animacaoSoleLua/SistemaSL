@@ -126,6 +126,55 @@ export async function createCourse(
   return toCourseRecord(course);
 }
 
+export interface ImportCourseInput {
+  instructorId: string;
+  title: string;
+  description?: string;
+  courseDate: Date;
+  location?: string;
+  members: Array<{ memberId: string; status: "attended" | "missed" }>;
+}
+
+export async function importCourse(
+  createdBy: string,
+  input: ImportCourseInput
+): Promise<CourseRecord> {
+  const now = new Date();
+
+  const course = await prisma.$transaction(async (tx) => {
+    const created = await tx.course.create({
+      data: {
+        createdBy,
+        instructorId: input.instructorId,
+        title: input.title,
+        description: input.description,
+        courseDate: input.courseDate,
+        location: input.location,
+        capacity: null,
+        archivedAt: now,
+      },
+      include: { enrollments: true, instructor: true },
+    });
+
+    if (input.members.length > 0) {
+      await tx.courseEnrollment.createMany({
+        data: input.members.map((m) => ({
+          courseId: created.id,
+          memberId: m.memberId,
+          status: m.status,
+        })),
+      });
+    }
+
+    return tx.course.findUniqueOrThrow({
+      where: { id: created.id },
+      include: { enrollments: true, instructor: true },
+    });
+  });
+
+  return toCourseRecord(course);
+}
+
 export async function listCourses(): Promise<CourseRecord[]> {
   const courses = await prisma.course.findMany({
     where: { archivedAt: null },
