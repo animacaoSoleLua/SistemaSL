@@ -303,8 +303,9 @@ export async function membrosRoutes(app: FastifyInstance) {
     const search = query.search?.trim().toLowerCase();
     if (search) {
       members = members.filter((member) => {
+        const fullName = [member.name, member.lastName].filter(Boolean).join(" ").toLowerCase();
         return (
-          member.name.toLowerCase().includes(search) ||
+          fullName.includes(search) ||
           member.email.toLowerCase().includes(search)
         );
       });
