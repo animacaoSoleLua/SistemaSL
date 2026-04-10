@@ -91,7 +91,7 @@ export default function CursosPage() {
   const [capacity, setCapacity] = useState("");
   const [unlimitedVagas, setUnlimitedVagas] = useState(false);
   const [instructorId, setInstructorId] = useState("");
-  const [members, setMembers] = useState<Array<{ id: string; name: string }>>([]);
+  const [members, setMembers] = useState<Array<{ id: string; name: string; last_name?: string | null }>>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -1615,15 +1615,16 @@ export default function CursosPage() {
                 {importSearch.trim() && (
                   <ul className="member-search-results">
                     {members
-                      .filter((m) =>
-                        normalizeString(m.name).includes(normalizeString(importSearch))
-                      )
+                      .filter((m) => {
+                        const fullName = [m.name, m.last_name].filter(Boolean).join(" ");
+                        return normalizeString(fullName).includes(normalizeString(importSearch));
+                      })
                       .slice(0, 8)
                       .map((m) => {
                         const alreadyAdded = importParticipants.some((p) => p.id === m.id);
                         return (
                           <li key={m.id} className="member-search-item">
-                            <span>{m.name}</span>
+                            <span>{[m.name, m.last_name].filter(Boolean).join(" ")}</span>
                             <button
                               type="button"
                               className="button button-sm button-secondary"

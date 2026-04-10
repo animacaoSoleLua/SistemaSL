@@ -26,6 +26,7 @@ interface Warning {
 interface MemberSummary {
   id: string;
   name: string;
+  last_name?: string | null;
 }
 
 // ── Reducer: formulário de criação ──────────────────────────────────────────
@@ -328,7 +329,10 @@ export default function WarningsPage() {
   const filteredMemberOptions = useMemo(() => {
     const term = normalizeString(memberSearch.trim());
     if (!term) return members;
-    return members.filter((member) => normalizeString(member.name).includes(term));
+    return members.filter((member) => {
+      const fullName = [member.name, member.last_name].filter(Boolean).join(" ");
+      return normalizeString(fullName).includes(term);
+    });
   }, [memberSearch, members]);
 
   const handleMemberSearchChange = (value: string) => {
