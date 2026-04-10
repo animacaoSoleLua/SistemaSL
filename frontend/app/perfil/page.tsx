@@ -24,6 +24,7 @@ interface WarningItem {
   id: string;
   reason: string;
   warning_date: string;
+  created_by_name?: string | null;
 }
 
 interface SuspensionInfo {
@@ -795,6 +796,11 @@ export default function PerfilPage() {
                             {formatDateBR(warning.warning_date)}
                           </span>
                           <span className="warning-desc">{warning.reason}</span>
+                          {warning.created_by_name && (
+                            <span className="warning-issuer">
+                              Dada por: {warning.created_by_name}
+                            </span>
+                          )}
                         </li>
                       ))}
                     </ul>
