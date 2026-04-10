@@ -144,7 +144,7 @@ export default function WarningsPage() {
         const members = membersResponse.data as MemberSummary[];
         const map: Record<string, string> = {};
         members.forEach((member) => {
-          map[member.id] = member.name;
+          map[member.id] = [member.name, member.last_name].filter(Boolean).join(" ");
         });
         setMembers(members);
         setMemberMap(map);
@@ -677,7 +677,7 @@ export default function WarningsPage() {
                         onClick={() => handleSelectMember(member)}
                         disabled={actionLoadingId === "new"}
                       >
-                        {member.name}
+                        {[member.name, member.last_name].filter(Boolean).join(" ")}
                       </button>
                     ))
                   )}
