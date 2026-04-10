@@ -447,6 +447,14 @@ export async function membrosRoutes(app: FastifyInstance) {
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
 
+    const uniqueCreatorIds = [...new Set(warnings.map((w) => w.createdBy).filter(Boolean))];
+    const creatorRecords = await Promise.all(uniqueCreatorIds.map((id) => getUserById(id)));
+    const creatorNameMap = new Map<string, string>(
+      creatorRecords
+        .filter((u): u is NonNullable<typeof u> => u !== undefined)
+        .map((u) => [u.id, [u.name, u.lastName].filter(Boolean).join(" ")])
+    );
+
     const suspension = await getActiveSuspension(member.id);
     const feedbacks =
       request.user.role === "admin"
@@ -516,6 +524,7 @@ export async function membrosRoutes(app: FastifyInstance) {
           reason: warning.reason,
           warning_date: formatDate(warning.warningDate),
           created_by: warning.createdBy,
+          created_by_name: creatorNameMap.get(warning.createdBy) ?? null,
         })),
         warnings_total: warnings.length,
         feedbacks: feedbacks.map((entry) => ({

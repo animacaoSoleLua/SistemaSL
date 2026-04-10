@@ -1,7 +1,14 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildServer } from "../src/app.js";
 import { getUserByEmail } from "../src/auth/store.js";
-import { disconnectDatabase, resetDatabase } from "./helpers/db.js";
+import {
+  disconnectDatabase,
+  resetDatabase,
+  testAdmin,
+  testMember1,
+  testMember2,
+  testMember3,
+} from "./helpers/db.js";
 
 describe("Advertencias (integration)", () => {
   const app = buildServer();
@@ -19,63 +26,30 @@ describe("Advertencias (integration)", () => {
     await disconnectDatabase();
   });
 
-  it("allows admin to create warnings and member sees suspension after three", async () => {
-    const loginAdmin = await app.inject({
+  async function loginAs(email: string, password: string): Promise<string> {
+    const res = await app.inject({
       method: "POST",
       url: "/api/v1/auth/login",
-      payload: {
-        email: "arthurssousa2004@gmail.com",
-        password: "admin123",
-      },
+      payload: { email, password },
     });
-    const adminToken = loginAdmin.json().data.access_token;
+    return res.json().data.access_token;
+  }
 
-    const member = await getUserByEmail("animador@sol-e-lua.com");
+  it("3 advertências no mesmo mês geram suspensão", async () => {
+    const adminToken = await loginAs(testAdmin.email, testAdmin.password);
+    const member = await getUserByEmail(testMember1.email);
 
-    const warningDates = ["2026-01-10", "2026-01-11", "2026-01-12"];
-    for (const warningDate of warningDates) {
-      const createResponse = await app.inject({
+    for (const date of ["2026-04-01", "2026-04-05", "2026-04-09"]) {
+      const res = await app.inject({
         method: "POST",
         url: "/api/v1/advertencias",
         headers: { authorization: `Bearer ${adminToken}` },
-        payload: {
-          member_id: member!.id,
-          reason: "Conduta inadequada",
-          warning_date: warningDate,
-        },
+        payload: { member_id: member!.id, reason: "Conduta inadequada", warning_date: date },
       });
-
-      expect(createResponse.statusCode).toBe(201);
+      expect(res.statusCode).toBe(201);
     }
 
-    const listAdmin = await app.inject({
-      method: "GET",
-      url: `/api/v1/advertencias?member_id=${member!.id}`,
-      headers: { authorization: `Bearer ${adminToken}` },
-    });
-
-    expect(listAdmin.statusCode).toBe(200);
-    expect(listAdmin.json().data).toHaveLength(3);
-
-    const loginMember = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/login",
-      payload: {
-        email: "animador@sol-e-lua.com",
-        password: "animador123",
-      },
-    });
-    const memberToken = loginMember.json().data.access_token;
-
-    const listMember = await app.inject({
-      method: "GET",
-      url: "/api/v1/advertencias",
-      headers: { authorization: `Bearer ${memberToken}` },
-    });
-
-    expect(listMember.statusCode).toBe(200);
-    expect(listMember.json().data).toHaveLength(3);
-
+    const memberToken = await loginAs(testMember1.email, testMember1.password);
     const profile = await app.inject({
       method: "GET",
       url: `/api/v1/membros/${member!.id}`,
@@ -88,45 +62,49 @@ describe("Advertencias (integration)", () => {
     expect(profileData.suspension.status).toBe("suspended");
   });
 
-  it("does not suspend if three warnings are not within one month", async () => {
-    const loginAdmin = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/login",
-      payload: {
-        email: "arthurssousa2004@gmail.com",
-        password: "admin123",
-      },
-    });
-    const adminToken = loginAdmin.json().data.access_token;
+  it("3 advertências cross-mês dentro de 1 mês geram suspensão (ex: 30/03, 10/04, 09/04)", async () => {
+    const adminToken = await loginAs(testAdmin.email, testAdmin.password);
+    const member = await getUserByEmail(testMember2.email);
 
-    const member = await getUserByEmail("recreador@sol-e-lua.com");
-
-    const warningDates = ["2026-01-01", "2026-01-15", "2026-02-16"];
-    for (const warningDate of warningDates) {
-      const createResponse = await app.inject({
+    for (const date of ["2026-03-10", "2026-03-30", "2026-04-09"]) {
+      const res = await app.inject({
         method: "POST",
         url: "/api/v1/advertencias",
         headers: { authorization: `Bearer ${adminToken}` },
-        payload: {
-          member_id: member!.id,
-          reason: "Atraso",
-          warning_date: warningDate,
-        },
+        payload: { member_id: member!.id, reason: "Atraso recorrente", warning_date: date },
       });
-
-      expect(createResponse.statusCode).toBe(201);
+      expect(res.statusCode).toBe(201);
     }
 
-    const loginMember = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/login",
-      payload: {
-        email: "recreador@sol-e-lua.com",
-        password: "recreador123",
-      },
+    const memberToken = await loginAs(testMember2.email, testMember2.password);
+    const profile = await app.inject({
+      method: "GET",
+      url: `/api/v1/membros/${member!.id}`,
+      headers: { authorization: `Bearer ${memberToken}` },
     });
-    const memberToken = loginMember.json().data.access_token;
 
+    expect(profile.statusCode).toBe(200);
+    const profileData = profile.json().data;
+    expect(profileData.warnings_total).toBe(3);
+    expect(profileData.suspension.status).toBe("suspended");
+  });
+
+  it("3 advertências com intervalo > 1 mês não geram suspensão", async () => {
+    const adminToken = await loginAs(testAdmin.email, testAdmin.password);
+    const member = await getUserByEmail(testMember3.email);
+
+    // Jan 1 fica fora da janela de [Jan 16, Feb 16]
+    for (const date of ["2026-01-01", "2026-01-15", "2026-02-16"]) {
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/v1/advertencias",
+        headers: { authorization: `Bearer ${adminToken}` },
+        payload: { member_id: member!.id, reason: "Atraso", warning_date: date },
+      });
+      expect(res.statusCode).toBe(201);
+    }
+
+    const memberToken = await loginAs(testMember3.email, testMember3.password);
     const profile = await app.inject({
       method: "GET",
       url: `/api/v1/membros/${member!.id}`,
@@ -139,83 +117,88 @@ describe("Advertencias (integration)", () => {
     expect(profileData.suspension.status).toBe("active");
   });
 
-  it("allows admin to delete a warning", async () => {
-    const loginAdmin = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/login",
-      payload: {
-        email: "arthurssousa2004@gmail.com",
-        password: "admin123",
-      },
+  it("deletar advertência remove a suspensão se restarem menos de 3 na janela", async () => {
+    const adminToken = await loginAs(testAdmin.email, testAdmin.password);
+    const member = await getUserByEmail(testMember1.email);
+
+    const warningIds: string[] = [];
+    for (const date of ["2026-03-10", "2026-03-20", "2026-04-01"]) {
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/v1/advertencias",
+        headers: { authorization: `Bearer ${adminToken}` },
+        payload: { member_id: member!.id, reason: "Falta", warning_date: date },
+      });
+      expect(res.statusCode).toBe(201);
+      warningIds.push(res.json().data.id);
+    }
+
+    const deleteRes = await app.inject({
+      method: "DELETE",
+      url: `/api/v1/advertencias/${warningIds[0]}`,
+      headers: { authorization: `Bearer ${adminToken}` },
     });
-    const adminToken = loginAdmin.json().data.access_token;
+    expect(deleteRes.statusCode).toBe(204);
 
-    const member = await getUserByEmail("recreador@sol-e-lua.com");
+    const memberToken = await loginAs(testMember1.email, testMember1.password);
+    const profile = await app.inject({
+      method: "GET",
+      url: `/api/v1/membros/${member!.id}`,
+      headers: { authorization: `Bearer ${memberToken}` },
+    });
 
-    const createResponse = await app.inject({
+    expect(profile.statusCode).toBe(200);
+    expect(profile.json().data.suspension.status).toBe("active");
+  });
+
+  it("animador pode criar advertência e vê apenas as próprias via created_by=me", async () => {
+    const animadorToken = await loginAs(testMember2.email, testMember2.password);
+    const target = await getUserByEmail(testMember3.email);
+
+    const createRes = await app.inject({
+      method: "POST",
+      url: "/api/v1/advertencias",
+      headers: { authorization: `Bearer ${animadorToken}` },
+      payload: { member_id: target!.id, reason: "Atraso injustificado", warning_date: "2026-03-01" },
+    });
+    expect(createRes.statusCode).toBe(201);
+
+    const listRes = await app.inject({
+      method: "GET",
+      url: "/api/v1/advertencias?created_by=me",
+      headers: { authorization: `Bearer ${animadorToken}` },
+    });
+    expect(listRes.statusCode).toBe(200);
+    expect(listRes.json().data).toHaveLength(1);
+  });
+
+  it("profile warnings include created_by_name", async () => {
+    const adminToken = await loginAs(testAdmin.email, testAdmin.password);
+    const admin = await getUserByEmail(testAdmin.email);
+
+    const member = await getUserByEmail(testMember1.email);
+
+    await app.inject({
       method: "POST",
       url: "/api/v1/advertencias",
       headers: { authorization: `Bearer ${adminToken}` },
       payload: {
         member_id: member!.id,
-        reason: "Falta",
+        reason: "Teste de autor",
         warning_date: "2026-02-01",
       },
     });
 
-    const warningId = createResponse.json().data.id;
-
-    const deleteResponse = await app.inject({
-      method: "DELETE",
-      url: `/api/v1/advertencias/${warningId}`,
+    const profile = await app.inject({
+      method: "GET",
+      url: `/api/v1/membros/${member!.id}`,
       headers: { authorization: `Bearer ${adminToken}` },
     });
 
-    expect(deleteResponse.statusCode).toBe(204);
-
-    const listMember = await app.inject({
-      method: "GET",
-      url: "/api/v1/advertencias",
-      headers: { authorization: `Bearer ${adminToken}` },
-    });
-
-    expect(listMember.statusCode).toBe(200);
-    expect(listMember.json().data).toHaveLength(0);
-  });
-
-  it("allows animador to list warnings they created", async () => {
-    const loginAnimador = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/login",
-      payload: {
-        email: "animador@sol-e-lua.com",
-        password: "animador123",
-      },
-    });
-    const animadorToken = loginAnimador.json().data.access_token;
-
-    const recreador = await getUserByEmail("recreador@sol-e-lua.com");
-
-    const createResponse = await app.inject({
-      method: "POST",
-      url: "/api/v1/advertencias",
-      headers: { authorization: `Bearer ${animadorToken}` },
-      payload: {
-        member_id: recreador!.id,
-        reason: "Atraso",
-        warning_date: "2026-03-01",
-      },
-    });
-
-    expect(createResponse.statusCode).toBe(201);
-
-    const listResponse = await app.inject({
-      method: "GET",
-      url: "/api/v1/advertencias?created_by=me",
-      headers: { authorization: `Bearer ${animadorToken}` },
-    });
-
-    expect(listResponse.statusCode).toBe(200);
-    expect(listResponse.json().data).toHaveLength(1);
+    expect(profile.statusCode).toBe(200);
+    const profileData = profile.json().data;
+    expect(profileData.warnings).toHaveLength(1);
+    const expectedName = [admin!.name, admin!.lastName].filter(Boolean).join(" ");
+    expect(profileData.warnings[0].created_by_name).toBe(expectedName);
   });
 });
