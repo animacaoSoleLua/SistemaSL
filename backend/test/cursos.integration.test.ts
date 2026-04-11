@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildServer } from "../src/app.js";
 import { getUserByEmail } from "../src/auth/store.js";
-import { disconnectDatabase, resetDatabase } from "./helpers/db.js";
+import { disconnectDatabase, resetDatabase, testAdmin } from "./helpers/db.js";
 
 describe("Cursos (integration)", () => {
   const app = buildServer();
@@ -540,6 +540,44 @@ describe("Cursos (integration)", () => {
     const data = response.json().data as Array<{ title: string }>;
     expect(data.some((c) => c.title === "Curso Fevereiro")).toBe(true);
     expect(data.some((c) => c.title === "Curso Marco")).toBe(false);
+  });
+
+  it("returns 400 for invalid period_start", async () => {
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: testAdmin.email, password: testAdmin.password },
+    });
+    const token = login.json().data.access_token;
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/cursos?period_start=not-a-date",
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toBe("invalid_request");
+    expect(response.json().message).toBe("Periodo inicial invalido");
+  });
+
+  it("returns 400 for invalid period_end", async () => {
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: testAdmin.email, password: testAdmin.password },
+    });
+    const token = login.json().data.access_token;
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/cursos?period_end=not-a-date",
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toBe("invalid_request");
+    expect(response.json().message).toBe("Periodo final invalido");
   });
 
   it("rejects import by recreador", async () => {
