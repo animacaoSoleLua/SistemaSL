@@ -95,8 +95,18 @@ export function resolveApiAssetUrl(url?: string | null) {
   return `${API_ORIGIN}/${url}`;
 }
 
-export async function getReports() {
-  return request('/relatorios', { method: 'GET' });
+export async function getReports(params: {
+  period_start?: string;
+  period_end?: string;
+  limit?: number;
+} = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.period_start) searchParams.set("period_start", params.period_start);
+  if (params.period_end) searchParams.set("period_end", params.period_end);
+  if (params.limit) searchParams.set("limit", String(params.limit));
+  const query = searchParams.toString();
+  const endpoint = query ? `/relatorios?${query}` : "/relatorios";
+  return request(endpoint, { method: "GET" });
 }
 
 export async function getDashboardSummary(params: {
@@ -391,11 +401,15 @@ export async function getCourses(params: {
   status?: "available" | "full" | "all" | "archived";
   page?: number;
   limit?: number;
+  period_start?: string;
+  period_end?: string;
 } = {}) {
   const searchParams = new URLSearchParams();
   if (params.status) searchParams.set("status", params.status);
   if (params.page) searchParams.set("page", String(params.page));
   if (params.limit) searchParams.set("limit", String(params.limit));
+  if (params.period_start) searchParams.set("period_start", params.period_start);
+  if (params.period_end) searchParams.set("period_end", params.period_end);
 
   const query = searchParams.toString();
   const endpoint = query ? `/cursos?${query}` : "/cursos";
