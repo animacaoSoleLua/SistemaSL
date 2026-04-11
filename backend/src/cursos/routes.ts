@@ -83,6 +83,8 @@ interface CourseQuery {
   status?: string;
   page?: string;
   limit?: string;
+  period_start?: string;
+  period_end?: string;
 }
 
 function parseDate(value?: string): Date | undefined {
@@ -149,6 +151,23 @@ export async function cursosRoutes(app: FastifyInstance) {
       });
     }
 
+    const periodStart = parseDate(query.period_start);
+    const periodEnd = parseDate(query.period_end);
+
+    if (query.period_start && !periodStart) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Periodo inicial invalido",
+      });
+    }
+
+    if (query.period_end && !periodEnd) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Periodo final invalido",
+      });
+    }
+
     if (query.status && !isValidStatusFilter(query.status)) {
       return reply.status(400).send({
         error: "invalid_request",
@@ -171,6 +190,13 @@ export async function cursosRoutes(app: FastifyInstance) {
         }
         return remaining <= 0;
       });
+    }
+
+    if (periodStart) {
+      courses = courses.filter((course) => course.courseDate >= periodStart);
+    }
+    if (periodEnd) {
+      courses = courses.filter((course) => course.courseDate <= periodEnd);
     }
 
     courses.sort((a, b) => a.courseDate.getTime() - b.courseDate.getTime());

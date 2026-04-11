@@ -496,6 +496,52 @@ describe("Cursos (integration)", () => {
     expect(importResponse.statusCode).toBe(401);
   });
 
+  it("filters courses by period_start and period_end", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: {
+        email: "arthurssousa2004@gmail.com",
+        password: "admin123",
+      },
+    });
+    const adminToken = loginAdmin.json().data.access_token;
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
+
+    await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        title: "Curso Fevereiro",
+        course_date: "2026-02-15T10:00",
+        instructor_id: adminUser!.id,
+      },
+    });
+
+    await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        title: "Curso Marco",
+        course_date: "2026-03-10T10:00",
+        instructor_id: adminUser!.id,
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/cursos?period_start=2026-02-01&period_end=2026-02-28&status=all",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const data = response.json().data as Array<{ title: string }>;
+    expect(data.some((c) => c.title === "Curso Fevereiro")).toBe(true);
+    expect(data.some((c) => c.title === "Curso Marco")).toBe(false);
+  });
+
   it("rejects import by recreador", async () => {
     const loginAdmin = await app.inject({
       method: "POST",
