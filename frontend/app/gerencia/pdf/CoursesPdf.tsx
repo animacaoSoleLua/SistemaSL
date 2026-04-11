@@ -1,3 +1,5 @@
+"use client";
+
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 export interface CoursePdfItem {
@@ -79,7 +81,7 @@ export function CoursesPdf({ courses, period, generatedAt }: CoursesPdfProps) {
             </Text>
             <Text style={s.cInstructor}>{c.instructor.name}</Text>
             <Text style={s.cCapacity}>
-              {c.enrolled_count} / {c.capacity ?? "∞"}
+              {c.enrolled_count} / {c.capacity ?? "Ilimitado"}
             </Text>
           </View>
         ))}

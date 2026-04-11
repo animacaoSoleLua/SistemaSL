@@ -1,3 +1,5 @@
+"use client";
+
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 export interface MemberPdfItem {
@@ -16,7 +18,7 @@ interface MembersPdfProps {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrador",
+  admin: "Admin",
   animador: "Animador",
   recreador: "Recreador",
 };
