@@ -1,0 +1,122 @@
+/* Gerência — relatórios gerenciais */
+
+.gerencia-header {
+  margin-bottom: 28px;
+}
+
+.gerencia-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.gerencia-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Grid de 4 cards de resumo */
+.gerencia-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+/* Seções */
+.gerencia-section {
+  margin-bottom: 48px;
+}
+
+.gerencia-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 16px;
+}
+
+.gerencia-section-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.gerencia-filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.gerencia-count {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Tabela */
+.gerencia-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(111, 76, 255, 0.1);
+}
+
+.gerencia-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.gerencia-table thead th {
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gerencia-table tbody tr {
+  border-bottom: 1px solid rgba(111, 76, 255, 0.06);
+}
+
+.gerencia-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.gerencia-table tbody td {
+  padding: 10px 14px;
+  color: var(--ink);
+}
+
+.gerencia-empty {
+  text-align: center;
+  padding: 32px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Responsivo */
+@media (max-width: 960px) {
+  .gerencia-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .gerencia-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gerencia-section-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
