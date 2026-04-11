@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useId, useRef, useState, useEffect } from "react";
 import {
   FiAlertTriangle,
+  FiBarChart2,
   FiBookOpen,
   FiFileText,
   FiGrid,
@@ -28,6 +29,12 @@ const navItems = [
     href: "/dashboard",
     roles: ["admin"],
     icon: <FiGrid aria-hidden="true" />
+  },
+  {
+    label: "Gerência",
+    href: "/gerencia",
+    roles: ["admin"],
+    icon: <FiBarChart2 aria-hidden="true" />
   },
   {
     label: "Relatorios",
@@ -80,6 +87,9 @@ function isActive(pathname: string, href: string) {
   }
   if (href === "/relatorios") {
     return pathname.startsWith("/relatorios");
+  }
+  if (href === "/gerencia") {
+    return pathname.startsWith("/gerencia");
   }
   if (href === "/cursos") {
     return pathname.startsWith("/cursos") || pathname.startsWith("/novo-curso");
