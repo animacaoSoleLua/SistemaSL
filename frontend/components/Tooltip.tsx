@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState, useRef, useEffect } from "react";
+import React, { ReactNode, useState, useRef, useEffect } from "react";
 import "./Tooltip.css";
 
 interface TooltipProps {
@@ -31,11 +31,15 @@ export default function Tooltip({
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
 
-    // Check if top position goes off-screen
+    // Check if position goes off-screen and adjust
     if (position === "top" && tooltip.top < 8) {
       setAdjustedPosition("bottom");
     } else if (position === "bottom" && tooltip.bottom > viewportHeight - 8) {
       setAdjustedPosition("top");
+    } else if (position === "left" && tooltip.left < 8) {
+      setAdjustedPosition("right");
+    } else if (position === "right" && tooltip.right > viewportWidth - 8) {
+      setAdjustedPosition("left");
     }
   }, [isVisible, position]);
 
@@ -58,16 +62,34 @@ export default function Tooltip({
     setIsVisible(false);
   };
 
+  // Clone children and pass handlers
+  const childrenWithHandlers = React.isValidElement(children)
+    ? React.cloneElement(children, {
+        onMouseEnter: (e: React.MouseEvent) => {
+          children.props?.onMouseEnter?.(e);
+          handleMouseEnter();
+        },
+        onMouseLeave: (e: React.MouseEvent) => {
+          children.props?.onMouseLeave?.(e);
+          handleMouseLeave();
+        },
+        onFocus: (e: React.FocusEvent) => {
+          children.props?.onFocus?.(e);
+          handleFocus();
+        },
+        onBlur: (e: React.FocusEvent) => {
+          children.props?.onBlur?.(e);
+          handleBlur();
+        },
+      })
+    : children;
+
   return (
     <div
       ref={triggerRef}
       className="tooltip-trigger"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
     >
-      {children}
+      {childrenWithHandlers}
       {isVisible && (
         <div
           ref={tooltipRef}
