@@ -21,6 +21,7 @@ import {
   isRoleAllowed,
   type Role,
 } from "../../lib/auth";
+import TooltipIcon from "../../components/TooltipIcon";
 
 const allowedRoles: Role[] = ["admin"];
 
@@ -427,7 +428,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--success"><FiCheckCircle aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : membersStats.disciplinary}%</span>
-              <span className="stat-label">Saúde Disciplinar</span>
+              <span className="stat-label">
+                Saúde Disciplinar
+                <TooltipIcon
+                  label="Saúde Disciplinar"
+                  content="Porcentagem de membros que não possuem nenhuma advertência ativa no sistema. Calculado em tempo real baseado no registro de advertências."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
           <div className="stat-divider" />
@@ -435,7 +443,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--warning"><FiSmile aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : membersStats.satisfaction}%</span>
-              <span className="stat-label">Satisfação do Cliente</span>
+              <span className="stat-label">
+                Satisfação do Cliente
+                <TooltipIcon
+                  label="Satisfação do Cliente"
+                  content="Porcentagem de feedbacks positivos coletados nos últimos 30 dias. Baseado em pesquisas de satisfação preenchidas após eventos."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
           <div className="stat-divider" />
@@ -443,7 +458,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--info"><FiTrendingUp aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : membersStats.attendance}%</span>
-              <span className="stat-label">Taxa de Assiduidade</span>
+              <span className="stat-label">
+                Taxa de Assiduidade
+                <TooltipIcon
+                  label="Taxa de Assiduidade"
+                  content="Porcentagem de participantes que compareceram aos cursos nos últimos 30 dias. Calculado a partir do status de presença registrado no sistema."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
           <div className="stat-divider" />
@@ -451,7 +473,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--danger"><FiXCircle aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : membersStats.cancelation}%</span>
-              <span className="stat-label">Taxa de Cancelamento</span>
+              <span className="stat-label">
+                Taxa de Cancelamento
+                <TooltipIcon
+                  label="Taxa de Cancelamento"
+                  content="Porcentagem de inscritos que não compareceram aos cursos nos últimos 30 dias. Complementa a taxa de assiduidade."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
         </>
@@ -463,7 +492,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--green"><FiFileText aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : reportsStats.total}</span>
-              <span className="stat-label">Total de Relatórios</span>
+              <span className="stat-label">
+                Total de Relatórios
+                <TooltipIcon
+                  label="Total de Relatórios"
+                  content="Número total de eventos com relatórios registrados no período selecionado."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
           <div className="stat-divider" />
@@ -471,7 +507,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--purple"><FiFileText aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : reportsStats.outsideBrasilia}</span>
-              <span className="stat-label">Fora de Brasília</span>
+              <span className="stat-label">
+                Fora de Brasília
+                <TooltipIcon
+                  label="Fora de Brasília"
+                  content="Quantidade de eventos realizados fora da região de Brasília conforme indicado no formulário de relatório."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
           <div className="stat-divider" />
@@ -479,7 +522,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--amber"><FiFileText aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : reportsStats.exclusive}</span>
-              <span className="stat-label">Eventos Exclusivos</span>
+              <span className="stat-label">
+                Eventos Exclusivos
+                <TooltipIcon
+                  label="Eventos Exclusivos"
+                  content="Quantidade de eventos marcados como exclusivos no sistema durante o período."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
           <div className="stat-divider" />
@@ -487,7 +537,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--blue"><FiFileText aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : reportsStats.avgQuality}</span>
-              <span className="stat-label">Qualidade Média</span>
+              <span className="stat-label">
+                Qualidade Média
+                <TooltipIcon
+                  label="Qualidade Média"
+                  content="Média aritmética das notas de qualidade (0-10) atribuídas aos eventos no período."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
         </>
@@ -499,7 +556,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--blue"><FiBookOpen aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : coursesStats.total}</span>
-              <span className="stat-label">Total de Cursos</span>
+              <span className="stat-label">
+                Total de Cursos
+                <TooltipIcon
+                  label="Total de Cursos"
+                  content="Número total de cursos realizados no período selecionado."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
           <div className="stat-divider" />
@@ -507,7 +571,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--green"><FiUsers aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : coursesStats.enrollments}</span>
-              <span className="stat-label">Total de Inscrições</span>
+              <span className="stat-label">
+                Total de Inscrições
+                <TooltipIcon
+                  label="Total de Inscrições"
+                  content="Soma de todas as inscrições em cursos durante o período. Um participante pode se inscrever em múltiplos cursos."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
           <div className="stat-divider" />
@@ -515,7 +586,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--amber"><FiBookOpen aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : coursesStats.avgOccupancy}%</span>
-              <span className="stat-label">Ocupação Média</span>
+              <span className="stat-label">
+                Ocupação Média
+                <TooltipIcon
+                  label="Ocupação Média"
+                  content="Porcentagem média de vagas preenchidas nos cursos do período. Calculado apenas para cursos com capacidade definida."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
           <div className="stat-divider" />
@@ -523,7 +601,14 @@ export default function GerenciaPage() {
             <span className="stat-icon stat-icon--purple"><FiUsers aria-hidden="true" /></span>
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : coursesStats.activeInstructors}</span>
-              <span className="stat-label">Instrutores Ativos</span>
+              <span className="stat-label">
+                Instrutores Ativos
+                <TooltipIcon
+                  label="Instrutores Ativos"
+                  content="Número de instrutores únicos que ministraram cursos no período selecionado."
+                  position="top"
+                />
+              </span>
             </div>
           </div>
         </>
