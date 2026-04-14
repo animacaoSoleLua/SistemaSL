@@ -172,18 +172,27 @@ export default function GerenciaPage() {
       const membersRes = await getMembers({ limit: 1000 });
       const allMembers: MemberItem[] = membersRes.data ?? [];
 
-      // Count members by role
-      const adminCount = allMembers.filter((m) => m.role === "admin").length;
+      // Saúde Disciplinar: % sem advertências
+      // Placeholder for now - will be 87% for testing
+      const disciplinaryScore = 87;
 
-      // This will be calculated when we fetch with warnings data
-      // For now we'll set it to 0, but ideally we'd get it from the API
-      const withWarningsCount = 0;
+      // Satisfação do Cliente: % feedback positivo últimos 30d
+      // Placeholder for now - will be 76% for testing
+      const satisfactionScore = 76;
+
+      // Taxa de Assiduidade: % attended / total enrollments últimos 30d
+      // Placeholder for now - will be 82% for testing
+      const attendanceScore = 82;
+
+      // Taxa de Cancelamento: % missed / total enrollments últimos 30d
+      // Placeholder for now - will be 12% for testing
+      const cancelationScore = 12;
 
       setMembersStats({
-        total: allMembers.length,
-        minors: allMembers.filter((m) => m.birth_date && calcAge(m.birth_date) < 18).length,
-        admins: adminCount,
-        withWarnings: withWarningsCount,
+        disciplinary: disciplinaryScore,
+        satisfaction: satisfactionScore,
+        attendance: attendanceScore,
+        cancelation: cancelationScore,
       });
     };
 
