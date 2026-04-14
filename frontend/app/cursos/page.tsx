@@ -27,6 +27,7 @@ import {
 } from "../../lib/auth";
 import { useFocusTrap } from "../../lib/useFocusTrap";
 import { normalizeString } from "../../lib/validators";
+import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
 
 interface Course {
   id: string;
@@ -83,6 +84,21 @@ export default function CursosPage() {
   const [viewCourse, setViewCourse] = useState<Course | null>(null);
   const [viewDetails, setViewDetails] = useState<CourseDetails | null>(null);
   const [viewError, setViewError] = useState<string | null>(null);
+  const [enrolledMembersModal, setEnrolledMembersModal] = useState<{
+    isOpen: boolean;
+    courseId: string | null;
+    members: Array<{ id: string; name: string }>;
+    loading: boolean;
+    error: string | null;
+    searchTerm: string;
+  }>({
+    isOpen: false,
+    courseId: null,
+    members: [],
+    loading: false,
+    error: null,
+    searchTerm: ''
+  });
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [courseDate, setCourseDate] = useState("");
@@ -350,7 +366,7 @@ export default function CursosPage() {
       const rawDate = data.course_date ?? "";
       const sep = rawDate.includes("T") ? "T" : " ";
       const [datePart = "", timeFull = ""] = rawDate.split(sep);
-      setCourseDate(datePart);
+      setCourseDate(isoToDisplay(datePart));
       setCourseTime(timeFull.slice(0, 5) || "08:00");
       setLocation(data.location ?? "");
       if (data.capacity === null) {
@@ -507,7 +523,7 @@ export default function CursosPage() {
       await importCourse({
         title: importTitle.trim(),
         description: importDescription.trim() || undefined,
-        course_date: `${importDate}T${importTime}`,
+        course_date: `${displayToIso(importDate)}T${importTime}`,
         location: importLocation.trim() || undefined,
         instructor_id: importInstructorId,
         members: importParticipants.map((p) => ({
@@ -560,7 +576,7 @@ export default function CursosPage() {
         await updateCourse(editingCourseId, {
           title: title.trim(),
           description: description.trim() || undefined,
-          course_date: `${courseDate}T${courseTime}`,
+          course_date: `${displayToIso(courseDate)}T${courseTime}`,
           location: location.trim() || undefined,
           capacity: unlimitedVagas ? null : parsedCapacity,
           instructor_id: instructorId,
@@ -570,7 +586,7 @@ export default function CursosPage() {
         await createCourse({
           title: title.trim(),
           description: description.trim() || undefined,
-          course_date: `${courseDate}T${courseTime}`,
+          course_date: `${displayToIso(courseDate)}T${courseTime}`,
           location: location.trim() || undefined,
           capacity: parsedCapacity,
           instructor_id: instructorId,
@@ -1395,9 +1411,12 @@ export default function CursosPage() {
                   <input
                     id="course-date"
                     className="input"
-                    type="date"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="DD/MM/AAAA"
                     value={courseDate}
-                    onChange={(e) => setCourseDate(e.target.value)}
+                    onChange={(e) => setCourseDate(formatDateInput(e.target.value))}
                     required
                     aria-required="true"
                     disabled={saving || editingLoading}
@@ -1550,10 +1569,13 @@ export default function CursosPage() {
                     <label htmlFor="import-date">Data *</label>
                     <input
                       id="import-date"
-                      type="date"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="DD/MM/AAAA"
                       className="form-input"
                       value={importDate}
-                      onChange={(e) => setImportDate(e.target.value)}
+                      onChange={(e) => setImportDate(formatDateInput(e.target.value))}
                       required
                     />
                   </div>
