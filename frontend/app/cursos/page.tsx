@@ -1800,6 +1800,95 @@ export default function CursosPage() {
           </div>
         </div>
       )}
+
+      {enrolledMembersModal.isOpen && (
+        <div className="modal-overlay" onClick={closeEnrolledMembersModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                Inscritos no Curso:{' '}
+                {courses.find(c => c.id === enrolledMembersModal.courseId)?.title}
+              </h2>
+              <button
+                onClick={closeEnrolledMembersModal}
+                className="close-btn"
+                aria-label="Fechar modal"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div className="modal-content">
+              {enrolledMembersModal.loading && (
+                <div className="loading-state">
+                  <p>Carregando inscritos...</p>
+                </div>
+              )}
+
+              {!enrolledMembersModal.loading && enrolledMembersModal.error && (
+                <div className="error-state">
+                  <p>{enrolledMembersModal.error}</p>
+                </div>
+              )}
+
+              {!enrolledMembersModal.loading && !enrolledMembersModal.error && (
+                <>
+                  <div className="search-section">
+                    <input
+                      type="text"
+                      placeholder="Buscar por nome..."
+                      value={enrolledMembersModal.searchTerm}
+                      onChange={(e) =>
+                        setEnrolledMembersModal(prev => ({
+                          ...prev,
+                          searchTerm: e.target.value
+                        }))
+                      }
+                      className="search-input"
+                    />
+                  </div>
+
+                  {enrolledMembersModal.members.length === 0 ? (
+                    <div className="empty-state">
+                      <p>Nenhum inscrito ainda</p>
+                    </div>
+                  ) : (
+                    <div className="members-list">
+                      {enrolledMembersModal.members
+                        .filter(member =>
+                          member.name
+                            .toLowerCase()
+                            .includes(enrolledMembersModal.searchTerm.toLowerCase())
+                        )
+                        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+                        .map(member => (
+                          <div key={member.id} className="member-item">
+                            {member.name}
+                          </div>
+                        ))}
+                      {enrolledMembersModal.members.filter(member =>
+                        member.name
+                          .toLowerCase()
+                          .includes(enrolledMembersModal.searchTerm.toLowerCase())
+                      ).length === 0 && enrolledMembersModal.searchTerm && (
+                        <div className="no-results">
+                          <p>Nenhum resultado para "{enrolledMembersModal.searchTerm}"</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button onClick={closeEnrolledMembersModal} className="btn-secondary">
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

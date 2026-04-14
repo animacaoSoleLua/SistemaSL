@@ -437,3 +437,66 @@ body.theme-purple .import-participants-list ul {
   background: rgba(161, 97, 255, 0.03);
   border-color: rgba(161, 97, 255, 0.15);
 }
+
+/* Enrolled Members Modal */
+.search-section {
+  margin-bottom: 1.5rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+}
+
+.members-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.member-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95rem;
+}
+
+.member-item:last-child {
+  border-bottom: none;
+}
+
+.member-item:hover {
+  background-color: #f9f9f9;
+}
+
+.loading-state,
+.error-state,
+.empty-state,
+.no-results {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #666;
+}
+
+.error-state {
+  color: #d32f2f;
+}
+
+.no-results {
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  color: #999;
+  font-size: 0.9rem;
+}
