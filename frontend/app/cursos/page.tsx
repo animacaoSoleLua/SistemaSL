@@ -1802,8 +1802,8 @@ export default function CursosPage() {
       )}
 
       {enrolledMembersModal.isOpen && (
-        <div className="modal-overlay" onClick={closeEnrolledMembersModal}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop" onClick={closeEnrolledMembersModal}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>
                 Inscritos no Curso:{' '}
@@ -1811,14 +1811,14 @@ export default function CursosPage() {
               </h2>
               <button
                 onClick={closeEnrolledMembersModal}
-                className="close-btn"
-                aria-label="Fechar modal"
+                className="icon-button"
+                aria-label="Fechar modal de inscritos"
               >
-                <FiX size={24} />
+                <FiX size={20} />
               </button>
             </div>
 
-            <div className="modal-content">
+            <div className="modal-body">
               {enrolledMembersModal.loading && (
                 <div className="loading-state">
                   <p>Carregando inscritos...</p>
@@ -1882,7 +1882,7 @@ export default function CursosPage() {
             </div>
 
             <div className="modal-footer">
-              <button onClick={closeEnrolledMembersModal} className="btn-secondary">
+              <button onClick={closeEnrolledMembersModal} className="button secondary">
                 Fechar
               </button>
             </div>
