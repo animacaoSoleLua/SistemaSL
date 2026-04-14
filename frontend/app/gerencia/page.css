@@ -1,41 +1,302 @@
-/* Gerência — relatórios gerenciais */
+/* ─── Gerência — Management Reports ──────────────────────────── */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Page header ──────────────────────────────────────────────── */
 
 .gerencia-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
   margin-bottom: 28px;
+  animation: fadeUp 0.4s ease both;
+  flex-wrap: wrap;
+}
+
+.gerencia-header-text {
+  flex-shrink: 0;
 }
 
 .gerencia-title {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 800;
   color: var(--ink);
   margin: 0 0 4px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .gerencia-subtitle {
   font-size: 14px;
   color: var(--muted);
   margin: 0;
+  letter-spacing: 0.01em;
 }
 
-/* Grid de 4 cards de resumo */
-.gerencia-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 48px;
+/* ── Tab navigation ───────────────────────────────────────────── */
+
+.gerencia-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--panel);
+  border: 1px solid rgba(111, 76, 255, 0.1);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 1px 8px rgba(36, 28, 60, 0.06);
 }
 
-/* Seções */
+.gerencia-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  white-space: nowrap;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+}
+
+.gerencia-tab svg {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.gerencia-tab:hover:not(.active) {
+  background: rgba(111, 76, 255, 0.06);
+  color: var(--ink);
+}
+
+.gerencia-tab.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(111, 76, 255, 0.35);
+}
+
+/* ── Stats bar ────────────────────────────────────────────────── */
+
+.gerencia-stats-bar {
+  display: flex;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid rgba(111, 76, 255, 0.1);
+  border-radius: 16px;
+  padding: 0 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 10px rgba(36, 28, 60, 0.06);
+  animation: fadeUp 0.4s ease both;
+  animation-delay: 0.08s;
+  overflow: hidden;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  padding: 20px 24px;
+  min-width: 0;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 44px;
+  background: rgba(111, 76, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+
+.stat-icon--purple { color: #6f4cff; background: rgba(111, 76, 255, 0.1); }
+.stat-icon--amber  { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+.stat-icon--green  { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+.stat-icon--blue   { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+
+.stat-icon--success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.stat-icon--warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.stat-icon--info {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.stat-icon--danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.stat-pct {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Export PDF button override ───────────────────────────────── */
+
+.btn-export-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease, opacity 0.18s ease;
+  box-shadow: 0 3px 14px rgba(111, 76, 255, 0.35);
+  white-space: nowrap;
+}
+
+.btn-export-pdf svg {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.btn-export-pdf:hover:not(:disabled) {
+  background: #5c36e8;
+  box-shadow: 0 5px 20px rgba(111, 76, 255, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-export-pdf:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(111, 76, 255, 0.3);
+}
+
+.btn-export-pdf:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Active section panel ─────────────────────────────────────── */
+
+.gerencia-panel {
+  background: var(--panel);
+  border: 1px solid rgba(111, 76, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 2px 20px rgba(36, 28, 60, 0.07);
+  overflow: hidden;
+  animation: fadeUp 0.4s ease both;
+  animation-delay: 0.22s;
+}
+
 .gerencia-section {
-  margin-bottom: 48px;
+  padding: 28px 28px 32px;
+  animation: fadeIn 0.25s ease both;
+}
+
+/* ── Section header ───────────────────────────────────────────── */
+
+.gerencia-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .gerencia-section-title {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--ink);
-  margin: 0 0 16px;
+  margin: 0 0 4px;
+  letter-spacing: -0.015em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
+
+.gerencia-section-title::before {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.gerencia-section-desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+  padding-left: 14px;
+}
+
+/* ── Controls bar ─────────────────────────────────────────────── */
 
 .gerencia-section-controls {
   display: flex;
@@ -44,79 +305,256 @@
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 16px;
+  padding: 12px 16px;
+  background: rgba(111, 76, 255, 0.03);
+  border: 1px solid rgba(111, 76, 255, 0.07);
+  border-radius: 12px;
 }
 
 .gerencia-filters {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.gerencia-count {
-  font-size: 13px;
+.gerencia-filter-label {
+  font-size: 12px;
+  font-weight: 600;
   color: var(--muted);
   white-space: nowrap;
 }
 
-/* Tabela */
+.gerencia-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--accent-soft);
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* ── Table ────────────────────────────────────────────────────── */
+
 .gerencia-table-wrapper {
   overflow-x: auto;
   border-radius: 12px;
-  border: 1px solid rgba(111, 76, 255, 0.1);
+  border: 1px solid rgba(111, 76, 255, 0.09);
 }
 
 .gerencia-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .gerencia-table thead th {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: rgba(111, 76, 255, 0.04);
+  color: var(--muted);
   text-align: left;
-  padding: 10px 14px;
-  font-size: 11px;
+  padding: 11px 16px;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid rgba(111, 76, 255, 0.08);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .gerencia-table tbody tr {
-  border-bottom: 1px solid rgba(111, 76, 255, 0.06);
+  border-bottom: 1px solid rgba(111, 76, 255, 0.05);
+  transition: background 0.15s ease;
 }
 
 .gerencia-table tbody tr:last-child {
   border-bottom: none;
 }
 
+.gerencia-table tbody tr:hover {
+  background: rgba(111, 76, 255, 0.04);
+}
+
 .gerencia-table tbody td {
-  padding: 10px 14px;
+  padding: 11px 16px;
+  color: var(--ink);
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.gerencia-table tbody td:first-child {
+  font-weight: 600;
   color: var(--ink);
 }
 
 .gerencia-empty {
   text-align: center;
-  padding: 32px;
+  padding: 48px 32px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.gerencia-empty::before {
+  content: "—";
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  color: rgba(111, 76, 255, 0.2);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+/* role badge */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.role-badge.admin    { color: #6f4cff; background: rgba(111, 76, 255, 0.1);  border-color: rgba(111, 76, 255, 0.25); }
+.role-badge.animador { color: #10b981; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.25); }
+.role-badge.recreador{ color: #3b82f6; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.25); }
+
+/* loading row skeleton */
+.gerencia-loading-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--muted);
   font-size: 14px;
 }
 
-/* Responsivo */
+.gerencia-loading-text::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-dot 1.1s ease infinite;
+}
+
+/* ── Dark theme overrides ─────────────────────────────────────── */
+
+body.theme-purple .gerencia-tabs {
+  background: rgba(21, 11, 34, 0.9);
+  border-color: rgba(161, 97, 255, 0.15);
+}
+
+body.theme-purple .gerencia-tab.active {
+  box-shadow: 0 2px 12px rgba(111, 76, 255, 0.5);
+}
+
+body.theme-purple .gerencia-stats-bar {
+  background: rgba(21, 11, 34, 0.85);
+  border-color: rgba(161, 97, 255, 0.15);
+}
+
+body.theme-purple .stat-divider {
+  background: rgba(161, 97, 255, 0.13);
+}
+
+body.theme-purple .gerencia-panel {
+  background: rgba(21, 11, 34, 0.85);
+  border-color: rgba(161, 97, 255, 0.13);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-purple .gerencia-section-controls {
+  background: rgba(161, 97, 255, 0.05);
+  border-color: rgba(161, 97, 255, 0.1);
+}
+
+body.theme-purple .gerencia-table-wrapper {
+  border-color: rgba(161, 97, 255, 0.1);
+}
+
+body.theme-purple .gerencia-table thead th {
+  background: rgba(161, 97, 255, 0.07);
+  border-bottom-color: rgba(161, 97, 255, 0.1);
+}
+
+body.theme-purple .gerencia-table tbody tr {
+  border-bottom-color: rgba(161, 97, 255, 0.06);
+}
+
+body.theme-purple .gerencia-table tbody tr:hover {
+  background: rgba(161, 97, 255, 0.06);
+}
+
+body.theme-purple .gerencia-count {
+  background: rgba(161, 97, 255, 0.13);
+  color: rgba(243, 233, 255, 0.7);
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+
 @media (max-width: 960px) {
-  .gerencia-summary-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .gerencia-stats-bar {
+    flex-wrap: wrap;
+    padding: 4px;
+  }
+
+  .stat-item {
+    flex: 1 1 45%;
+    min-width: 160px;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .gerencia-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .gerencia-tabs {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .gerencia-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 12.5px;
   }
 }
 
 @media (max-width: 600px) {
-  .gerencia-summary-grid {
-    grid-template-columns: 1fr;
+  .gerencia-title {
+    font-size: 22px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .gerencia-section {
+    padding: 20px 16px 24px;
   }
 
   .gerencia-section-controls {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .gerencia-section-header {
+    flex-direction: column;
   }
 }
