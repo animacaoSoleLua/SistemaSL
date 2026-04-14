@@ -479,6 +479,18 @@ export async function updateEnrollmentStatus(
   });
 }
 
+export async function getEnrolledMembers(
+  courseId: string
+): Promise<{ id: string; name: string }[]> {
+  try {
+    const data = await request(`/cursos/${courseId}/inscricoes`, { method: "GET" });
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching enrolled members:', error);
+    throw error;
+  }
+}
+
 export async function finalizeCourse(
   courseId: string,
   enrollments: Array<{ enrollment_id: string; status: "attended" | "missed" }>
@@ -525,6 +537,7 @@ export async function createFeedback(input: {
   type: "positive" | "negative";
   text?: string;
   member_ids: string[];
+  event_date?: string;
 }) {
   return request("/feedbacks", {
     method: "POST",
