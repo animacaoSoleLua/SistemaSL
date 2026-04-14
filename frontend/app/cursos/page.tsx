@@ -3,7 +3,7 @@
 import './page.css';
 import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiAlertTriangle, FiArchive, FiInfo, FiTrash2, FiX } from "react-icons/fi";
+import { FiAlertTriangle, FiArchive, FiInfo, FiTrash2, FiUsers, FiX } from "react-icons/fi";
 import {
   cancelEnrollment,
   createCourse,
@@ -887,6 +887,14 @@ export default function CursosPage() {
                             }}
                           >
                             Editar
+                          </button>
+                          <button
+                            onClick={() => handleViewEnrolled(course.id)}
+                            className="action-btn info-btn"
+                            title="Ver inscritos"
+                            aria-label="Ver inscritos do curso"
+                          >
+                            <FiUsers size={18} />
                           </button>
                           <button
                             type="button"
