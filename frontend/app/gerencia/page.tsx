@@ -14,7 +14,7 @@ import {
   FiUsers,
   FiXCircle,
 } from "react-icons/fi";
-import { getCourses, getMembers, getReports } from "../../lib/api";
+import { getCourses, getEnrolledMembers, getFeedbacks, getMembers, getReports, getWarnings } from "../../lib/api";
 import {
   getDefaultRoute,
   getStoredUser,
@@ -176,21 +176,73 @@ export default function GerenciaPage() {
       const membersRes = await getMembers({ limit: 1000 });
       const allMembers: MemberItem[] = membersRes.data ?? [];
 
-      // Saúde Disciplinar: % sem advertências
-      // Placeholder for now - will be 87% for testing
-      const disciplinaryScore = 87;
+      // Calculate 30-day window (today - 30 days)
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().slice(0, 10);
 
-      // Satisfação do Cliente: % feedback positivo últimos 30d
-      // Placeholder for now - will be 76% for testing
-      const satisfactionScore = 76;
+      // 1. Saúde Disciplinar: % members without active warnings
+      let disciplinaryScore = 0;
+      if (allMembers.length > 0) {
+        const warningsRes = await getWarnings({ limit: 1000 });
+        const activeWarnings = (warningsRes.data ?? []) as any[];
+        const membersWithWarnings = new Set(activeWarnings.map((w) => w.member_id));
+        const membersWithoutWarnings = allMembers.length - membersWithWarnings.size;
+        disciplinaryScore = Math.round((membersWithoutWarnings / allMembers.length) * 100);
+      }
 
-      // Taxa de Assiduidade: % attended / total enrollments últimos 30d
-      // Placeholder for now - will be 82% for testing
-      const attendanceScore = 82;
+      // 2. Satisfação do Cliente: % positive feedback in last 30 days
+      let satisfactionScore = 0;
+      const feedbacksRes = await getFeedbacks({ limit: 1000 });
+      const allFeedbacks = (feedbacksRes.data ?? []) as any[];
+      const feedbacksLast30d = allFeedbacks.filter((f) => {
+        const feedbackDate = f.event_date || f.created_at;
+        return feedbackDate && feedbackDate >= thirtyDaysAgoStr;
+      });
+      if (feedbacksLast30d.length > 0) {
+        const positiveFeedbacks = feedbacksLast30d.filter((f) => f.type === "positive").length;
+        satisfactionScore = Math.round((positiveFeedbacks / feedbacksLast30d.length) * 100);
+      }
 
-      // Taxa de Cancelamento: % missed / total enrollments últimos 30d
-      // Placeholder for now - will be 12% for testing
-      const cancelationScore = 12;
+      // 3 & 4. Taxa de Assiduidade & Cancelamento: from course enrollments last 30 days
+      let attendanceScore = 0;
+      let cancelationScore = 0;
+      const coursesRes = await getCourses({ status: "all", limit: 1000 });
+      const allCourses = (coursesRes.data ?? []) as CourseItem[];
+
+      // Need to fetch enrollments for each course to get status data
+      let totalEnrollmentsLast30d = 0;
+      let attendedCount = 0;
+      let missedCount = 0;
+
+      for (const course of allCourses) {
+        try {
+          const enrollmentsRes = await getEnrolledMembers(course.id);
+          const enrollments = (enrollmentsRes ?? []) as any[];
+
+          for (const enrollment of enrollments) {
+            // Check if enrollment is within last 30 days
+            const enrollmentDate = enrollment.createdAt || enrollment.created_at;
+            if (enrollmentDate && enrollmentDate >= thirtyDaysAgoStr) {
+              totalEnrollmentsLast30d++;
+
+              if (enrollment.status === "attended") {
+                attendedCount++;
+              } else if (enrollment.status === "missed") {
+                missedCount++;
+              }
+            }
+          }
+        } catch (error) {
+          // Silently skip if course enrollments can't be fetched
+          console.error(`Failed to fetch enrollments for course ${course.id}:`, error);
+        }
+      }
+
+      if (totalEnrollmentsLast30d > 0) {
+        attendanceScore = Math.round((attendedCount / totalEnrollmentsLast30d) * 100);
+        cancelationScore = Math.round((missedCount / totalEnrollmentsLast30d) * 100);
+      }
 
       setMembersStats({
         disciplinary: disciplinaryScore,
