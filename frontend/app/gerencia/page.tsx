@@ -57,6 +57,8 @@ const ROLE_LABELS: Record<string, string> = {
   recreador: "Recreador",
 };
 
+type Tab = "membros" | "relatorios" | "cursos";
+
 function getMonthBounds(month: number, year: number) {
   const start = `${year}-${String(month).padStart(2, "0")}-01`;
   const lastDay = new Date(year, month, 0).getDate();
@@ -94,13 +96,33 @@ async function triggerDownload(blob: Blob, filename: string) {
 export default function GerenciaPage() {
   const router = useRouter();
   const [canLoad, setCanLoad] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("membros");
 
-  // Summary cards
-  const [summaryLoading, setSummaryLoading] = useState(true);
-  const [totalMembers, setTotalMembers] = useState(0);
-  const [minorCount, setMinorCount] = useState(0);
-  const [reportsThisMonth, setReportsThisMonth] = useState(0);
-  const [coursesThisMonth, setCoursesThisMonth] = useState(0);
+  // Summary cards - Members stats
+  const [membersStats, setMembersStats] = useState({
+    disciplinary: 0,      // % sem advertências
+    satisfaction: 0,      // % feedback positivo
+    attendance: 0,        // % attended
+    cancelation: 0,       // % missed
+  });
+
+  // Summary cards - Reports stats
+  const [reportsStats, setReportsStats] = useState({
+    total: 0,
+    outsideBrasilia: 0,
+    exclusive: 0,
+    avgQuality: 0,
+  });
+
+  // Summary cards - Courses stats
+  const [coursesStats, setCoursesStats] = useState({
+    total: 0,
+    enrollments: 0,
+    avgOccupancy: 0,
+    activeInstructors: 0,
+  });
+
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Members section
   const [membersLoading, setMembersLoading] = useState(false);
@@ -140,27 +162,96 @@ export default function GerenciaPage() {
     setCanLoad(true);
   }, [router]);
 
-  // Summary cards: load once on mount
+  // Summary cards: load based on active tab
   useEffect(() => {
     if (!canLoad) return;
-    setSummaryLoading(true);
+    setStatsLoading(true);
     const { start, end } = getMonthBounds(now.getMonth() + 1, now.getFullYear());
-    Promise.all([
-      getMembers({ limit: 1000 }),
-      getReports({ period_start: start, period_end: end, limit: 1000 }),
-      getCourses({ status: "all", period_start: start, period_end: end, limit: 1000 }),
-    ])
-      .then(([membersRes, reportsRes, coursesRes]) => {
-        const allMembers: MemberItem[] = membersRes.data ?? [];
-        setTotalMembers(allMembers.length);
-        setMinorCount(
-          allMembers.filter((m) => m.birth_date && calcAge(m.birth_date) < 18).length
-        );
-        setReportsThisMonth((reportsRes.data ?? []).length);
-        setCoursesThisMonth((coursesRes.data ?? []).length);
-      })
-      .finally(() => setSummaryLoading(false));
-  }, [canLoad]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const loadMembersStats = async () => {
+      const membersRes = await getMembers({ limit: 1000 });
+      const allMembers: MemberItem[] = membersRes.data ?? [];
+
+      // Count members by role
+      const adminCount = allMembers.filter((m) => m.role === "admin").length;
+
+      // This will be calculated when we fetch with warnings data
+      // For now we'll set it to 0, but ideally we'd get it from the API
+      const withWarningsCount = 0;
+
+      setMembersStats({
+        total: allMembers.length,
+        minors: allMembers.filter((m) => m.birth_date && calcAge(m.birth_date) < 18).length,
+        admins: adminCount,
+        withWarnings: withWarningsCount,
+      });
+    };
+
+    const loadReportsStats = async () => {
+      const reportsRes = await getReports({
+        period_start: start,
+        period_end: end,
+        limit: 1000
+      });
+      const reports = (reportsRes.data ?? []) as any[];
+
+      const outsideCount = reports.filter((r) => r.outside_brasilia).length;
+      const exclusiveCount = reports.filter((r) => r.exclusive_event).length;
+      const qualityScores = reports
+        .map((r) => r.event_quality_score)
+        .filter((s) => s !== null && s !== undefined) as number[];
+      const avgQuality = qualityScores.length > 0
+        ? Math.round(qualityScores.reduce((a, b) => a + b, 0) / qualityScores.length)
+        : 0;
+
+      setReportsStats({
+        total: reports.length,
+        outsideBrasilia: outsideCount,
+        exclusive: exclusiveCount,
+        avgQuality: avgQuality,
+      });
+    };
+
+    const loadCoursesStats = async () => {
+      const coursesRes = await getCourses({
+        status: "all",
+        period_start: start,
+        period_end: end,
+        limit: 1000
+      });
+      const courses = (coursesRes.data ?? []) as CourseItem[];
+
+      // Calculate occupancy average
+      const occupancyRates = courses
+        .filter((c) => c.capacity && c.capacity > 0)
+        .map((c) => (c.enrolled_count / (c.capacity || 1)) * 100);
+      const avgOccupancy = occupancyRates.length > 0
+        ? Math.round(occupancyRates.reduce((a, b) => a + b, 0) / occupancyRates.length)
+        : 0;
+
+      // Count total enrollments (from all courses)
+      const totalEnrollments = courses.reduce((sum, c) => sum + c.enrolled_count, 0);
+
+      // Count unique instructors
+      const uniqueInstructors = new Set(courses.map((c) => c.instructor.id)).size;
+
+      setCoursesStats({
+        total: courses.length,
+        enrollments: totalEnrollments,
+        avgOccupancy: avgOccupancy,
+        activeInstructors: uniqueInstructors,
+      });
+    };
+
+    // Load stats based on active tab
+    if (activeTab === "membros") {
+      loadMembersStats().finally(() => setStatsLoading(false));
+    } else if (activeTab === "relatorios") {
+      loadReportsStats().finally(() => setStatsLoading(false));
+    } else if (activeTab === "cursos") {
+      loadCoursesStats().finally(() => setStatsLoading(false));
+    }
+  }, [canLoad, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Members section: reload when role filter changes
   useEffect(() => {
@@ -262,284 +353,422 @@ export default function GerenciaPage() {
 
   if (!canLoad) return null;
 
-  const minorPercent =
-    totalMembers > 0 ? Math.round((minorCount / totalMembers) * 100) : 0;
+  // Render stats based on active tab
+  const renderStats = () => {
+    if (activeTab === "membros") {
+      const minorPercent =
+        membersStats.total > 0 ? Math.round((membersStats.minors / membersStats.total) * 100) : 0;
+      return (
+        <>
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--purple"><FiUsers aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : membersStats.total}</span>
+              <span className="stat-label">Total de Membros</span>
+            </div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--amber"><FiUserX aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">
+                {statsLoading ? "—" : membersStats.minors}
+                {!statsLoading && membersStats.total > 0 && (
+                  <small className="stat-pct">{minorPercent}%</small>
+                )}
+              </span>
+              <span className="stat-label">Menores de Idade</span>
+            </div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--green"><FiUsers aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : membersStats.admins}</span>
+              <span className="stat-label">Administradores</span>
+            </div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--blue"><FiUserX aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : membersStats.withWarnings}</span>
+              <span className="stat-label">Com Advertências</span>
+            </div>
+          </div>
+        </>
+      );
+    } else if (activeTab === "relatorios") {
+      return (
+        <>
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--green"><FiFileText aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : reportsStats.total}</span>
+              <span className="stat-label">Total de Relatórios</span>
+            </div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--purple"><FiFileText aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : reportsStats.outsideBrasilia}</span>
+              <span className="stat-label">Fora de Brasília</span>
+            </div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--amber"><FiFileText aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : reportsStats.exclusive}</span>
+              <span className="stat-label">Eventos Exclusivos</span>
+            </div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--blue"><FiFileText aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : reportsStats.avgQuality}</span>
+              <span className="stat-label">Qualidade Média</span>
+            </div>
+          </div>
+        </>
+      );
+    } else if (activeTab === "cursos") {
+      return (
+        <>
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--blue"><FiBookOpen aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : coursesStats.total}</span>
+              <span className="stat-label">Total de Cursos</span>
+            </div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--green"><FiUsers aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : coursesStats.enrollments}</span>
+              <span className="stat-label">Total de Inscrições</span>
+            </div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--amber"><FiBookOpen aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : coursesStats.avgOccupancy}%</span>
+              <span className="stat-label">Ocupação Média</span>
+            </div>
+          </div>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <span className="stat-icon stat-icon--purple"><FiUsers aria-hidden="true" /></span>
+            <div className="stat-body">
+              <span className="stat-value">{statsLoading ? "—" : coursesStats.activeInstructors}</span>
+              <span className="stat-label">Instrutores Ativos</span>
+            </div>
+          </div>
+        </>
+      );
+    }
+  };
 
   return (
-    <main className="page">
+    <main className="app-page">
+      {/* Header + tabs */}
       <div className="gerencia-header">
-        <h1 className="gerencia-title">Gerência</h1>
-        <p className="gerencia-subtitle">Relatórios gerenciais e indicadores da empresa</p>
+        <div className="gerencia-header-text">
+          <h1 className="gerencia-title">Gerência</h1>
+          <p className="gerencia-subtitle">Relatórios gerenciais e indicadores da empresa</p>
+        </div>
+
+        <nav className="gerencia-tabs" aria-label="Seções de gerência">
+          <button
+            type="button"
+            className={`gerencia-tab${activeTab === "membros" ? " active" : ""}`}
+            onClick={() => setActiveTab("membros")}
+          >
+            <FiUsers aria-hidden="true" />
+            Membros
+          </button>
+          <button
+            type="button"
+            className={`gerencia-tab${activeTab === "relatorios" ? " active" : ""}`}
+            onClick={() => setActiveTab("relatorios")}
+          >
+            <FiFileText aria-hidden="true" />
+            Relatórios
+          </button>
+          <button
+            type="button"
+            className={`gerencia-tab${activeTab === "cursos" ? " active" : ""}`}
+            onClick={() => setActiveTab("cursos")}
+          >
+            <FiBookOpen aria-hidden="true" />
+            Cursos
+          </button>
+        </nav>
       </div>
 
-      {/* Cards de resumo */}
-      <div className="gerencia-summary-grid">
-        <div className="summary-card">
-          <div className="summary-head">
-            <span className="summary-label">Total de Membros</span>
-            <span className="summary-icon">
-              <FiUsers aria-hidden="true" />
-            </span>
-          </div>
-          <div className="summary-value">
-            {summaryLoading ? "—" : totalMembers}
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-head">
-            <span className="summary-label">Menores de Idade</span>
-            <span className="summary-icon">
-              <FiUserX aria-hidden="true" />
-            </span>
-          </div>
-          <div className="summary-value">
-            {summaryLoading ? "—" : minorCount}
-          </div>
-          {!summaryLoading && totalMembers > 0 && (
-            <span className="summary-note">{minorPercent}% do total</span>
-          )}
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-head">
-            <span className="summary-label">Relatórios este Mês</span>
-            <span className="summary-icon">
-              <FiFileText aria-hidden="true" />
-            </span>
-          </div>
-          <div className="summary-value">
-            {summaryLoading ? "—" : reportsThisMonth}
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-head">
-            <span className="summary-label">Cursos este Mês</span>
-            <span className="summary-icon">
-              <FiBookOpen aria-hidden="true" />
-            </span>
-          </div>
-          <div className="summary-value">
-            {summaryLoading ? "—" : coursesThisMonth}
-          </div>
-        </div>
+      {/* Stats em linha */}
+      <div className="gerencia-stats-bar">
+        {renderStats()}
       </div>
 
-      {/* Seção: Membros */}
-      <section className="gerencia-section">
-        <h2 className="gerencia-section-title">Relação de Membros</h2>
-        <div className="gerencia-section-controls">
-          <div className="gerencia-filters">
-            <select
-              className="input"
-              value={membersRoleFilter}
-              onChange={(e) => setMembersRoleFilter(e.target.value)}
-              aria-label="Filtrar por função"
-            >
-              <option value="all">Todos</option>
-              <option value="admin">Admin</option>
-              <option value="animador">Animador</option>
-              <option value="recreador">Recreador</option>
-            </select>
-            <span className="gerencia-count">
-              {membersLoading ? "Carregando..." : `${members.length} membro(s)`}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleGenerateMembersPdf}
-            disabled={generatingMembersPdf || membersLoading || members.length === 0}
-          >
-            <FiDownload aria-hidden="true" />
-            {generatingMembersPdf ? "Gerando..." : "Gerar PDF"}
-          </button>
-        </div>
+      {/* Seção ativa */}
+      <div className="gerencia-panel">
+        {/* ── Membros ── */}
+        {activeTab === "membros" && (
+          <section className="gerencia-section" key="membros">
+            <div className="gerencia-section-header">
+              <div>
+                <h2 className="gerencia-section-title">Relação de Membros</h2>
+                <p className="gerencia-section-desc">Lista completa de membros cadastrados no sistema</p>
+              </div>
+              <button
+                type="button"
+                className="btn-export-pdf"
+                onClick={handleGenerateMembersPdf}
+                disabled={generatingMembersPdf || membersLoading || members.length === 0}
+              >
+                <FiDownload aria-hidden="true" />
+                {generatingMembersPdf ? "Gerando..." : "Exportar PDF"}
+              </button>
+            </div>
 
-        <div className="gerencia-table-wrapper">
-          <table className="gerencia-table">
-            <thead>
-              <tr>
-                <th>Nome Completo</th>
-                <th>CPF</th>
-                <th>Data de Nascimento</th>
-                <th>Idade</th>
-                <th>Função</th>
-              </tr>
-            </thead>
-            <tbody>
-              {membersLoading ? (
-                <tr>
-                  <td colSpan={5} className="gerencia-empty">Carregando...</td>
-                </tr>
-              ) : members.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="gerencia-empty">Nenhum membro encontrado.</td>
-                </tr>
-              ) : (
-                members.map((m) => (
-                  <tr key={m.id}>
-                    <td>{m.name}{m.last_name ? ` ${m.last_name}` : ""}</td>
-                    <td>{m.cpf ?? "—"}</td>
-                    <td>{m.birth_date ? formatDateBR(m.birth_date) : "—"}</td>
-                    <td>{m.birth_date ? calcAge(m.birth_date) : "—"}</td>
-                    <td>{ROLE_LABELS[m.role] ?? m.role}</td>
+            <div className="gerencia-section-controls">
+              <div className="gerencia-filters">
+                <label className="gerencia-filter-label">Função:</label>
+                <select
+                  className="input"
+                  value={membersRoleFilter}
+                  onChange={(e) => setMembersRoleFilter(e.target.value)}
+                  aria-label="Filtrar por função"
+                >
+                  <option value="all">Todos</option>
+                  <option value="admin">Admin</option>
+                  <option value="animador">Animador</option>
+                  <option value="recreador">Recreador</option>
+                </select>
+              </div>
+              <span className="gerencia-count">
+                {membersLoading ? "Carregando..." : `${members.length} membro(s)`}
+              </span>
+            </div>
+
+            <div className="gerencia-table-wrapper">
+              <table className="gerencia-table">
+                <thead>
+                  <tr>
+                    <th>Nome Completo</th>
+                    <th>CPF</th>
+                    <th>Data de Nascimento</th>
+                    <th>Idade</th>
+                    <th>Função</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                </thead>
+                <tbody>
+                  {membersLoading ? (
+                    <tr>
+                      <td colSpan={5} className="gerencia-empty">
+                        <span className="gerencia-loading-text">Carregando membros</span>
+                      </td>
+                    </tr>
+                  ) : members.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="gerencia-empty">Nenhum membro encontrado.</td>
+                    </tr>
+                  ) : (
+                    members.map((m) => (
+                      <tr key={m.id}>
+                        <td>{m.name}{m.last_name ? ` ${m.last_name}` : ""}</td>
+                        <td>{m.cpf ?? "—"}</td>
+                        <td>{m.birth_date ? formatDateBR(m.birth_date) : "—"}</td>
+                        <td>{m.birth_date ? calcAge(m.birth_date) : "—"}</td>
+                        <td>
+                          <span className={`role-badge ${m.role}`}>
+                            {ROLE_LABELS[m.role] ?? m.role}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
-      {/* Seção: Relatórios de Eventos */}
-      <section className="gerencia-section">
-        <h2 className="gerencia-section-title">Relatórios de Eventos por Mês</h2>
-        <div className="gerencia-section-controls">
-          <div className="gerencia-filters">
-            <select
-              className="input"
-              value={reportsMonth}
-              onChange={(e) => setReportsMonth(Number(e.target.value))}
-              aria-label="Mês dos relatórios"
-            >
-              {MONTH_NAMES.map((name, i) => (
-                <option key={i + 1} value={i + 1}>{name}</option>
-              ))}
-            </select>
-            <select
-              className="input"
-              value={reportsYear}
-              onChange={(e) => setReportsYear(Number(e.target.value))}
-              aria-label="Ano dos relatórios"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-            <span className="gerencia-count">
-              {reportsLoading ? "Carregando..." : `${reportItems.length} relatório(s)`}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleGenerateReportsPdf}
-            disabled={generatingReportsPdf || reportsLoading || reportItems.length === 0}
-          >
-            <FiDownload aria-hidden="true" />
-            {generatingReportsPdf ? "Gerando..." : "Gerar PDF"}
-          </button>
-        </div>
+        {/* ── Relatórios ── */}
+        {activeTab === "relatorios" && (
+          <section className="gerencia-section" key="relatorios">
+            <div className="gerencia-section-header">
+              <div>
+                <h2 className="gerencia-section-title">Relatórios de Eventos por Mês</h2>
+                <p className="gerencia-section-desc">Eventos registrados no período selecionado</p>
+              </div>
+              <button
+                type="button"
+                className="btn-export-pdf"
+                onClick={handleGenerateReportsPdf}
+                disabled={generatingReportsPdf || reportsLoading || reportItems.length === 0}
+              >
+                <FiDownload aria-hidden="true" />
+                {generatingReportsPdf ? "Gerando..." : "Exportar PDF"}
+              </button>
+            </div>
 
-        <div className="gerencia-table-wrapper">
-          <table className="gerencia-table">
-            <thead>
-              <tr>
-                <th>Data do Evento</th>
-                <th>Contratante</th>
-                <th>Título do Roteiro</th>
-                <th>Autor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportsLoading ? (
-                <tr>
-                  <td colSpan={4} className="gerencia-empty">Carregando...</td>
-                </tr>
-              ) : reportItems.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="gerencia-empty">Nenhum relatório encontrado neste período.</td>
-                </tr>
-              ) : (
-                reportItems.map((r) => (
-                  <tr key={r.id}>
-                    <td>{formatDateBR(r.event_date)}</td>
-                    <td>{r.contractor_name}</td>
-                    <td>{r.title_schedule ?? "—"}</td>
-                    <td>{r.author_name ?? "—"}</td>
+            <div className="gerencia-section-controls">
+              <div className="gerencia-filters">
+                <label className="gerencia-filter-label">Período:</label>
+                <select
+                  className="input"
+                  value={reportsMonth}
+                  onChange={(e) => setReportsMonth(Number(e.target.value))}
+                  aria-label="Mês dos relatórios"
+                >
+                  {MONTH_NAMES.map((name, i) => (
+                    <option key={i + 1} value={i + 1}>{name}</option>
+                  ))}
+                </select>
+                <select
+                  className="input"
+                  value={reportsYear}
+                  onChange={(e) => setReportsYear(Number(e.target.value))}
+                  aria-label="Ano dos relatórios"
+                >
+                  {years.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              <span className="gerencia-count">
+                {reportsLoading ? "Carregando..." : `${reportItems.length} relatório(s)`}
+              </span>
+            </div>
+
+            <div className="gerencia-table-wrapper">
+              <table className="gerencia-table">
+                <thead>
+                  <tr>
+                    <th>Data do Evento</th>
+                    <th>Contratante</th>
+                    <th>Título do Roteiro</th>
+                    <th>Autor</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                </thead>
+                <tbody>
+                  {reportsLoading ? (
+                    <tr>
+                      <td colSpan={4} className="gerencia-empty">
+                        <span className="gerencia-loading-text">Carregando relatórios</span>
+                      </td>
+                    </tr>
+                  ) : reportItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="gerencia-empty">Nenhum relatório encontrado neste período.</td>
+                    </tr>
+                  ) : (
+                    reportItems.map((r) => (
+                      <tr key={r.id}>
+                        <td>{formatDateBR(r.event_date)}</td>
+                        <td>{r.contractor_name}</td>
+                        <td>{r.title_schedule ?? "—"}</td>
+                        <td>{r.author_name ?? "—"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
-      {/* Seção: Cursos */}
-      <section className="gerencia-section">
-        <h2 className="gerencia-section-title">Cursos por Mês</h2>
-        <div className="gerencia-section-controls">
-          <div className="gerencia-filters">
-            <select
-              className="input"
-              value={coursesMonth}
-              onChange={(e) => setCoursesMonth(Number(e.target.value))}
-              aria-label="Mês dos cursos"
-            >
-              {MONTH_NAMES.map((name, i) => (
-                <option key={i + 1} value={i + 1}>{name}</option>
-              ))}
-            </select>
-            <select
-              className="input"
-              value={coursesYear}
-              onChange={(e) => setCoursesYear(Number(e.target.value))}
-              aria-label="Ano dos cursos"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-            <span className="gerencia-count">
-              {coursesLoading ? "Carregando..." : `${courseItems.length} curso(s)`}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleGenerateCoursesPdf}
-            disabled={generatingCoursesPdf || coursesLoading || courseItems.length === 0}
-          >
-            <FiDownload aria-hidden="true" />
-            {generatingCoursesPdf ? "Gerando..." : "Gerar PDF"}
-          </button>
-        </div>
+        {/* ── Cursos ── */}
+        {activeTab === "cursos" && (
+          <section className="gerencia-section" key="cursos">
+            <div className="gerencia-section-header">
+              <div>
+                <h2 className="gerencia-section-title">Cursos por Mês</h2>
+                <p className="gerencia-section-desc">Cursos realizados no período selecionado</p>
+              </div>
+              <button
+                type="button"
+                className="btn-export-pdf"
+                onClick={handleGenerateCoursesPdf}
+                disabled={generatingCoursesPdf || coursesLoading || courseItems.length === 0}
+              >
+                <FiDownload aria-hidden="true" />
+                {generatingCoursesPdf ? "Gerando..." : "Exportar PDF"}
+              </button>
+            </div>
 
-        <div className="gerencia-table-wrapper">
-          <table className="gerencia-table">
-            <thead>
-              <tr>
-                <th>Curso</th>
-                <th>Data</th>
-                <th>Instrutor</th>
-                <th>Inscritos / Vagas</th>
-              </tr>
-            </thead>
-            <tbody>
-              {coursesLoading ? (
-                <tr>
-                  <td colSpan={4} className="gerencia-empty">Carregando...</td>
-                </tr>
-              ) : courseItems.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="gerencia-empty">Nenhum curso encontrado neste período.</td>
-                </tr>
-              ) : (
-                courseItems.map((c) => (
-                  <tr key={c.id}>
-                    <td>{c.title}</td>
-                    <td>{formatDateBR(c.course_date)}</td>
-                    <td>{c.instructor.name}</td>
-                    <td>{c.enrolled_count} / {c.capacity ?? "Ilimitado"}</td>
+            <div className="gerencia-section-controls">
+              <div className="gerencia-filters">
+                <label className="gerencia-filter-label">Período:</label>
+                <select
+                  className="input"
+                  value={coursesMonth}
+                  onChange={(e) => setCoursesMonth(Number(e.target.value))}
+                  aria-label="Mês dos cursos"
+                >
+                  {MONTH_NAMES.map((name, i) => (
+                    <option key={i + 1} value={i + 1}>{name}</option>
+                  ))}
+                </select>
+                <select
+                  className="input"
+                  value={coursesYear}
+                  onChange={(e) => setCoursesYear(Number(e.target.value))}
+                  aria-label="Ano dos cursos"
+                >
+                  {years.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              <span className="gerencia-count">
+                {coursesLoading ? "Carregando..." : `${courseItems.length} curso(s)`}
+              </span>
+            </div>
+
+            <div className="gerencia-table-wrapper">
+              <table className="gerencia-table">
+                <thead>
+                  <tr>
+                    <th>Curso</th>
+                    <th>Data</th>
+                    <th>Instrutor</th>
+                    <th>Inscritos / Vagas</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                </thead>
+                <tbody>
+                  {coursesLoading ? (
+                    <tr>
+                      <td colSpan={4} className="gerencia-empty">
+                        <span className="gerencia-loading-text">Carregando cursos</span>
+                      </td>
+                    </tr>
+                  ) : courseItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="gerencia-empty">Nenhum curso encontrado neste período.</td>
+                    </tr>
+                  ) : (
+                    courseItems.map((c) => (
+                      <tr key={c.id}>
+                        <td>{c.title}</td>
+                        <td>{formatDateBR(c.course_date)}</td>
+                        <td>{c.instructor.name}</td>
+                        <td>{c.enrolled_count} / {c.capacity ?? "Ilimitado"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+      </div>
     </main>
   );
 }
