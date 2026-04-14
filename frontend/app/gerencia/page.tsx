@@ -5,10 +5,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiBookOpen,
+  FiCheckCircle,
   FiDownload,
   FiFileText,
+  FiSmile,
+  FiTrendingUp,
   FiUserX,
   FiUsers,
+  FiXCircle,
 } from "react-icons/fi";
 import { getCourses, getMembers, getReports } from "../../lib/api";
 import {
@@ -365,44 +369,37 @@ export default function GerenciaPage() {
   // Render stats based on active tab
   const renderStats = () => {
     if (activeTab === "membros") {
-      const minorPercent =
-        membersStats.total > 0 ? Math.round((membersStats.minors / membersStats.total) * 100) : 0;
       return (
         <>
           <div className="stat-item">
-            <span className="stat-icon stat-icon--purple"><FiUsers aria-hidden="true" /></span>
+            <span className="stat-icon stat-icon--success"><FiCheckCircle aria-hidden="true" /></span>
             <div className="stat-body">
-              <span className="stat-value">{statsLoading ? "—" : membersStats.total}</span>
-              <span className="stat-label">Total de Membros</span>
+              <span className="stat-value">{statsLoading ? "—" : membersStats.disciplinary}%</span>
+              <span className="stat-label">Saúde Disciplinar</span>
             </div>
           </div>
           <div className="stat-divider" />
           <div className="stat-item">
-            <span className="stat-icon stat-icon--amber"><FiUserX aria-hidden="true" /></span>
+            <span className="stat-icon stat-icon--warning"><FiSmile aria-hidden="true" /></span>
             <div className="stat-body">
-              <span className="stat-value">
-                {statsLoading ? "—" : membersStats.minors}
-                {!statsLoading && membersStats.total > 0 && (
-                  <small className="stat-pct">{minorPercent}%</small>
-                )}
-              </span>
-              <span className="stat-label">Menores de Idade</span>
+              <span className="stat-value">{statsLoading ? "—" : membersStats.satisfaction}%</span>
+              <span className="stat-label">Satisfação do Cliente</span>
             </div>
           </div>
           <div className="stat-divider" />
           <div className="stat-item">
-            <span className="stat-icon stat-icon--green"><FiUsers aria-hidden="true" /></span>
+            <span className="stat-icon stat-icon--info"><FiTrendingUp aria-hidden="true" /></span>
             <div className="stat-body">
-              <span className="stat-value">{statsLoading ? "—" : membersStats.admins}</span>
-              <span className="stat-label">Administradores</span>
+              <span className="stat-value">{statsLoading ? "—" : membersStats.attendance}%</span>
+              <span className="stat-label">Taxa de Assiduidade</span>
             </div>
           </div>
           <div className="stat-divider" />
           <div className="stat-item">
-            <span className="stat-icon stat-icon--blue"><FiUserX aria-hidden="true" /></span>
+            <span className="stat-icon stat-icon--danger"><FiXCircle aria-hidden="true" /></span>
             <div className="stat-body">
-              <span className="stat-value">{statsLoading ? "—" : membersStats.withWarnings}</span>
-              <span className="stat-label">Com Advertências</span>
+              <span className="stat-value">{statsLoading ? "—" : membersStats.cancelation}%</span>
+              <span className="stat-label">Taxa de Cancelamento</span>
             </div>
           </div>
         </>
