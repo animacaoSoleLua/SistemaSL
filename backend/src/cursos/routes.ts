@@ -579,6 +579,64 @@ export async function cursosRoutes(app: FastifyInstance) {
     });
   });
 
+  app.get("/api/v1/cursos/:id/inscricoes", async (request, reply) => {
+    const params = request.params as { id?: string };
+    if (!params.id) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Curso invalido",
+      });
+    }
+
+    if (!request.user) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Token ausente",
+      });
+    }
+
+    // Fetch course to ensure it exists
+    const course = await getCourseById(params.id);
+    if (!course) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Curso nao encontrado",
+      });
+    }
+
+    try {
+      // Fetch enrolled members with their names
+      const enrollments = await prisma.courseEnrollment.findMany({
+        where: { courseId: params.id },
+        include: {
+          member: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+            },
+          },
+        },
+      });
+
+      // Format response: return id and full name
+      const formattedEnrollments = enrollments.map((e) => ({
+        id: e.member.id,
+        name: `${e.member.name}${e.member.lastName ? " " + e.member.lastName : ""}`,
+      }));
+
+      return reply.status(200).send({
+        data: formattedEnrollments,
+      });
+    } catch (error) {
+      console.error("Error fetching enrollments:", error);
+      return reply.status(500).send({
+        error: "internal_error",
+        message: "Erro ao carregar inscritos",
+      });
+    }
+  });
+
   app.post("/api/v1/cursos/:id/inscricoes", async (request, reply) => {
     const params = request.params as { id?: string };
     if (!params.id) {
