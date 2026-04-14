@@ -12,6 +12,7 @@ import {
   finalizeCourse,
   getCourse,
   getCourses,
+  getEnrolledMembers,
   getErrorMessage,
   getMember,
   getMembers,
@@ -487,6 +488,41 @@ export default function CursosPage() {
     setViewDetails(null);
     setViewError(null);
     setViewLoading(false);
+  };
+
+  const handleViewEnrolled = async (courseId: string) => {
+    setEnrolledMembersModal(prev => ({
+      ...prev,
+      isOpen: true,
+      courseId,
+      loading: true,
+      error: null,
+      members: [],
+      searchTerm: ''
+    }));
+
+    try {
+      const members = await getEnrolledMembers(courseId);
+      setEnrolledMembersModal(prev => ({
+        ...prev,
+        members,
+        loading: false
+      }));
+    } catch (error) {
+      setEnrolledMembersModal(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Erro ao carregar inscritos'
+      }));
+    }
+  };
+
+  const closeEnrolledMembersModal = () => {
+    setEnrolledMembersModal(prev => ({
+      ...prev,
+      isOpen: false,
+      searchTerm: ''
+    }));
   };
 
   function resetImportModal() {
