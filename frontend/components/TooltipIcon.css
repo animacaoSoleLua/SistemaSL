@@ -1,0 +1,25 @@
+.tooltip-icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 6px;
+  color: #666;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 150ms ease;
+  vertical-align: middle;
+}
+
+.tooltip-icon-button:hover,
+.tooltip-icon-button:focus {
+  color: #333;
+  outline: none;
+}
+
+.tooltip-icon-button:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
