@@ -12,6 +12,7 @@ import {
   FiTrendingUp,
   FiUserX,
   FiUsers,
+  FiVolume2,
   FiXCircle,
 } from "react-icons/fi";
 import { getCourses, getEnrolledMembers, getFeedbacks, getMembers, getReports, getWarnings } from "../../lib/api";
@@ -500,14 +501,14 @@ export default function GerenciaPage() {
           </div>
           <div className="stat-divider" />
           <div className="stat-item">
-            <span className="stat-icon stat-icon--purple"><FiFileText aria-hidden="true" /></span>
+            <span className="stat-icon stat-icon--amber"><FiDownload aria-hidden="true" /></span>
             <div className="stat-body">
-              <span className="stat-value">{statsLoading ? "—" : reportsStats.outsideBrasilia}</span>
+              <span className="stat-value">{statsLoading ? "—" : `R$ ${reportsStats.uberCostTotal.toFixed(2)}`}</span>
               <span className="stat-label">
-                Fora de Brasília
+                Gastos de Uber mensal
                 <TooltipIcon
-                  label="Fora de Brasília"
-                  content="Quantidade de eventos realizados fora da região de Brasília conforme indicado no formulário de relatório."
+                  label="Gastos de Uber mensal"
+                  content="Soma de todas as corridas Uber (GO + retorno) registradas no período. Baseado nos valores informados nos relatórios."
                   position="top"
                 />
               </span>
@@ -515,14 +516,14 @@ export default function GerenciaPage() {
           </div>
           <div className="stat-divider" />
           <div className="stat-item">
-            <span className="stat-icon stat-icon--amber"><FiFileText aria-hidden="true" /></span>
+            <span className="stat-icon stat-icon--purple"><FiVolume2 aria-hidden="true" /></span>
             <div className="stat-body">
-              <span className="stat-value">{statsLoading ? "—" : reportsStats.exclusive}</span>
+              <span className="stat-value">{statsLoading ? "—" : `${reportsStats.avgSoundQuality}`}</span>
               <span className="stat-label">
-                Eventos Exclusivos
+                Qualidade Média da Caixa de Som
                 <TooltipIcon
-                  label="Eventos Exclusivos"
-                  content="Quantidade de eventos marcados como exclusivos no sistema durante o período."
+                  label="Qualidade Média da Caixa de Som"
+                  content="Avaliação média (0-10) da qualidade da caixa de som e eletrônica durante os eventos do período."
                   position="top"
                 />
               </span>
@@ -532,11 +533,11 @@ export default function GerenciaPage() {
           <div className="stat-item">
             <span className="stat-icon stat-icon--blue"><FiFileText aria-hidden="true" /></span>
             <div className="stat-body">
-              <span className="stat-value">{statsLoading ? "—" : reportsStats.avgQuality}</span>
+              <span className="stat-value">{statsLoading ? "—" : `${reportsStats.avgEventQuality}`}</span>
               <span className="stat-label">
-                Qualidade Média
+                Qualidade Média de Eventos
                 <TooltipIcon
-                  label="Qualidade Média"
+                  label="Qualidade Média de Eventos"
                   content="Média aritmética das notas de qualidade (0-10) atribuídas aos eventos no período."
                   position="top"
                 />
