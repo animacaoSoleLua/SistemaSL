@@ -254,28 +254,24 @@ export default function GerenciaPage() {
     };
 
     const loadReportsStats = async () => {
-      const reportsRes = await getReports({
-        period_start: start,
-        period_end: end,
-        limit: 1000
-      });
-      const reports = (reportsRes.data ?? []) as any[];
-
-      const outsideCount = reports.filter((r) => r.outside_brasilia).length;
-      const exclusiveCount = reports.filter((r) => r.exclusive_event).length;
-      const qualityScores = reports
-        .map((r) => r.event_quality_score)
-        .filter((s) => s !== null && s !== undefined) as number[];
-      const avgQuality = qualityScores.length > 0
-        ? Math.round(qualityScores.reduce((a, b) => a + b, 0) / qualityScores.length)
-        : 0;
-
-      setReportsStats({
-        total: reports.length,
-        outsideBrasilia: outsideCount,
-        exclusive: exclusiveCount,
-        avgQuality: avgQuality,
-      });
+      try {
+        const response = await fetch(
+          `/api/v1/relatorios/stats?month=${reportsMonth}&year=${reportsYear}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch reports stats");
+        }
+        const json = await response.json();
+        setReportsStats(json.data);
+      } catch (error) {
+        console.error("Error loading reports stats:", error);
+        setReportsStats({
+          total: 0,
+          uberCostTotal: 0,
+          avgSoundQuality: 0,
+          avgEventQuality: 0,
+        });
+      }
     };
 
     const loadCoursesStats = async () => {
