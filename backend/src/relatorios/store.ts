@@ -572,3 +572,61 @@ export async function resetReports(): Promise<void> {
   await prisma.reportMedia.deleteMany();
   await prisma.report.deleteMany();
 }
+
+export async function getReportsStats(
+  month: number,
+  year: number
+): Promise<{ total: number; uberCostTotal: number; avgSoundQuality: number; avgEventQuality: number }> {
+  // Calculate date range for the month
+  const startDate = new Date(year, month - 1, 1); // month is 1-indexed
+  const endDate = new Date(year, month, 0); // last day of month
+
+  // Query all reports in the period
+  const reports = await prisma.report.findMany({
+    where: {
+      eventDate: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+    select: {
+      uberGoValue: true,
+      uberReturnValue: true,
+      qualitySound: true,
+      eventQualityScore: true,
+    },
+  });
+
+  // Calculate total count
+  const total = reports.length;
+
+  // Calculate Uber costs (sum of GO + return values)
+  const uberCostTotal = reports.reduce((sum, report) => {
+    const goValue = report.uberGoValue ?? 0;
+    const returnValue = report.uberReturnValue ?? 0;
+    return sum + goValue + returnValue;
+  }, 0);
+
+  // Calculate average sound quality (exclude nulls)
+  const soundQualityValues = reports
+    .map((r) => r.qualitySound)
+    .filter((q) => q !== null && q !== undefined) as number[];
+  const avgSoundQuality = soundQualityValues.length > 0
+    ? Math.round(soundQualityValues.reduce((a, b) => a + b, 0) / soundQualityValues.length)
+    : 0;
+
+  // Calculate average event quality (exclude nulls)
+  const eventQualityValues = reports
+    .map((r) => r.eventQualityScore)
+    .filter((q) => q !== null && q !== undefined) as number[];
+  const avgEventQuality = eventQualityValues.length > 0
+    ? Math.round(eventQualityValues.reduce((a, b) => a + b, 0) / eventQualityValues.length)
+    : 0;
+
+  return {
+    total,
+    uberCostTotal,
+    avgSoundQuality,
+    avgEventQuality,
+  };
+}
