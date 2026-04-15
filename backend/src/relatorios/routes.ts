@@ -11,10 +11,12 @@ import {
   createReport,
   deleteReport,
   getReportById,
+  getReportsStats,
   listReports,
   MediaType,
   updateReport,
 } from "./store.js";
+import type { ReportsStatsResponse } from "./dto/reports-stats.dto.js";
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_VIDEO_SIZE_BYTES = 15 * 1024 * 1024;
@@ -555,6 +557,32 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       data: {
         id: report.id,
       },
+    });
+  });
+
+  app.get("/api/v1/relatorios/stats", async (request, reply) => {
+    if (!request.user) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Token ausente",
+      });
+    }
+
+    const query = request.query as { month?: string; year?: string };
+    const month = query.month ? Number(query.month) : undefined;
+    const year = query.year ? Number(query.year) : undefined;
+
+    if (!month || !year || month < 1 || month > 12 || year < 2020) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Mes ou ano invalido",
+      });
+    }
+
+    const stats = await getReportsStats(month, year);
+
+    return reply.status(200).send({
+      data: stats,
     });
   });
 
