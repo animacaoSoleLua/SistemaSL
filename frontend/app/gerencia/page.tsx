@@ -114,9 +114,9 @@ export default function GerenciaPage() {
   // Summary cards - Reports stats
   const [reportsStats, setReportsStats] = useState({
     total: 0,
-    outsideBrasilia: 0,
-    exclusive: 0,
-    avgQuality: 0,
+    uberCostTotal: 0,
+    avgSoundQuality: 0,
+    avgEventQuality: 0,
   });
 
   // Summary cards - Courses stats
