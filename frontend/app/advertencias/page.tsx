@@ -15,6 +15,7 @@ import {
 } from "../../lib/api";
 import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
 import { normalizeString } from "../../lib/validators";
+import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
 
 interface Warning {
   id: string;
@@ -194,7 +195,7 @@ export default function WarningsPage() {
   const openEditModal = (warning: Warning) => {
     setEditingWarning(warning);
     dispatchEdit({ type: "SET_FIELD", field: "reason", value: warning.reason });
-    dispatchEdit({ type: "SET_FIELD", field: "date", value: warning.warning_date });
+    dispatchEdit({ type: "SET_FIELD", field: "date", value: isoToDisplay(warning.warning_date) });
     setActionError(null);
   };
 
@@ -233,7 +234,7 @@ export default function WarningsPage() {
       setActionError("A descrição deve ter ao menos 5 caracteres.");
       return;
     }
-    if (editDate > todayDate) {
+    if (displayToIso(editDate) > todayDate) {
       setActionError("A data da advertência não pode ser no futuro.");
       return;
     }
@@ -242,7 +243,7 @@ export default function WarningsPage() {
     try {
       const response = await updateWarning(editingWarning.id, {
         reason: trimmedReason,
-        warning_date: editDate,
+        warning_date: displayToIso(editDate),
       });
       const updated = response?.data as { id: string; reason: string; warning_date: string };
       setWarnings((prev) =>
@@ -290,7 +291,7 @@ export default function WarningsPage() {
       setCreateError("A descrição deve ter ao menos 5 caracteres.");
       return;
     }
-    if (newDate > todayDate) {
+    if (displayToIso(newDate) > todayDate) {
       setCreateError("A data da advertência não pode ser no futuro.");
       return;
     }
@@ -300,7 +301,7 @@ export default function WarningsPage() {
       const createResponse = await createWarning({
         member_id: newMemberId,
         reason: newReason.trim(),
-        warning_date: newDate,
+        warning_date: displayToIso(newDate),
       });
       const suspensionApplied =
         (createResponse?.data as { suspension_applied?: boolean })?.suspension_applied ??
@@ -540,11 +541,13 @@ export default function WarningsPage() {
               <span>Data da ocorrência</span>
               <input
                 id="edit-date"
-                type="date"
+                type="text"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="DD/MM/AAAA"
                 className="input"
                 value={editDate}
-                max={todayDate}
-                onChange={(event) => dispatchEdit({ type: "SET_FIELD", field: "date", value: event.target.value })}
+                onChange={(event) => dispatchEdit({ type: "SET_FIELD", field: "date", value: formatDateInput(event.target.value) })}
                 required
                 aria-required="true"
                 disabled={actionLoadingId === editingWarning?.id}
@@ -688,11 +691,13 @@ export default function WarningsPage() {
               <span>Data da ocorrência</span>
               <input
                 id="create-date"
-                type="date"
+                type="text"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="DD/MM/AAAA"
                 className="input"
                 value={newDate}
-                max={todayDate}
-                onChange={(event) => dispatchCreate({ type: "SET_FIELD", field: "date", value: event.target.value })}
+                onChange={(event) => dispatchCreate({ type: "SET_FIELD", field: "date", value: formatDateInput(event.target.value) })}
                 required
                 aria-required="true"
                 disabled={actionLoadingId === "new"}

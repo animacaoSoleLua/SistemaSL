@@ -339,6 +339,7 @@ p {
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   padding: 18px 24px 32px;
   position: relative;
@@ -346,11 +347,14 @@ p {
 
 .app-content {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
+  min-width: 0;
 }
 
 .app-page {
   padding: 12px 0 48px;
+  min-width: 0;
 }
 
 .app-navbar {

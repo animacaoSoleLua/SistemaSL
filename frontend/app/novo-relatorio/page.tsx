@@ -15,6 +15,7 @@ import {
 } from "../../lib/api";
 import { getMediaValidationError } from "../../lib/mediaValidators";
 import { normalizeString } from "../../lib/validators";
+import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
 
 type TransportType = "" | "uber99" | "carro_empresa" | "outro";
 type YesNo = "" | "sim" | "nao";
@@ -342,7 +343,7 @@ function NovoRelatorioContent() {
       .then((response) => {
         if (!mounted) return;
         const report = response?.data as ReportDetail;
-        setEventDate(report.event_date ?? "");
+        setEventDate(report.event_date ? isoToDisplay(report.event_date) : "");
         setTitleSchedule(report.title_schedule ?? "");
         setBirthdayContractor(report.contractor_name ?? "");
         setTransportType((report.transport_type as TransportType) ?? "uber99");
@@ -532,7 +533,7 @@ function NovoRelatorioContent() {
     setIsSubmitting(true);
 
     const reportPayload = {
-      event_date: eventDate,
+      event_date: displayToIso(eventDate),
       contractor_name: birthdayContractor.trim(),
       location: titleSchedule.trim() || "Nao informado",
       title_schedule: titleSchedule.trim() || undefined,
@@ -685,9 +686,12 @@ function NovoRelatorioContent() {
                   id="eventDate"
                   name="eventDate"
                   className="input"
-                  type="date"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="DD/MM/AAAA"
                   value={eventDate}
-                  onChange={(event) => setEventDate(event.target.value)}
+                  onChange={(event) => setEventDate(formatDateInput(event.target.value))}
                   required
                 />
               </label>
@@ -736,7 +740,7 @@ function NovoRelatorioContent() {
                 >
                   <option value="uber99">Uber/99</option>
                   <option value="carro_empresa">Carro da Empresa</option>
-                  <option value="outro">Outro</option>
+                  <option value="outro">Carro Pessoal</option>
                 </select>
               </label>
 

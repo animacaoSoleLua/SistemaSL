@@ -1024,3 +1024,36 @@ body.theme-purple .cpf-selected-item:focus {
   color: var(--ink);
   text-align: center;
 }
+
+.members-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(111, 76, 255, 0.25);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  border-color: rgba(111, 76, 255, 0.4);
+  color: var(--ink);
+  background: rgba(111, 76, 255, 0.06);
+}
+
+.filter-btn.active {
+  background: rgba(111, 76, 255, 0.12);
+  border-color: rgba(111, 76, 255, 0.5);
+  color: var(--accent);
+  font-weight: 600;
+}

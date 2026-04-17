@@ -28,6 +28,7 @@ interface Feedback {
   type: "positive" | "negative";
   text: string | null;
   audio_url: string | null;
+  event_date: string | null;
   created_at: string;
   created_by: { id: string; name: string; last_name: string | null };
   members: FeedbackMember[];
@@ -49,10 +50,11 @@ interface CreateFormState {
   selectedMembers: MemberOption[];
   audioFile: File | null;
   inputMode: "text" | "audio";
+  eventDate: string;
 }
 
 type CreateFormAction =
-  | { type: "SET_FIELD"; field: "type" | "text" | "memberSearch" | "inputMode"; value: string }
+  | { type: "SET_FIELD"; field: "type" | "text" | "memberSearch" | "inputMode" | "eventDate"; value: string }
   | { type: "ADD_MEMBER"; member: MemberOption }
   | { type: "REMOVE_MEMBER"; memberId: string }
   | { type: "SET_AUDIO"; file: File | null }
@@ -65,6 +67,7 @@ const createFormInitial: CreateFormState = {
   selectedMembers: [],
   audioFile: null,
   inputMode: "text",
+  eventDate: "",
 };
 
 function createFormReducer(state: CreateFormState, action: CreateFormAction): CreateFormState {
@@ -94,6 +97,27 @@ function roleLabel(role: string) {
   if (role === "recreador") return "Recreador";
   if (role === "admin") return "Admin";
   return role;
+}
+
+function formatDateString(dateString: string): string {
+  // Converte strings de data ISO (YYYY-MM-DD) ou ISO com tempo para formato local
+  // sem problemas de timezone
+  if (!dateString) return '';
+
+  // Se for data simples (YYYY-MM-DD), processa diretamente
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateString.split('-');
+    return new Date(`${year}-${month}-${day}T00:00:00`).toLocaleDateString("pt-BR");
+  }
+
+  // Se for ISO com tempo, extrai apenas a data
+  if (dateString.includes('T')) {
+    const datePart = dateString.split('T')[0];
+    const [year, month, day] = datePart.split('-');
+    return new Date(`${year}-${month}-${day}T00:00:00`).toLocaleDateString("pt-BR");
+  }
+
+  return new Date(dateString).toLocaleDateString("pt-BR");
 }
 
 export default function FeedbacksPage() {
@@ -202,6 +226,7 @@ export default function FeedbacksPage() {
         formData.append("type", createForm.type);
         formData.append("member_ids", JSON.stringify(memberIds));
         if (createForm.text.trim()) formData.append("text", createForm.text.trim());
+        if (createForm.eventDate) formData.append("event_date", createForm.eventDate);
         formData.append("audio", createForm.audioFile);
         await createFeedbackWithAudio(formData);
       } else {
@@ -209,6 +234,7 @@ export default function FeedbacksPage() {
           type: createForm.type as "positive" | "negative",
           text: createForm.text.trim(),
           member_ids: memberIds,
+          event_date: createForm.eventDate || undefined,
         });
       }
 
@@ -341,9 +367,11 @@ export default function FeedbacksPage() {
                         ? <><FiThumbsUp aria-hidden="true" /> Positivo</>
                         : <><FiThumbsDown aria-hidden="true" /> Negativo</>}
                     </span>
-                    <span className="feedback-item-date">
-                      {new Date(fb.created_at).toLocaleDateString("pt-BR")}
-                    </span>
+                    {fb.event_date && (
+                      <span className="feedback-item-date" style={{ fontSize: "0.9em", color: "#666" }}>
+                        Evento: {formatDateString(fb.event_date)}
+                      </span>
+                    )}
                     {currentRole === "admin" && (
                       <div className="feedback-item-header-right">
                         <button
@@ -388,7 +416,10 @@ export default function FeedbacksPage() {
                   </div>
 
                   <div className="feedback-item-footer">
-                    Registrado por <strong>{fullName(fb.created_by.name, fb.created_by.last_name)}</strong>
+                    <div>Registrado por <strong>{fullName(fb.created_by.name, fb.created_by.last_name)}</strong></div>
+                    <div style={{ fontSize: "0.9em", color: "#666", marginTop: "4px" }}>
+                      Criado dia {formatDateString(fb.created_at)}
+                    </div>
                   </div>
                 </li>
               ))}
@@ -574,6 +605,43 @@ export default function FeedbacksPage() {
               </ul>
             )}
           </div>
+
+          {/* Data do Evento */}
+          <label className="field">
+            <span>Data do evento (opcional)</span>
+            <input
+              type="date"
+              className="input"
+              value={createForm.eventDate}
+              onChange={(e) => {
+                let dateValue = e.target.value;
+
+                // Se o usuário digitou manualmente em formato DD/MM/YYYY, converte para YYYY-MM-DD
+                if (dateValue && !dateValue.includes('-') && dateValue.includes('/')) {
+                  const parts = dateValue.split('/');
+                  if (parts.length === 3) {
+                    dateValue = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                  }
+                }
+
+                dispatchCreate({ type: "SET_FIELD", field: "eventDate", value: dateValue });
+              }}
+              onBlur={(e) => {
+                let dateValue = e.target.value;
+
+                // Normaliza o formato se necessário
+                if (dateValue && !dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                  const parts = dateValue.replace(/\D/g, '');
+                  if (parts.length === 8) {
+                    dateValue = `${parts.substring(4)}-${parts.substring(2, 4)}-${parts.substring(0, 2)}`;
+                    dispatchCreate({ type: "SET_FIELD", field: "eventDate", value: dateValue });
+                  }
+                }
+              }}
+              placeholder="DD/MM/YYYY ou use o date picker"
+              aria-label="Data do evento relacionado ao feedback"
+            />
+          </label>
 
           <div className="modal-footer">
             <button type="button" className="button secondary" onClick={closeCreate} disabled={saving}>

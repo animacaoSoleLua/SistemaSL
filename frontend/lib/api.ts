@@ -109,6 +109,10 @@ export async function getReports(params: {
   return request(endpoint, { method: "GET" });
 }
 
+export async function getReportsStats(month: number, year: number) {
+  return request(`/relatorios/stats?month=${month}&year=${year}`, { method: "GET" });
+}
+
 export async function getDashboardSummary(params: {
   period_start?: string;
   period_end?: string;

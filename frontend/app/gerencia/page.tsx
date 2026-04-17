@@ -15,7 +15,7 @@ import {
   FiVolume2,
   FiXCircle,
 } from "react-icons/fi";
-import { getCourses, getEnrolledMembers, getFeedbacks, getMembers, getReports, getWarnings } from "../../lib/api";
+import { getCourses, getEnrolledMembers, getFeedbacks, getMembers, getReports, getReportsStats, getWarnings } from "../../lib/api";
 import {
   getDefaultRoute,
   getStoredUser,
@@ -175,95 +175,92 @@ export default function GerenciaPage() {
     const { start, end } = getMonthBounds(now.getMonth() + 1, now.getFullYear());
 
     const loadMembersStats = async () => {
-      const membersRes = await getMembers({ limit: 1000 });
-      const allMembers: MemberItem[] = membersRes.data ?? [];
+      try {
+        const membersRes = await getMembers({ limit: 1000 });
+        const allMembers: MemberItem[] = membersRes.data ?? [];
 
-      // Calculate 30-day window (today - 30 days)
-      const thirtyDaysAgo = new Date(now);
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().slice(0, 10);
+        // Calculate 30-day window (today - 30 days)
+        const thirtyDaysAgo = new Date(now);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().slice(0, 10);
 
-      // 1. Saúde Disciplinar: % members without active warnings
-      let disciplinaryScore = 0;
-      if (allMembers.length > 0) {
-        const warningsRes = await getWarnings({ limit: 1000 });
-        const activeWarnings = (warningsRes.data ?? []) as any[];
-        const membersWithWarnings = new Set(activeWarnings.map((w) => w.member_id));
-        const membersWithoutWarnings = allMembers.length - membersWithWarnings.size;
-        disciplinaryScore = Math.round((membersWithoutWarnings / allMembers.length) * 100);
-      }
+        // 1. Saúde Disciplinar: % members without active warnings
+        let disciplinaryScore = 0;
+        if (allMembers.length > 0) {
+          const warningsRes = await getWarnings({ limit: 1000 });
+          const activeWarnings = (warningsRes.data ?? []) as any[];
+          const membersWithWarnings = new Set(activeWarnings.map((w) => w.member_id));
+          const membersWithoutWarnings = allMembers.length - membersWithWarnings.size;
+          disciplinaryScore = Math.round((membersWithoutWarnings / allMembers.length) * 100);
+        }
 
-      // 2. Satisfação do Cliente: % positive feedback in last 30 days
-      let satisfactionScore = 0;
-      const feedbacksRes = await getFeedbacks({ limit: 1000 });
-      const allFeedbacks = (feedbacksRes.data ?? []) as any[];
-      const feedbacksLast30d = allFeedbacks.filter((f) => {
-        const feedbackDate = f.event_date || f.created_at;
-        return feedbackDate && feedbackDate >= thirtyDaysAgoStr;
-      });
-      if (feedbacksLast30d.length > 0) {
-        const positiveFeedbacks = feedbacksLast30d.filter((f) => f.type === "positive").length;
-        satisfactionScore = Math.round((positiveFeedbacks / feedbacksLast30d.length) * 100);
-      }
+        // 2. Satisfação do Cliente: % positive feedback in last 30 days
+        let satisfactionScore = 0;
+        const feedbacksRes = await getFeedbacks({ limit: 1000 });
+        const allFeedbacks = (feedbacksRes.data ?? []) as any[];
+        const feedbacksLast30d = allFeedbacks.filter((f) => {
+          const feedbackDate = f.event_date || f.created_at;
+          return feedbackDate && feedbackDate >= thirtyDaysAgoStr;
+        });
+        if (feedbacksLast30d.length > 0) {
+          const positiveFeedbacks = feedbacksLast30d.filter((f) => f.type === "positive").length;
+          satisfactionScore = Math.round((positiveFeedbacks / feedbacksLast30d.length) * 100);
+        }
 
-      // 3 & 4. Taxa de Assiduidade & Cancelamento: from course enrollments last 30 days
-      let attendanceScore = 0;
-      let cancelationScore = 0;
-      const coursesRes = await getCourses({ status: "all", limit: 1000 });
-      const allCourses = (coursesRes.data ?? []) as CourseItem[];
+        // 3 & 4. Taxa de Assiduidade & Cancelamento: from course enrollments last 30 days
+        let attendanceScore = 0;
+        let cancelationScore = 0;
+        const coursesRes = await getCourses({ status: "all", limit: 1000 });
+        const allCourses = (coursesRes.data ?? []) as CourseItem[];
 
-      // Need to fetch enrollments for each course to get status data
-      let totalEnrollmentsLast30d = 0;
-      let attendedCount = 0;
-      let missedCount = 0;
+        let totalEnrollmentsLast30d = 0;
+        let attendedCount = 0;
+        let missedCount = 0;
 
-      for (const course of allCourses) {
-        try {
-          const enrollmentsRes = await getEnrolledMembers(course.id);
-          const enrollments = (enrollmentsRes ?? []) as any[];
+        for (const course of allCourses) {
+          try {
+            const enrollmentsRes = await getEnrolledMembers(course.id);
+            const enrollments = (enrollmentsRes ?? []) as any[];
 
-          for (const enrollment of enrollments) {
-            // Check if enrollment is within last 30 days
-            const enrollmentDate = enrollment.createdAt || enrollment.created_at;
-            if (enrollmentDate && enrollmentDate >= thirtyDaysAgoStr) {
-              totalEnrollmentsLast30d++;
-
-              if (enrollment.status === "attended") {
-                attendedCount++;
-              } else if (enrollment.status === "missed") {
-                missedCount++;
+            for (const enrollment of enrollments) {
+              const enrollmentDate = enrollment.createdAt || enrollment.created_at;
+              if (enrollmentDate && enrollmentDate >= thirtyDaysAgoStr) {
+                totalEnrollmentsLast30d++;
+                if (enrollment.status === "attended") attendedCount++;
+                else if (enrollment.status === "missed") missedCount++;
               }
             }
+          } catch (error) {
+            console.error(`Failed to fetch enrollments for course ${course.id}:`, error);
           }
-        } catch (error) {
-          // Silently skip if course enrollments can't be fetched
-          console.error(`Failed to fetch enrollments for course ${course.id}:`, error);
         }
-      }
 
-      if (totalEnrollmentsLast30d > 0) {
-        attendanceScore = Math.round((attendedCount / totalEnrollmentsLast30d) * 100);
-        cancelationScore = Math.round((missedCount / totalEnrollmentsLast30d) * 100);
-      }
+        if (totalEnrollmentsLast30d > 0) {
+          attendanceScore = Math.round((attendedCount / totalEnrollmentsLast30d) * 100);
+          cancelationScore = Math.round((missedCount / totalEnrollmentsLast30d) * 100);
+        }
 
-      setMembersStats({
-        disciplinary: disciplinaryScore,
-        satisfaction: satisfactionScore,
-        attendance: attendanceScore,
-        cancelation: cancelationScore,
-      });
+        setMembersStats({
+          disciplinary: disciplinaryScore,
+          satisfaction: satisfactionScore,
+          attendance: attendanceScore,
+          cancelation: cancelationScore,
+        });
+      } catch (error) {
+        console.error("Error loading members stats:", error);
+      }
     };
 
     const loadReportsStats = async () => {
       try {
-        const response = await fetch(
-          `/api/v1/relatorios/stats?month=${reportsMonth}&year=${reportsYear}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch reports stats");
-        }
-        const json = await response.json();
-        setReportsStats(json.data);
+        const json = await getReportsStats(reportsMonth, reportsYear);
+        const d = json.data ?? {};
+        setReportsStats({
+          total: Number(d.total) || 0,
+          uberCostTotal: Number(d.uberCostTotal) || 0,
+          avgSoundQuality: Number(d.avgSoundQuality) || 0,
+          avgEventQuality: Number(d.avgEventQuality) || 0,
+        });
       } catch (error) {
         console.error("Error loading reports stats:", error);
         setReportsStats({
@@ -314,7 +311,7 @@ export default function GerenciaPage() {
     } else if (activeTab === "cursos") {
       loadCoursesStats().finally(() => setStatsLoading(false));
     }
-  }, [canLoad, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [canLoad, activeTab, reportsMonth, reportsYear, coursesMonth, coursesYear]);
 
   // Members section: reload when role filter changes
   useEffect(() => {
@@ -426,7 +423,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : membersStats.disciplinary}%</span>
               <span className="stat-label">
-                Saúde Disciplinar
+                <span className="stat-label-text">Saúde Disciplinar</span>
                 <TooltipIcon
                   label="Saúde Disciplinar"
                   content="Porcentagem de membros que não possuem nenhuma advertência ativa no sistema. Calculado em tempo real baseado no registro de advertências."
@@ -441,7 +438,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : membersStats.satisfaction}%</span>
               <span className="stat-label">
-                Satisfação do Cliente
+                <span className="stat-label-text">Satisfação do Cliente</span>
                 <TooltipIcon
                   label="Satisfação do Cliente"
                   content="Porcentagem de feedbacks positivos coletados nos últimos 30 dias. Baseado em pesquisas de satisfação preenchidas após eventos."
@@ -456,7 +453,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : membersStats.attendance}%</span>
               <span className="stat-label">
-                Taxa de Assiduidade
+                <span className="stat-label-text">Taxa de Assiduidade</span>
                 <TooltipIcon
                   label="Taxa de Assiduidade"
                   content="Porcentagem de participantes que compareceram aos cursos nos últimos 30 dias. Calculado a partir do status de presença registrado no sistema."
@@ -471,7 +468,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : membersStats.cancelation}%</span>
               <span className="stat-label">
-                Taxa de Cancelamento
+                <span className="stat-label-text">Taxa de Cancelamento</span>
                 <TooltipIcon
                   label="Taxa de Cancelamento"
                   content="Porcentagem de inscritos que não compareceram aos cursos nos últimos 30 dias. Complementa a taxa de assiduidade."
@@ -490,7 +487,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : reportsStats.total}</span>
               <span className="stat-label">
-                Total de Relatórios
+                <span className="stat-label-text">Total de Relatórios</span>
                 <TooltipIcon
                   label="Total de Relatórios"
                   content="Número total de eventos com relatórios registrados no período selecionado."
@@ -505,7 +502,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : `R$ ${reportsStats.uberCostTotal.toFixed(2)}`}</span>
               <span className="stat-label">
-                Gastos de Uber mensal
+                <span className="stat-label-text">Gastos de Uber mensal</span>
                 <TooltipIcon
                   label="Gastos de Uber mensal"
                   content="Soma de todas as corridas Uber (GO + retorno) registradas no período. Baseado nos valores informados nos relatórios."
@@ -520,7 +517,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : `${reportsStats.avgSoundQuality}`}</span>
               <span className="stat-label">
-                Qualidade Média da Caixa de Som
+                <span className="stat-label-text">Qualidade Média da Caixa de Som</span>
                 <TooltipIcon
                   label="Qualidade Média da Caixa de Som"
                   content="Avaliação média (0-10) da qualidade da caixa de som e eletrônica durante os eventos do período."
@@ -535,7 +532,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : `${reportsStats.avgEventQuality}`}</span>
               <span className="stat-label">
-                Qualidade Média de Eventos
+                <span className="stat-label-text">Qualidade Média de Eventos</span>
                 <TooltipIcon
                   label="Qualidade Média de Eventos"
                   content="Média aritmética das notas de qualidade (0-10) atribuídas aos eventos no período."
@@ -554,7 +551,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : coursesStats.total}</span>
               <span className="stat-label">
-                Total de Cursos
+                <span className="stat-label-text">Total de Cursos</span>
                 <TooltipIcon
                   label="Total de Cursos"
                   content="Número total de cursos realizados no período selecionado."
@@ -569,7 +566,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : coursesStats.enrollments}</span>
               <span className="stat-label">
-                Total de Inscrições
+                <span className="stat-label-text">Total de Inscrições</span>
                 <TooltipIcon
                   label="Total de Inscrições"
                   content="Soma de todas as inscrições em cursos durante o período. Um participante pode se inscrever em múltiplos cursos."
@@ -584,7 +581,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : coursesStats.avgOccupancy}%</span>
               <span className="stat-label">
-                Ocupação Média
+                <span className="stat-label-text">Ocupação Média</span>
                 <TooltipIcon
                   label="Ocupação Média"
                   content="Porcentagem média de vagas preenchidas nos cursos do período. Calculado apenas para cursos com capacidade definida."
@@ -599,7 +596,7 @@ export default function GerenciaPage() {
             <div className="stat-body">
               <span className="stat-value">{statsLoading ? "—" : coursesStats.activeInstructors}</span>
               <span className="stat-label">
-                Instrutores Ativos
+                <span className="stat-label-text">Instrutores Ativos</span>
                 <TooltipIcon
                   label="Instrutores Ativos"
                   content="Número de instrutores únicos que ministraram cursos no período selecionado."
@@ -629,7 +626,7 @@ export default function GerenciaPage() {
             onClick={() => setActiveTab("membros")}
           >
             <FiUsers aria-hidden="true" />
-            Membros
+            <span>Membros</span>
           </button>
           <button
             type="button"
@@ -637,7 +634,7 @@ export default function GerenciaPage() {
             onClick={() => setActiveTab("relatorios")}
           >
             <FiFileText aria-hidden="true" />
-            Relatórios
+            <span>Relatórios</span>
           </button>
           <button
             type="button"
@@ -645,7 +642,7 @@ export default function GerenciaPage() {
             onClick={() => setActiveTab("cursos")}
           >
             <FiBookOpen aria-hidden="true" />
-            Cursos
+            <span>Cursos</span>
           </button>
         </nav>
       </div>
@@ -659,7 +656,7 @@ export default function GerenciaPage() {
       <div className="gerencia-panel">
         {/* ── Membros ── */}
         {activeTab === "membros" && (
-          <section className="gerencia-section" key="membros">
+          <section className="gerencia-section" data-section="membros" key="membros">
             <div className="gerencia-section-header">
               <div>
                 <h2 className="gerencia-section-title">Relação de Membros</h2>
@@ -741,7 +738,7 @@ export default function GerenciaPage() {
 
         {/* ── Relatórios ── */}
         {activeTab === "relatorios" && (
-          <section className="gerencia-section" key="relatorios">
+          <section className="gerencia-section" data-section="relatorios" key="relatorios">
             <div className="gerencia-section-header">
               <div>
                 <h2 className="gerencia-section-title">Relatórios de Eventos por Mês</h2>
@@ -826,7 +823,7 @@ export default function GerenciaPage() {
 
         {/* ── Cursos ── */}
         {activeTab === "cursos" && (
-          <section className="gerencia-section" key="cursos">
+          <section className="gerencia-section" data-section="cursos" key="cursos">
             <div className="gerencia-section-header">
               <div>
                 <h2 className="gerencia-section-title">Cursos por Mês</h2>

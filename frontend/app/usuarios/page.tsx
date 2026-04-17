@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   FiAlertTriangle,
   FiEdit2,
+  FiInfo,
   FiShield,
   FiStar,
   FiTrash2,
@@ -27,6 +28,7 @@ import {
 import { getStoredUser, roleLabels, type Role, type StoredUser } from "../../lib/auth";
 import { useFocusTrap } from "../../lib/useFocusTrap";
 import { isStrongPassword, isValidCPF, normalizeString } from "../../lib/validators";
+import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
 
 interface MemberFormState {
   name: string;
@@ -164,6 +166,7 @@ export default function UsuariosPage() {
   const [feedbackCounts, setFeedbackCounts] = useState<{ positive: number; negative: number } | null>(null);
   const [feedbackCountsLoading, setFeedbackCountsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
   const [cpfModalOpen, setCpfModalOpen] = useState(false);
   const [cpfSearchTerm, setCpfSearchTerm] = useState("");
   const [cpfSelectedMembers, setCpfSelectedMembers] = useState<Member[]>([]);
@@ -283,7 +286,7 @@ export default function UsuariosPage() {
         last_name: member.last_name ?? "",
         cpf: member.cpf ? formatCpf(member.cpf) : "",
         email: member.email,
-        birth_date: member.birth_date ?? "",
+        birth_date: member.birth_date ? isoToDisplay(member.birth_date) : "",
         region: member.region ?? "",
         phone: member.phone ?? "",
         role: member.role,
@@ -334,7 +337,7 @@ export default function UsuariosPage() {
           last_name: formData.last_name.trim(),
           cpf: formData.cpf.trim(),
           email: formData.email.trim(),
-          birth_date: formData.birth_date,
+          birth_date: displayToIso(formData.birth_date),
           region: formData.region.trim(),
           phone: formData.phone.trim(),
           role: formData.role,
@@ -346,7 +349,7 @@ export default function UsuariosPage() {
           last_name: formData.last_name.trim(),
           cpf: formData.cpf.trim() ? formData.cpf.trim() : undefined,
           email: formData.email.trim(),
-          birth_date: formData.birth_date,
+          birth_date: displayToIso(formData.birth_date),
           region: formData.region.trim(),
           phone: formData.phone.trim(),
           role: formData.role,
@@ -395,17 +398,26 @@ export default function UsuariosPage() {
   };
 
   const filteredUsers = useMemo(() => {
-    const search = normalizeString(searchTerm.trim());
-    if (!search) {
-      return users;
+    let result = users;
+
+    // Filter by role
+    if (roleFilter !== "all") {
+      result = result.filter((user) => user.role === roleFilter);
     }
-    return users.filter(
-      (user) =>
-        normalizeString(user.name).includes(search) ||
-        normalizeString(user.last_name ?? "").includes(search) ||
-        normalizeString(user.email).includes(search)
-    );
-  }, [users, searchTerm]);
+
+    // Filter by search term
+    const search = normalizeString(searchTerm.trim());
+    if (search) {
+      result = result.filter(
+        (user) =>
+          normalizeString(user.name).includes(search) ||
+          normalizeString(user.last_name ?? "").includes(search) ||
+          normalizeString(user.email).includes(search)
+      );
+    }
+
+    return result;
+  }, [users, searchTerm, roleFilter]);
 
   useEffect(() => {
     if (filteredUsers.length === 0) {
@@ -774,6 +786,36 @@ export default function UsuariosPage() {
                     aria-label="Buscar membro"
                   />
                 </div>
+                <div className="members-filters">
+                  <button
+                    className={`filter-btn ${roleFilter === "all" ? "active" : ""}`}
+                    onClick={() => setRoleFilter("all")}
+                    aria-pressed={roleFilter === "all"}
+                  >
+                    Todos
+                  </button>
+                  <button
+                    className={`filter-btn ${roleFilter === "animador" ? "active" : ""}`}
+                    onClick={() => setRoleFilter("animador")}
+                    aria-pressed={roleFilter === "animador"}
+                  >
+                    Animadores
+                  </button>
+                  <button
+                    className={`filter-btn ${roleFilter === "recreador" ? "active" : ""}`}
+                    onClick={() => setRoleFilter("recreador")}
+                    aria-pressed={roleFilter === "recreador"}
+                  >
+                    Recreadores
+                  </button>
+                  <button
+                    className={`filter-btn ${roleFilter === "admin" ? "active" : ""}`}
+                    onClick={() => setRoleFilter("admin")}
+                    aria-pressed={roleFilter === "admin"}
+                  >
+                    Admin
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -812,18 +854,6 @@ export default function UsuariosPage() {
                         isSelected ? "selected" : ""
                       }`}
                       key={user.id}
-                      role="button"
-                      tabIndex={0}
-                      aria-pressed={isSelected}
-                      onClick={() => { setSelectedMemberId(user.id); setDetailsTab("dados"); setDetailsModalOpen(true); }}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          setSelectedMemberId(user.id);
-                          setDetailsTab("dados");
-                          setDetailsModalOpen(true);
-                        }
-                      }}
                     >
                       <div className="member-row-avatar" aria-hidden="true">
                         {renderAvatar(getDisplayName(user), user.photo_url)}
@@ -838,34 +868,49 @@ export default function UsuariosPage() {
                         <span className={`role-pill ${user.role}`}>
                           {roleLabels[user.role]}
                         </span>
-                        {isAdmin && (
-                          <div className="member-row-actions">
-                            <button
-                              className="icon-button"
-                              type="button"
-                              aria-label="Editar membro"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openEditModal(user);
-                              }}
-                            >
-                              <FiEdit2 aria-hidden="true" />
-                            </button>
-                            {currentUser?.id !== user.id && (
+                        <div className="member-row-actions">
+                          <button
+                            className="icon-button"
+                            type="button"
+                            aria-label="Ver detalhes do membro"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSelectedMemberId(user.id);
+                              setDetailsTab("dados");
+                              setDetailsModalOpen(true);
+                            }}
+                          >
+                            <FiInfo aria-hidden="true" />
+                          </button>
+                          {isAdmin && (
+                            <>
                               <button
-                                className="icon-button danger"
+                                className="icon-button"
                                 type="button"
-                                aria-label="Excluir membro"
+                                aria-label="Editar membro"
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  handleDelete(user);
+                                  openEditModal(user);
                                 }}
                               >
-                                <FiTrash2 aria-hidden="true" />
+                                <FiEdit2 aria-hidden="true" />
                               </button>
-                            )}
-                          </div>
-                        )}
+                              {currentUser?.id !== user.id && (
+                                <button
+                                  className="icon-button danger"
+                                  type="button"
+                                  aria-label="Excluir membro"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleDelete(user);
+                                  }}
+                                >
+                                  <FiTrash2 aria-hidden="true" />
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                         </div>
                     </li>
                   );
@@ -1218,10 +1263,13 @@ export default function UsuariosPage() {
                   <input
                     id="member-birth-date"
                     className="input"
-                    type="date"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="DD/MM/AAAA"
                     value={formData.birth_date}
                     onChange={(event) =>
-                      handleInputChange("birth_date", event.target.value)
+                      handleInputChange("birth_date", formatDateInput(event.target.value))
                     }
                     required
                     aria-required="true"

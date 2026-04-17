@@ -18,6 +18,7 @@ export default function Tooltip({
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [adjustedPosition, setAdjustedPosition] = useState<"top" | "bottom" | "left" | "right">(position);
+  const [horizontalOffset, setHorizontalOffset] = useState(0);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -41,6 +42,15 @@ export default function Tooltip({
     } else if (position === "right" && tooltip.right > viewportWidth - 8) {
       setAdjustedPosition("left");
     }
+
+    // Adjust horizontal offset if tooltip goes off-screen horizontally
+    let offset = 0;
+    if (tooltip.left < 8) {
+      offset = 8 - tooltip.left;
+    } else if (tooltip.right > viewportWidth - 8) {
+      offset = viewportWidth - 8 - tooltip.right;
+    }
+    setHorizontalOffset(offset);
   }, [isVisible, position]);
 
   const handleMouseEnter = () => {
@@ -95,6 +105,7 @@ export default function Tooltip({
           ref={tooltipRef}
           className={`tooltip-content tooltip-${adjustedPosition}`}
           role="tooltip"
+          style={{ "--tooltip-offset": `${horizontalOffset}px` } as React.CSSProperties}
         >
           {content}
         </div>

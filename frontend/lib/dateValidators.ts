@@ -1,4 +1,22 @@
 /**
+ * Converts ISO date string (YYYY-MM-DD) to display format (DD/MM/YYYY)
+ */
+export function isoToDisplay(iso: string): string {
+  if (!iso || iso.length < 10) return '';
+  const [year, month, day] = iso.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+/**
+ * Converts display date string (DD/MM/YYYY) to ISO format (YYYY-MM-DD)
+ */
+export function displayToIso(display: string): string {
+  if (!display || display.length !== 10) return '';
+  const [day, month, year] = display.split('/');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Formats a string of numbers into DD/MM/YYYY format
  * Only keeps the first 8 digits
  */

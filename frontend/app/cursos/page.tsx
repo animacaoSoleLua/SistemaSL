@@ -3,7 +3,7 @@
 import './page.css';
 import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiAlertTriangle, FiArchive, FiInfo, FiTrash2, FiUsers, FiX } from "react-icons/fi";
+import { FiAlertTriangle, FiArchive, FiEdit2, FiEye, FiInfo, FiTrash2, FiUsers, FiX } from "react-icons/fi";
 import {
   cancelEnrollment,
   createCourse,
@@ -826,15 +826,6 @@ export default function CursosPage() {
                   <article
                     className="report-item"
                     key={course.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => openViewModal(course)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        openViewModal(course);
-                      }
-                    }}
                   >
                     <div className="report-meta">
                       <strong className="report-name">{course.title}</strong>
@@ -915,22 +906,36 @@ export default function CursosPage() {
                       {statusFilter !== "archived" && canManageCourse && (
                         <>
                           <button
+                            onClick={() => handleViewEnrolled(course.id)}
+                            className="enrolled-button"
+                            title={`Ver ${course.enrolled_count} inscritos`}
+                            aria-label={`Ver ${course.enrolled_count} inscritos do curso`}
+                          >
+                            Ver Inscritos
+                            <FiUsers size={16} />
+                          </button>
+                          <button
                             type="button"
-                            className="button edit"
+                            className="button secondary"
+                            onClick={() => openViewModal(course)}
+                            title="Ver detalhes do curso"
+                            aria-label={`Ver detalhes do curso ${course.title}`}
+                          >
+                            <FiEye size={14} />
+                            Detalhes
+                          </button>
+                          <button
+                            type="button"
+                            className="button secondary"
                             onClick={(event) => {
                               event.stopPropagation();
                               openEditModal(course.id);
                             }}
+                            title="Editar curso"
+                            aria-label={`Editar curso ${course.title}`}
                           >
+                            <FiEdit2 size={14} />
                             Editar
-                          </button>
-                          <button
-                            onClick={() => handleViewEnrolled(course.id)}
-                            className="action-btn info-btn"
-                            title="Ver inscritos"
-                            aria-label="Ver inscritos do curso"
-                          >
-                            <FiUsers size={18} />
                           </button>
                           <button
                             type="button"

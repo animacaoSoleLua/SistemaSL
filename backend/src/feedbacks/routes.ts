@@ -81,6 +81,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
         type: f.type,
         text: f.text,
         audio_url: f.audioUrl,
+        event_date: null,
         created_at: f.createdAt.toISOString(),
         created_by: {
           id: f.creator.id,
@@ -213,6 +214,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
           type: feedback.type,
           text: feedback.text,
           audio_url: feedback.audioUrl,
+          event_date: null,
           created_at: feedback.createdAt.toISOString(),
           members: feedback.members.map((m) => ({
             id: m.id,
@@ -228,6 +230,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
         type?: string;
         text?: string;
         member_ids?: unknown;
+        event_date?: string;
       };
 
       if (!body.type || (body.type !== "positive" && body.type !== "negative")) {
@@ -280,6 +283,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
           type: feedback.type,
           text: feedback.text,
           audio_url: feedback.audioUrl,
+          event_date: null,
           created_at: feedback.createdAt.toISOString(),
           members: feedback.members.map((m) => ({
             id: m.id,
@@ -311,6 +315,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
         type: feedback.type,
         text: feedback.text,
         audio_url: feedback.audioUrl,
+        event_date: null,
         created_at: feedback.createdAt.toISOString(),
         created_by: {
           id: feedback.creator.id,

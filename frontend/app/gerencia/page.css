@@ -187,6 +187,13 @@
 }
 
 .stat-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.stat-label-text {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -502,17 +509,62 @@ body.theme-purple .gerencia-count {
 
 @media (max-width: 960px) {
   .gerencia-stats-bar {
-    flex-wrap: wrap;
-    padding: 4px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 16px;
   }
 
+  /*
+   * DOM order: stat-item(1) | stat-divider(2) | stat-item(3) | stat-divider(4)
+   *            stat-item(5) | stat-divider(6) | stat-item(7)
+   * display:none dividers → 4 stat-items fill the 2-col grid:
+   *   grid pos 1 = nth-child(1)  →  row1 col1  (left)
+   *   grid pos 2 = nth-child(3)  →  row1 col2  (right)
+   *   grid pos 3 = nth-child(5)  →  row2 col1  (left)
+   *   grid pos 4 = nth-child(7)  →  row2 col2  (right)
+   */
   .stat-item {
-    flex: 1 1 45%;
-    min-width: 160px;
+    flex: unset;
+    min-width: 0;
+    padding: 18px 20px;
+    gap: 12px;
+    border-bottom: 1px solid rgba(111, 76, 255, 0.07);
+    border-right: 1px solid rgba(111, 76, 255, 0.07);
+  }
+
+  /* Right column items — no right border */
+  .stat-item:nth-child(3),
+  .stat-item:nth-child(7) {
+    border-right: none;
+  }
+
+  /* Last-row items — no bottom border */
+  .stat-item:nth-child(5),
+  .stat-item:nth-child(7) {
+    border-bottom: none;
   }
 
   .stat-divider {
     display: none;
+  }
+}
+
+/* ── Tablet / grande mobile: botão full-width ─────────────────── */
+
+@media (max-width: 768px) {
+  .gerencia-section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .btn-export-pdf {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 18px;
   }
 }
 
@@ -542,7 +594,13 @@ body.theme-purple .gerencia-count {
   }
 
   .stat-value {
-    font-size: 20px;
+    font-size: 22px;
+  }
+
+  .stat-item {
+    padding: 16px 14px;
+    gap: 10px;
+    align-items: flex-start;
   }
 
   .gerencia-section {
@@ -554,7 +612,144 @@ body.theme-purple .gerencia-count {
     align-items: flex-start;
   }
 
-  .gerencia-section-header {
-    flex-direction: column;
+  .gerencia-filters {
+    width: 100%;
+  }
+
+  .gerencia-filters .input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .gerencia-count {
+    align-self: flex-start;
+  }
+
+  .stat-label {
+    align-items: flex-start;
+  }
+
+  .stat-label-text {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  /* Table: horizontal scroll com momentum iOS */
+  .gerencia-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .gerencia-table {
+    font-size: 12.5px;
+  }
+
+  .gerencia-table thead th,
+  .gerencia-table tbody td {
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+
+  /* Membros: esconde Data de Nascimento (col 3) e Idade (col 4) — mantém Nome, CPF, Função */
+  .gerencia-section[data-section="membros"] .gerencia-table thead th:nth-child(3),
+  .gerencia-section[data-section="membros"] .gerencia-table thead th:nth-child(4),
+  .gerencia-section[data-section="membros"] .gerencia-table tbody td:nth-child(3),
+  .gerencia-section[data-section="membros"] .gerencia-table tbody td:nth-child(4) {
+    display: none;
+  }
+
+  /* Relatórios: esconde Título do Roteiro (col 3) — mantém Data, Contratante, Autor */
+  .gerencia-section[data-section="relatorios"] .gerencia-table thead th:nth-child(3),
+  .gerencia-section[data-section="relatorios"] .gerencia-table tbody td:nth-child(3) {
+    display: none;
+  }
+
+  /* Cursos: esconde Instrutor (col 3) — mantém Curso, Data, Inscritos/Vagas */
+  .gerencia-section[data-section="cursos"] .gerencia-table thead th:nth-child(3),
+  .gerencia-section[data-section="cursos"] .gerencia-table tbody td:nth-child(3) {
+    display: none;
+  }
+}
+
+/* ── Mobile pequeno: ajustes adicionais ──────────────────────── */
+
+@media (max-width: 480px) {
+  .stat-item {
+    padding: 14px 12px;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .stat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .stat-value {
+    font-size: 17px;
+  }
+
+  .stat-label-text {
+    font-size: 9.5px;
+    line-height: 1.25;
+    -webkit-line-clamp: 3;
+  }
+
+  /* Tabs: icons only */
+  .gerencia-tab span {
+    display: none;
+  }
+
+  .gerencia-tab {
+    gap: 0;
+    padding: 10px;
+  }
+
+  .gerencia-tab svg {
+    font-size: 18px;
+  }
+
+  /* Section spacing */
+  .gerencia-section {
+    padding: 16px 12px 20px;
+  }
+
+  .gerencia-section-title {
+    font-size: 15px;
+  }
+
+  .gerencia-table {
+    font-size: 12px;
+  }
+
+  .gerencia-table thead th,
+  .gerencia-table tbody td {
+    padding: 9px 10px;
+  }
+}
+
+/* ── Dark theme: bordas do grid 2×2 ─────────────────────────── */
+
+@media (max-width: 960px) {
+  body.theme-purple .stat-item {
+    border-bottom-color: rgba(161, 97, 255, 0.1);
+    border-right-color: rgba(161, 97, 255, 0.1);
+  }
+
+  body.theme-purple .stat-item:nth-child(3),
+  body.theme-purple .stat-item:nth-child(7) {
+    border-right: none;
+  }
+
+  body.theme-purple .stat-item:nth-child(5),
+  body.theme-purple .stat-item:nth-child(7) {
+    border-bottom: none;
   }
 }

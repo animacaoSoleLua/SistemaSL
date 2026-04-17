@@ -1,14 +1,17 @@
+# syntax=docker/dockerfile:1
 FROM node:20-bullseye-slim
 
 WORKDIR /app
 
 # Instala dependências no build da imagem — não repete no startup
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 COPY next.config.mjs tsconfig.json next-env.d.ts ./
 COPY app ./app
 COPY assets ./assets
+COPY components ./components
 COPY lib ./lib
 
 ENV NODE_ENV=development

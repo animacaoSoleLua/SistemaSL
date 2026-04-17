@@ -19,6 +19,7 @@ import {
   isRoleAllowed,
   type Role,
 } from "../../lib/auth";
+import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
 
 interface WarningItem {
   id: string;
@@ -155,7 +156,7 @@ export default function PerfilPage() {
       setEditLastName(member.last_name ?? "");
       setEditCpf(member.cpf ?? "");
       setEditEmail(member.email);
-      setEditBirthDate(member.birth_date ?? "");
+      setEditBirthDate(member.birth_date ? isoToDisplay(member.birth_date) : "");
       setEditRegion(member.region ?? "");
       setEditPhone(formatPhone(member.phone ?? ""));
       setEditPix(member.pix ?? "");
@@ -223,7 +224,7 @@ export default function PerfilPage() {
       editLastName.trim() !== (member.last_name ?? "") ||
       editCpf.trim() !== (member.cpf ?? "") ||
       editEmail.trim() !== member.email ||
-      editBirthDate !== (member.birth_date ?? "") ||
+      editBirthDate !== (member.birth_date ? isoToDisplay(member.birth_date) : "") ||
       editRegion.trim() !== (member.region ?? "") ||
       editPhone.trim() !== (member.phone ?? "") ||
       editPix.trim() !== (member.pix ?? "") ||
@@ -278,7 +279,7 @@ export default function PerfilPage() {
           last_name: trimmedLastName,
           cpf: trimmedCpf,
           email: trimmedEmail,
-          birth_date: birthDateValue,
+          birth_date: displayToIso(birthDateValue),
           region: trimmedRegion,
           phone: trimmedPhone,
           pix: trimmedPix || null,
@@ -293,7 +294,7 @@ export default function PerfilPage() {
                 last_name: trimmedLastName,
                 cpf: trimmedCpf,
                 email: trimmedEmail,
-                birth_date: birthDateValue,
+                birth_date: displayToIso(birthDateValue),
                 region: trimmedRegion,
                 phone: trimmedPhone,
                 pix: trimmedPix || null,
@@ -538,9 +539,12 @@ export default function PerfilPage() {
                     <input
                       id="profileBirthDate"
                       className="input"
-                      type="date"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="DD/MM/AAAA"
                       value={editBirthDate}
-                      onChange={(e) => setEditBirthDate(e.target.value)}
+                      onChange={(e) => setEditBirthDate(formatDateInput(e.target.value))}
                     />
                   </label>
                   <label className="field full" htmlFor="profileRegion">
