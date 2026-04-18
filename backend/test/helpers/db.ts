@@ -31,6 +31,30 @@ export const testMember3 = {
   role: "recreador" as const,
 };
 
+const testScenarioUsers = [
+  {
+    name: "Arthur",
+    lastName: "Sousa",
+    email: "arthurssousa2004@gmail.com",
+    passwordHash: hashPassword("admin123"),
+    role: "admin" as const,
+  },
+  {
+    name: "Animador",
+    lastName: "Lua",
+    email: "animador@sol-e-lua.com",
+    passwordHash: hashPassword("animador123"),
+    role: "animador" as const,
+  },
+  {
+    name: "Recreador",
+    lastName: "Sol",
+    email: "recreador@sol-e-lua.com",
+    passwordHash: hashPassword("recreador123"),
+    role: "recreador" as const,
+  },
+];
+
 export async function resetDatabase(): Promise<void> {
   await prisma.$executeRawUnsafe("SELECT pg_advisory_lock(2147483647)");
   try {
@@ -38,6 +62,7 @@ export async function resetDatabase(): Promise<void> {
       'TRUNCATE TABLE "report_feedbacks", "report_media", "reports", "course_enrollments", "courses", "warnings", "suspensions", "password_reset_tokens", "users" RESTART IDENTITY CASCADE'
     );
     await prisma.user.createMany({ data: baseUsers });
+    await prisma.user.createMany({ data: testScenarioUsers });
     await prisma.user.createMany({
       data: [testMember1, testMember2, testMember3].map((m) => ({
         name: m.name,

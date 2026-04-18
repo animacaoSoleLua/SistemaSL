@@ -144,7 +144,7 @@ describe("Relatorios (integration)", () => {
     });
     await addMediaToReport(ownReport.id, {
       type: "image",
-      url: "/uploads/relatorios/foto-evento.jpg",
+      url: "https://test-pub.r2.dev/relatorios/foto-evento.jpg",
       sizeBytes: 15360,
     });
     await createReport(admin!.id, {
@@ -177,7 +177,7 @@ describe("Relatorios (integration)", () => {
     expect(body.data[0].title_schedule).toBe("Manhã recreativa");
     expect(body.data[0].media).toHaveLength(1);
     expect(body.data[0].media[0].media_type).toBe("image");
-    expect(body.data[0].media[0].url).toBe("/uploads/relatorios/foto-evento.jpg");
+    expect(body.data[0].media[0].url).toBe("https://test-pub.r2.dev/relatorios/foto-evento.jpg");
   });
 
   it("exports report as PDF for the owner", async () => {

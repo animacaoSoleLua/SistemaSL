@@ -1,10 +1,24 @@
-import { rm } from "node:fs/promises";
-import { join } from "node:path";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildServer } from "../src/app.js";
 import { getUserByEmail } from "../src/auth/store.js";
 import { createReport, getReportById } from "../src/relatorios/store.js";
 import { disconnectDatabase, resetDatabase } from "./helpers/db.js";
+
+vi.mock("../src/lib/r2.js", () => ({
+  uploadToR2: vi.fn(
+    async ({ stream, key, maxSize }: { stream: NodeJS.ReadableStream; key: string; maxSize: number }) => {
+      const chunks: Buffer[] = [];
+      let sizeBytes = 0;
+      for await (const chunk of stream as AsyncIterable<Buffer>) {
+        sizeBytes += chunk.length;
+        if (sizeBytes > maxSize) throw new Error("file_too_large");
+        chunks.push(chunk);
+      }
+      return { url: `${process.env.R2_PUBLIC_URL}/${key}`, sizeBytes };
+    }
+  ),
+  deleteFromR2: vi.fn(async () => {}),
+}));
 
 function buildMultipartPayload(options: {
   fields?: Record<string, string>;
@@ -57,7 +71,6 @@ describe("Relatorios media (integration)", () => {
 
   beforeEach(async () => {
     await resetDatabase();
-    await rm(join(process.cwd(), "uploads"), { recursive: true, force: true });
   });
 
   it("uploads media for own report", async () => {
@@ -92,15 +105,8 @@ describe("Relatorios media (integration)", () => {
 
     expect(response.statusCode).toBe(201);
     const body = response.json();
-    expect(body.data.url).toContain(`/uploads/relatorios/${report.id}/`);
+    expect(body.data.url).toContain(`${process.env.R2_PUBLIC_URL}/relatorios/${report.id}/`);
     expect(body.data.media_type).toBe("image");
-
-    const fetched = await app.inject({
-      method: "GET",
-      url: body.data.url,
-    });
-    expect(fetched.statusCode).toBe(200);
-    expect(fetched.body).toBe("imagem de teste");
 
     const stored = await getReportById(report.id);
     expect(stored?.media).toHaveLength(1);

@@ -15,6 +15,7 @@ import {
   resolveApiAssetUrl,
 } from "../../lib/api";
 import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { displayToIso, formatDateInput } from "../../lib/dateValidators";
 
 interface FeedbackMember {
   id: string;
@@ -226,7 +227,7 @@ export default function FeedbacksPage() {
         formData.append("type", createForm.type);
         formData.append("member_ids", JSON.stringify(memberIds));
         if (createForm.text.trim()) formData.append("text", createForm.text.trim());
-        if (createForm.eventDate) formData.append("event_date", createForm.eventDate);
+        if (createForm.eventDate) formData.append("event_date", displayToIso(createForm.eventDate));
         formData.append("audio", createForm.audioFile);
         await createFeedbackWithAudio(formData);
       } else {
@@ -234,7 +235,7 @@ export default function FeedbacksPage() {
           type: createForm.type as "positive" | "negative",
           text: createForm.text.trim(),
           member_ids: memberIds,
-          event_date: createForm.eventDate || undefined,
+          event_date: createForm.eventDate ? displayToIso(createForm.eventDate) : undefined,
         });
       }
 
@@ -610,35 +611,13 @@ export default function FeedbacksPage() {
           <label className="field">
             <span>Data do evento (opcional)</span>
             <input
-              type="date"
+              type="text"
+              inputMode="numeric"
+              maxLength={10}
               className="input"
               value={createForm.eventDate}
-              onChange={(e) => {
-                let dateValue = e.target.value;
-
-                // Se o usuário digitou manualmente em formato DD/MM/YYYY, converte para YYYY-MM-DD
-                if (dateValue && !dateValue.includes('-') && dateValue.includes('/')) {
-                  const parts = dateValue.split('/');
-                  if (parts.length === 3) {
-                    dateValue = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                  }
-                }
-
-                dispatchCreate({ type: "SET_FIELD", field: "eventDate", value: dateValue });
-              }}
-              onBlur={(e) => {
-                let dateValue = e.target.value;
-
-                // Normaliza o formato se necessário
-                if (dateValue && !dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                  const parts = dateValue.replace(/\D/g, '');
-                  if (parts.length === 8) {
-                    dateValue = `${parts.substring(4)}-${parts.substring(2, 4)}-${parts.substring(0, 2)}`;
-                    dispatchCreate({ type: "SET_FIELD", field: "eventDate", value: dateValue });
-                  }
-                }
-              }}
-              placeholder="DD/MM/YYYY ou use o date picker"
+              onChange={(e) => dispatchCreate({ type: "SET_FIELD", field: "eventDate", value: formatDateInput(e.target.value) })}
+              placeholder="DD/MM/AAAA"
               aria-label="Data do evento relacionado ao feedback"
             />
           </label>
