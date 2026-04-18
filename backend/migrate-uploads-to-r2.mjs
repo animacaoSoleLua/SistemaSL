@@ -103,13 +103,13 @@ async function main() {
   // 1. ReportMedia
   console.log("\n[1/3] Migrando mídias de relatórios...");
   const mediaRows = await db.query(
-    `SELECT id, url FROM "report_medias" WHERE url LIKE '/uploads/%'`
+    `SELECT id, url FROM "report_media" WHERE url LIKE '/uploads/%'`
   );
   console.log(`  Encontradas: ${mediaRows.rows.length}`);
   for (const row of mediaRows.rows) {
     const newUrl = await migrateUrl(db, row.url);
     if (newUrl) {
-      await db.query(`UPDATE "report_medias" SET url = $1 WHERE id = $2`, [newUrl, row.id]);
+      await db.query(`UPDATE "report_media" SET url = $1 WHERE id = $2`, [newUrl, row.id]);
       migrated++;
     } else {
       skipped++;
