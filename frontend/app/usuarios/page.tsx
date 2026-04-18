@@ -97,6 +97,7 @@ interface MemberFeedback {
   feedback: string;
   event_date: string;
   contractor_name: string;
+  author_name: string;
 }
 
 interface MemberCourse {
@@ -174,7 +175,7 @@ export default function UsuariosPage() {
   const [cpfActionError, setCpfActionError] = useState<string | null>(null);
   const [photoLightbox, setPhotoLightbox] = useState<{ url: string; name: string } | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [detailsTab, setDetailsTab] = useState<"dados" | "cursos" | "advertencias" | "feedbacks">("dados");
+  const [detailsTab, setDetailsTab] = useState<"dados" | "cursos" | "advertencias" | "clientes" | "feedbacks">("dados");
   const memberModalTrapRef = useFocusTrap(modalOpen);
   const deleteTrapRef = useFocusTrap(!!deleteTarget);
   const cpfTrapRef = useFocusTrap(cpfModalOpen);
@@ -986,11 +987,12 @@ export default function UsuariosPage() {
 
             {isAdmin && (
               <div className="details-tabs" role="tablist">
-                {(["dados", "feedbacks", "cursos", "advertencias"] as const).map((tab) => {
-                  const labels = { dados: "Dados", feedbacks: "Feedbacks", cursos: "Cursos", advertencias: "Advertências" };
+                {(["dados", "feedbacks", "clientes", "cursos", "advertencias"] as const).map((tab) => {
+                  const labels = { dados: "Dados", feedbacks: "Feedbacks", clientes: "Clientes", cursos: "Cursos", advertencias: "Advertências" };
                   const counts: Record<string, number | null> = {
                     dados: null,
-                    feedbacks: feedbackCounts ? feedbackCounts.positive + feedbackCounts.negative : null,
+                    feedbacks: detailsLoading ? null : (selectedMemberDetails?.feedbacks?.length ?? 0),
+                    clientes: feedbackCounts ? feedbackCounts.positive + feedbackCounts.negative : null,
                     cursos: detailsLoading ? null : courses.length,
                     advertencias: detailsLoading ? null : warnings.length,
                   };
@@ -1103,7 +1105,7 @@ export default function UsuariosPage() {
                 </div>
               )}
 
-              {isAdmin && detailsTab === "feedbacks" && (
+              {isAdmin && detailsTab === "clientes" && (
                 <div className="member-section">
                   <div className="member-section-header">
                     <h3 className="section-title">Feedbacks</h3>
@@ -1124,6 +1126,36 @@ export default function UsuariosPage() {
                         <span className="feedback-count-label">Negativos</span>
                       </div>
                     </div>
+                  )}
+                </div>
+              )}
+
+              {isAdmin && detailsTab === "feedbacks" && (
+                <div className="member-section">
+                  <div className="member-section-header">
+                    <h3 className="section-title">Feedbacks</h3>
+                    <span className="member-section-count">
+                      {selectedMemberDetails?.feedbacks?.length ?? 0}
+                    </span>
+                  </div>
+                  {detailsLoading ? (
+                    <p className="member-section-empty">Carregando feedbacks...</p>
+                  ) : detailsError ? (
+                    <p className="member-section-error">{detailsError}</p>
+                  ) : !selectedMemberDetails?.feedbacks?.length ? (
+                    <p className="member-section-empty">Nenhum feedback individual registrado.</p>
+                  ) : (
+                    <ul className="member-section-list">
+                      {selectedMemberDetails.feedbacks.map((entry) => (
+                        <li className="member-section-item" key={entry.id}>
+                          <div className="member-section-meta">
+                            <span className="member-section-date">{formatDateBR(entry.event_date)}</span>
+                            <strong className="member-section-title">{entry.author_name}</strong>
+                          </div>
+                          <p className="member-section-subtitle">{entry.feedback}</p>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
               )}
