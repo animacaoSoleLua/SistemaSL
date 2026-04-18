@@ -55,6 +55,7 @@ interface ReportDetail {
     url: string;
     media_type: "image" | "video";
     size_bytes: number;
+    topic?: string | null;
   }>;
   feedbacks: Array<{
     member_id: string;
