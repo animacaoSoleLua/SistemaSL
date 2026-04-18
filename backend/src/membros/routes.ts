@@ -1,11 +1,8 @@
 import { FastifyInstance } from "fastify";
-import { createWriteStream } from "node:fs";
-import { mkdir, unlink } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { dirname, extname, join, resolve, sep } from "node:path";
-import { pipeline } from "node:stream/promises";
-import { Transform } from "node:stream";
+import { extname } from "node:path";
 import { z } from "zod";
+import { deleteFromR2, uploadToR2 } from "../lib/r2.js";
 import { requireRole } from "../auth/guard.js";
 import { auditLog } from "../lib/audit.js";
 import { isValidCPF, validateUpload } from "../lib/validators.js";
@@ -77,10 +74,6 @@ const UpdateMemberSchema = z.object({
   photo_url: z.string().nullable().optional(),
 });
 
-const uploadsRoot = process.env.UPLOADS_DIR
-  ? resolve(process.env.UPLOADS_DIR)
-  : join(process.cwd(), "uploads");
-
 const MAX_PROFILE_PHOTO_BYTES = 5 * 1024 * 1024;
 const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
 const mimeImageExtensions: Record<string, string> = {
@@ -133,65 +126,20 @@ function resolveImageExtension(
   return undefined;
 }
 
-async function safeUnlink(path: string, log?: { warn: (msg: string, obj?: object) => void }): Promise<void> {
-  try {
-    await unlink(path);
-  } catch (err) {
-    log?.warn("safeUnlink falhou", { path, err: String(err) });
-  }
-}
-
 async function removePersistedMemberPhoto(options: {
   memberId: string;
   currentPhotoUrl?: string;
-  uploadsRoot: string;
   skipDbUpdate?: boolean;
-  log?: {
-    warn: (msg: string, obj?: object) => void;
-  };
 }): Promise<void> {
-  const { memberId, currentPhotoUrl, uploadsRoot, skipDbUpdate, log } = options;
+  const { memberId, currentPhotoUrl, skipDbUpdate } = options;
 
   if (!skipDbUpdate) {
     await updateUser(memberId, { photoUrl: null });
   }
 
-  if (!currentPhotoUrl || !currentPhotoUrl.startsWith("/uploads/")) {
-    return;
+  if (currentPhotoUrl) {
+    await deleteFromR2(currentPhotoUrl);
   }
-
-  const relativePath = currentPhotoUrl.replace(/^\/uploads\//, "");
-  const fullPath = join(uploadsRoot, relativePath);
-  await safeUnlink(fullPath, log);
-}
-
-async function saveUploadToDisk(options: {
-  stream: NodeJS.ReadableStream;
-  targetPath: string;
-  maxSize: number;
-}): Promise<number> {
-  let size = 0;
-  const counter = new Transform({
-    transform(chunk, _encoding, callback) {
-      size += chunk.length;
-      if (size > options.maxSize) {
-        callback(new Error("file_too_large"));
-        return;
-      }
-      callback(null, chunk);
-    },
-  });
-
-  await mkdir(dirname(options.targetPath), { recursive: true });
-
-  try {
-    await pipeline(options.stream, counter, createWriteStream(options.targetPath));
-  } catch (error) {
-    await safeUnlink(options.targetPath);
-    throw error;
-  }
-
-  return size;
 }
 
 function formatDate(date: Date): string {
@@ -534,6 +482,7 @@ export async function membrosRoutes(app: FastifyInstance) {
           feedback: entry.feedback,
           event_date: formatDate(entry.eventDate),
           contractor_name: entry.contractorName,
+          author_name: entry.authorName,
         })),
         suspension: suspension
           ? {
@@ -673,9 +622,7 @@ export async function membrosRoutes(app: FastifyInstance) {
       await removePersistedMemberPhoto({
         memberId: member.id,
         currentPhotoUrl: member.photoUrl,
-        uploadsRoot,
         skipDbUpdate: true,
-        log: request.log,
       });
     }
 
@@ -758,18 +705,17 @@ export async function membrosRoutes(app: FastifyInstance) {
     }
 
     const filename = `perfil-${randomUUID()}${extension}`;
-    const relativePath = join("membros", member.id, filename);
-    const storagePath = join(uploadsRoot, relativePath);
-    const fileStream = fileData.file as NodeJS.ReadableStream & {
-      truncated?: boolean;
-    };
+    const key = `membros/${member.id}/${filename}`;
+    const fileStream = fileData.file as NodeJS.ReadableStream;
 
+    let url: string;
     try {
-      await saveUploadToDisk({
+      ({ url } = await uploadToR2({
         stream: fileStream,
-        targetPath: storagePath,
+        key,
+        contentType: fileData.mimetype ?? "image/jpeg",
         maxSize: MAX_PROFILE_PHOTO_BYTES,
-      });
+      }));
     } catch (error) {
       if (error instanceof Error && error.message === "file_too_large") {
         return reply.status(400).send({
@@ -779,17 +725,6 @@ export async function membrosRoutes(app: FastifyInstance) {
       }
       throw error;
     }
-
-    if (fileStream.truncated) {
-      await safeUnlink(storagePath);
-      return reply.status(400).send({
-        error: "file_too_large",
-        message: "Arquivo excede o tamanho permitido",
-      });
-    }
-
-    const publicPath = relativePath.split(sep).join("/");
-    const url = `/uploads/${publicPath}`;
 
     const updated = await updateUser(member.id, { photoUrl: url });
     if (!updated) {
@@ -841,8 +776,6 @@ export async function membrosRoutes(app: FastifyInstance) {
     await removePersistedMemberPhoto({
       memberId: member.id,
       currentPhotoUrl: member.photoUrl,
-      uploadsRoot,
-      log: request.log,
     });
 
     auditLog(request.log, "MEMBER_UPDATED", request.user.id, {

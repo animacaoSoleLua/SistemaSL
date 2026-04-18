@@ -28,6 +28,7 @@ export interface MemberFeedbackRecord {
   feedback: string;
   eventDate: Date;
   contractorName: string;
+  authorName: string;
   createdAt: Date;
 }
 
@@ -531,7 +532,11 @@ export async function listFeedbacksForMember(
 ): Promise<MemberFeedbackRecord[]> {
   const feedbacks = await prisma.reportFeedback.findMany({
     where: { memberId },
-    include: { report: true },
+    include: {
+      report: {
+        include: { author: { select: { name: true, lastName: true } } },
+      },
+    },
   });
 
   return feedbacks.map((entry) => ({
@@ -541,6 +546,9 @@ export async function listFeedbacksForMember(
     feedback: entry.feedback,
     eventDate: entry.report.eventDate,
     contractorName: entry.report.contractorName,
+    authorName: [entry.report.author.name, entry.report.author.lastName]
+      .filter(Boolean)
+      .join(" "),
     createdAt: entry.createdAt,
   }));
 }

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildServer } from "../src/app.js";
 import { getUserByEmail } from "../src/auth/store.js";
+import { createReport } from "../src/relatorios/store.js";
 import { disconnectDatabase, resetDatabase } from "./helpers/db.js";
 
 describe("Membros (integration)", () => {
@@ -222,5 +223,60 @@ describe("Membros (integration)", () => {
     });
     expect(detailAfterRemove.statusCode).toBe(200);
     expect(detailAfterRemove.json().data.photo_url).toBeNull();
+  });
+
+  it("returns report feedbacks with author_name for admin", async () => {
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const token = login.json().data.access_token;
+    const admin = await getUserByEmail("arthurssousa2004@gmail.com");
+    expect(admin).toBeDefined();
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/membros",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        name: "Recreador",
+        last_name: "Teste",
+        email: "recreador-feedback@sol-e-lua.com",
+        role: "recreador",
+      },
+    });
+    expect(createResponse.statusCode).toBe(201);
+    const member = createResponse.json().data;
+
+    await createReport(admin!.id, {
+      eventDate: new Date("2026-03-15"),
+      contractorName: "Clube Teste",
+      location: "Brasília",
+      teamSummary: "Equipe bem entrosada",
+      feedbacks: [
+        { memberId: member.id, feedback: "Excelente desempenho no evento" },
+      ],
+    });
+
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: `/api/v1/membros/${member.id}`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(detailResponse.statusCode).toBe(200);
+    const feedbacks = detailResponse.json().data.feedbacks as Array<{
+      id: string;
+      feedback: string;
+      author_name: string;
+      event_date: string;
+    }>;
+    expect(feedbacks).toHaveLength(1);
+    expect(feedbacks[0].feedback).toBe("Excelente desempenho no evento");
+    expect(feedbacks[0].author_name).toBe(
+      [admin!.name, admin!.lastName].filter(Boolean).join(" ")
+    );
+    expect(feedbacks[0].event_date).toBe("2026-03-15");
   });
 });
