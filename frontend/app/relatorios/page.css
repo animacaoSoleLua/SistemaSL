@@ -67,6 +67,28 @@
 }
 
 /* ── Media grid (thumbnails) ── */
+.media-topics {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.media-topic-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.media-topic-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary, #888);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
 .media-grid {
   display: flex;
   flex-wrap: wrap;

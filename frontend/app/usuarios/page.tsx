@@ -1149,8 +1149,8 @@ export default function UsuariosPage() {
                       {selectedMemberDetails.feedbacks.map((entry) => (
                         <li className="member-section-item" key={entry.id}>
                           <div className="member-section-meta">
-                            <span className="member-section-date">{formatDateBR(entry.event_date)}</span>
                             <strong className="member-section-title">{entry.author_name}</strong>
+                            <span className="member-section-date">{formatDateBR(entry.event_date)}</span>
                           </div>
                           <p className="member-section-subtitle">{entry.feedback}</p>
                         </li>

@@ -550,65 +550,92 @@ export default function RelatoriosPage() {
                     <strong>Mídias anexadas</strong>
                     {selectedReport.media.length === 0 ? (
                       <p className="helper">Sem mídias anexadas.</p>
-                    ) : (
-                      <div className="media-grid">
-                        {selectedReport.media.map((item) => {
-                          const assetUrl = resolveApiAssetUrl(item.url);
-                          const filename = item.url.split("/").pop() ?? (item.media_type === "image" ? "imagem.jpg" : "video.mp4");
-                          if (item.media_type === "image") {
-                            return (
-                              <div key={item.id} className="media-thumb-wrap">
-                                <button
-                                  type="button"
-                                  className="media-thumb-btn"
-                                  onClick={() => setLightboxUrl(assetUrl)}
-                                  aria-label="Ampliar imagem"
-                                >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={assetUrl}
-                                    alt="Mídia do relatório"
-                                    className="media-thumb"
-                                    loading="lazy"
-                                  />
-                                  <span className="media-thumb-overlay" aria-hidden="true">
-                                    <FiMaximize2 />
-                                  </span>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="media-download-btn"
-                                  aria-label="Baixar imagem"
-                                  onClick={() => handleDownload(assetUrl, filename)}
-                                >
-                                  <FiDownload />
-                                </button>
-                              </div>
-                            );
-                          }
+                    ) : (() => {
+                      const topicOrder = [null, "Pintura", "Balão", "Animação", "Personagens", "Oficinas"];
+                      const topicLabels: Record<string, string> = {
+                        Pintura: "Pintura",
+                        "Balão": "Balão",
+                        "Animação": "Animação",
+                        Personagens: "Personagens",
+                        Oficinas: "Oficinas",
+                      };
+                      const grouped = topicOrder
+                        .map((topic) => ({
+                          topic,
+                          label: topic ? topicLabels[topic] : "Avaria no Material",
+                          items: selectedReport.media.filter((m) => (m.topic ?? null) === topic),
+                        }))
+                        .filter((g) => g.items.length > 0);
+
+                      const renderMediaItem = (item: typeof selectedReport.media[0]) => {
+                        const assetUrl = resolveApiAssetUrl(item.url);
+                        const filename = item.url.split("/").pop() ?? (item.media_type === "image" ? "imagem.jpg" : "video.mp4");
+                        if (item.media_type === "image") {
                           return (
-                            <div key={item.id} className="media-thumb-wrap media-thumb-wrap--video">
-                              <a
-                                href={assetUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="media-video-link"
+                            <div key={item.id} className="media-thumb-wrap">
+                              <button
+                                type="button"
+                                className="media-thumb-btn"
+                                onClick={() => setLightboxUrl(assetUrl)}
+                                aria-label="Ampliar imagem"
                               >
-                                Vídeo
-                              </a>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={assetUrl}
+                                  alt="Mídia do relatório"
+                                  className="media-thumb"
+                                  loading="lazy"
+                                />
+                                <span className="media-thumb-overlay" aria-hidden="true">
+                                  <FiMaximize2 />
+                                </span>
+                              </button>
                               <button
                                 type="button"
                                 className="media-download-btn"
-                                aria-label="Baixar vídeo"
+                                aria-label="Baixar imagem"
                                 onClick={() => handleDownload(assetUrl, filename)}
                               >
                                 <FiDownload />
                               </button>
                             </div>
                           );
-                        })}
-                      </div>
-                    )}
+                        }
+                        return (
+                          <div key={item.id} className="media-thumb-wrap media-thumb-wrap--video">
+                            <a
+                              href={assetUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="media-video-link"
+                            >
+                              Vídeo
+                            </a>
+                            <button
+                              type="button"
+                              className="media-download-btn"
+                              aria-label="Baixar vídeo"
+                              onClick={() => handleDownload(assetUrl, filename)}
+                            >
+                              <FiDownload />
+                            </button>
+                          </div>
+                        );
+                      };
+
+                      return (
+                        <div className="media-topics">
+                          {grouped.map((group) => (
+                            <div key={group.topic ?? "__damage__"} className="media-topic-group">
+                              <span className="media-topic-label">{group.label}</span>
+                              <div className="media-grid">
+                                {group.items.map(renderMediaItem)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div className="report-detail-group">

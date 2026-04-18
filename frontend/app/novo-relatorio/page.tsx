@@ -638,9 +638,9 @@ function NovoRelatorioContent() {
         throw new Error("Relatorio sem identificador.");
       }
 
-      for (const { file, topic } of mediaFilesWithTopic) {
-        await uploadReportMedia(reportId, file, topic);
-      }
+      await Promise.all(
+        mediaFilesWithTopic.map(({ file, topic }) => uploadReportMedia(reportId, file, topic))
+      );
 
       router.push("/relatorios");
     } catch (error) {

@@ -1,34 +1,9 @@
-import { unlink } from "node:fs/promises";
-import { join, resolve, sep } from "node:path";
 import { prisma } from "../db/prisma.js";
-
-const uploadsRoot = process.env.UPLOADS_DIR
-  ? resolve(process.env.UPLOADS_DIR)
-  : join(process.cwd(), "uploads");
+import { deleteFromR2 } from "../lib/r2.js";
 
 const MEDIA_EXPIRY_DAYS = 20;
 const REPORT_EXPIRY_DAYS = 365;
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
-
-async function safeUnlink(path: string): Promise<void> {
-  try {
-    await unlink(path);
-  } catch {
-    // ignore missing or already-deleted files
-  }
-}
-
-function resolveStoragePath(url: string): string | undefined {
-  if (!url.startsWith("/uploads/")) {
-    return undefined;
-  }
-  const relative = url.slice("/uploads/".length);
-  const storagePath = resolve(uploadsRoot, relative);
-  if (storagePath !== uploadsRoot && !storagePath.startsWith(`${uploadsRoot}${sep}`)) {
-    return undefined;
-  }
-  return storagePath;
-}
 
 export async function purgeOldMedia(): Promise<number> {
   const cutoff = new Date();
@@ -42,10 +17,7 @@ export async function purgeOldMedia(): Promise<number> {
   let deletedCount = 0;
   for (const report of reports) {
     for (const media of report.media) {
-      const storagePath = resolveStoragePath(media.url);
-      if (storagePath) {
-        await safeUnlink(storagePath);
-      }
+      await deleteFromR2(media.url);
     }
     const result = await prisma.reportMedia.deleteMany({ where: { reportId: report.id } });
     deletedCount += result.count;
@@ -65,10 +37,7 @@ export async function purgeOldReports(): Promise<number> {
 
   for (const report of reports) {
     for (const media of report.media) {
-      const storagePath = resolveStoragePath(media.url);
-      if (storagePath) {
-        await safeUnlink(storagePath);
-      }
+      await deleteFromR2(media.url);
     }
   }
 

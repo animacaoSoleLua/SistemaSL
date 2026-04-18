@@ -1,10 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
-import { createWriteStream } from "node:fs";
-import { mkdir, rm, unlink } from "node:fs/promises";
-import { extname, join, resolve } from "node:path";
-import { pipeline } from "node:stream/promises";
+import { extname } from "node:path";
 import { requireRole } from "../auth/guard.js";
+import { deleteFromR2, uploadToR2 } from "../lib/r2.js";
 import {
   createFeedback,
   deleteFeedback,
@@ -25,10 +23,6 @@ const allowedAudioMimes: Record<string, string> = {
   "audio/aac": ".aac",
   "audio/x-m4a": ".m4a",
 };
-
-const uploadsRoot = process.env.UPLOADS_DIR
-  ? resolve(process.env.UPLOADS_DIR)
-  : join(process.cwd(), "uploads");
 
 function parsePositiveInt(val: string | undefined): number | undefined {
   if (!val) return undefined;
@@ -118,8 +112,6 @@ export async function feedbacksRoutes(app: FastifyInstance) {
       let audioUrl: string | undefined;
 
       const feedbackId = randomUUID();
-      const feedbackDir = join(uploadsRoot, "feedbacks", feedbackId);
-      await mkdir(feedbackDir, { recursive: true });
 
       for await (const part of parts) {
         if (part.type === "field") {
@@ -142,7 +134,6 @@ export async function feedbacksRoutes(app: FastifyInstance) {
 
           if (!ext) {
             await part.file.resume();
-            await unlink(feedbackDir).catch(() => {});
             return reply.status(400).send({
               error: "invalid_file",
               message: "Formato de audio invalido. Use mp3, m4a, ogg, wav, webm ou aac.",
@@ -150,31 +141,22 @@ export async function feedbacksRoutes(app: FastifyInstance) {
           }
 
           const filename = `${randomUUID()}${ext}`;
-          const filePath = join(feedbackDir, filename);
-          let bytesWritten = 0;
-
-          const countBytes = new (await import("node:stream")).Transform({
-            transform(chunk, _enc, cb) {
-              bytesWritten += chunk.length;
-              if (bytesWritten > MAX_AUDIO_SIZE_BYTES) {
-                cb(new Error("file_too_large"));
-              } else {
-                cb(null, chunk);
-              }
-            },
-          });
+          const key = `feedbacks/${feedbackId}/${filename}`;
 
           try {
-            await pipeline(part.file, countBytes, createWriteStream(filePath));
+            const { url } = await uploadToR2({
+              stream: part.file,
+              key,
+              contentType: mimeType || "audio/mpeg",
+              maxSize: MAX_AUDIO_SIZE_BYTES,
+            });
+            audioUrl = url;
           } catch {
-            await unlink(filePath).catch(() => {});
             return reply.status(400).send({
               error: "file_too_large",
               message: "Audio muito grande. Maximo: 20MB.",
             });
           }
-
-          audioUrl = `/uploads/feedbacks/${feedbackId}/${filename}`;
         }
       }
 
@@ -347,8 +329,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
       await deleteFeedback(id);
 
       if (feedback.audioUrl) {
-        const feedbackDir = join(uploadsRoot, "feedbacks", id);
-        await rm(feedbackDir, { recursive: true, force: true }).catch(() => {});
+        await deleteFromR2(feedback.audioUrl);
       }
 
       return reply.status(204).send();

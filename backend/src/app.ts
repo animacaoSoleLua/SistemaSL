@@ -4,12 +4,7 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
-import fastifyStatic from "@fastify/static";
 import Fastify, { FastifyInstance } from "fastify";
-import { randomUUID } from "node:crypto";
-import { mkdirSync } from "node:fs";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
 import { advertenciasRoutes } from "./advertencias/routes.js";
 import { feedbacksRoutes } from "./feedbacks/routes.js";
 // import { googleRoutes } from "./google/routes.js"; // GOOGLE_CALENDAR_DISABLED
@@ -24,18 +19,6 @@ import { relatoriosRoutes } from "./relatorios/routes.js";
 import { healthRoutes } from "./routes/health.js";
 
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
-
-async function ensureUploadsWritable(root: string): Promise<void> {
-  await mkdir(root, { recursive: true });
-  const probe = join(root, `.upload-probe-${randomUUID()}`);
-  try {
-    await writeFile(probe, "ok");
-  } catch (error) {
-    throw new Error("uploads_unwritable", { cause: error });
-  } finally {
-    await unlink(probe).catch(() => {});
-  }
-}
 
 export function buildServer(): FastifyInstance {
   const isPrettyLogs =
@@ -156,19 +139,8 @@ export function buildServer(): FastifyInstance {
     credentials: true,
   });
 
-  const uploadsRoot = process.env.UPLOADS_DIR
-    ? resolve(process.env.UPLOADS_DIR)
-    : join(process.cwd(), "uploads");
-
-  try {
-    mkdirSync(uploadsRoot, { recursive: true });
-  } catch (error) {
-    throw new Error("uploads_unwritable", { cause: error });
-  }
-
   app.addHook("preHandler", authGuard);
   app.addHook("onReady", async () => {
-    await ensureUploadsWritable(uploadsRoot);
     await ensureBaseUsers();
     scheduleCleanup(app.log);
   });
@@ -178,10 +150,6 @@ export function buildServer(): FastifyInstance {
       fileSize: MAX_UPLOAD_BYTES,
       files: 1,
     },
-  });
-  app.register(fastifyStatic, {
-    root: uploadsRoot,
-    prefix: "/uploads/",
   });
 
   app.register(authRoutes, { prefix: "/api/v1/auth" });

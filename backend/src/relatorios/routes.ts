@@ -1,11 +1,8 @@
 import type { Multipart } from "@fastify/multipart";
 import { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
-import { createWriteStream } from "node:fs";
-import { mkdir, unlink } from "node:fs/promises";
-import { dirname, extname, join, resolve, sep } from "node:path";
-import { Transform } from "node:stream";
-import { pipeline } from "node:stream/promises";
+import { extname } from "node:path";
+import { deleteFromR2, uploadToR2 } from "../lib/r2.js";
 import {
   addMediaToReport,
   createReport,
@@ -20,9 +17,6 @@ import type { ReportsStatsResponse } from "./dto/reports-stats.dto.js";
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_VIDEO_SIZE_BYTES = 15 * 1024 * 1024;
-const uploadsRoot = process.env.UPLOADS_DIR
-  ? resolve(process.env.UPLOADS_DIR)
-  : join(process.cwd(), "uploads");
 
 const mediaExtensions: Record<MediaType, string[]> = {
   image: [".jpg", ".jpeg", ".png", ".webp"],
@@ -134,42 +128,6 @@ function getMultipartFieldValue(
   return undefined;
 }
 
-async function safeUnlink(path: string): Promise<void> {
-  try {
-    await unlink(path);
-  } catch {
-    // ignore errors while cleaning up temporary files
-  }
-}
-
-async function saveUploadToDisk(options: {
-  stream: NodeJS.ReadableStream;
-  targetPath: string;
-  maxSize: number;
-}): Promise<number> {
-  let size = 0;
-  const counter = new Transform({
-    transform(chunk, _encoding, callback) {
-      size += chunk.length;
-      if (size > options.maxSize) {
-        callback(new Error("file_too_large"));
-        return;
-      }
-      callback(null, chunk);
-    },
-  });
-
-  await mkdir(dirname(options.targetPath), { recursive: true });
-
-  try {
-    await pipeline(options.stream, counter, createWriteStream(options.targetPath));
-  } catch (error) {
-    await safeUnlink(options.targetPath);
-    throw error;
-  }
-
-  return size;
-}
 
 function parseDate(value?: string): Date | undefined {
   if (!value) {
@@ -203,23 +161,6 @@ function normalizeExtraHours(input: {
   return { hasExtraHours: undefined, extraHoursDetails: undefined };
 }
 
-function resolveStoragePathFromPublicUrl(url: string): string | undefined {
-  if (!url.startsWith("/uploads/")) {
-    return undefined;
-  }
-
-  const relative = url.slice("/uploads/".length);
-  const storagePath = resolve(uploadsRoot, relative);
-
-  if (
-    storagePath !== uploadsRoot &&
-    !storagePath.startsWith(`${uploadsRoot}${sep}`)
-  ) {
-    return undefined;
-  }
-
-  return storagePath;
-}
 
 function normalizePdfText(value: string): string {
   const ascii = value
@@ -876,15 +817,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
-    await Promise.all(
-      report.media.map(async (media) => {
-        const storagePath = resolveStoragePathFromPublicUrl(media.url);
-        if (!storagePath) {
-          return;
-        }
-        await safeUnlink(storagePath);
-      })
-    );
+    await Promise.all(report.media.map((media) => deleteFromR2(media.url)));
 
     return reply.status(204).send();
   });
@@ -1030,19 +963,18 @@ export async function relatoriosRoutes(app: FastifyInstance) {
 
     const maxSize = maxSizeForType(mediaType);
     const filename = `${randomUUID()}${extension}`;
-    const relativePath = join("relatorios", report.id, filename);
-    const storagePath = join(uploadsRoot, relativePath);
+    const key = `relatorios/${report.id}/${filename}`;
 
-    const fileStream = fileData.file as NodeJS.ReadableStream & {
-      truncated?: boolean;
-    };
-    let sizeBytes = 0;
+    const fileStream = fileData.file as NodeJS.ReadableStream;
+    let url: string;
+    let sizeBytes: number;
     try {
-      sizeBytes = await saveUploadToDisk({
+      ({ url, sizeBytes } = await uploadToR2({
         stream: fileStream,
-        targetPath: storagePath,
+        key,
+        contentType: fileData.mimetype ?? "application/octet-stream",
         maxSize,
-      });
+      }));
     } catch (error) {
       if (error instanceof Error && error.message === "file_too_large") {
         return reply.status(400).send({
@@ -1052,17 +984,6 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       }
       throw error;
     }
-
-    if (fileStream.truncated) {
-      await safeUnlink(storagePath);
-      return reply.status(400).send({
-        error: "file_too_large",
-        message: "Arquivo excede o tamanho permitido",
-      });
-    }
-
-    const publicPath = relativePath.split(sep).join("/");
-    const url = `/uploads/${publicPath}`;
 
     const media = await addMediaToReport(report.id, {
       type: mediaType,

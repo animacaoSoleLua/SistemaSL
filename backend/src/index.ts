@@ -9,7 +9,11 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM: z.string().optional(),
-  UPLOADS_DIR: z.string().default("./uploads"),
+  R2_ENDPOINT: z.string().url(),
+  R2_ACCESS_KEY_ID: z.string().min(1),
+  R2_SECRET_ACCESS_KEY: z.string().min(1),
+  R2_BUCKET_NAME: z.string().min(1),
+  R2_PUBLIC_URL: z.string().url(),
 });
 
 const envResult = envSchema.safeParse(process.env);
