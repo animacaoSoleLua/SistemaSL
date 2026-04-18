@@ -17,6 +17,7 @@ ENV HOST=0.0.0.0
 ENV PORT=3001
 
 COPY entrypoint.sh ./
+COPY migrate-uploads-to-r2.mjs ./
 RUN chmod +x entrypoint.sh
 
 EXPOSE 3001
