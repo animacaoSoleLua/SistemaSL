@@ -46,7 +46,8 @@ type ReportMedia = {
 type ReportDetail = {
   event_date: string;
   contractor_name: string;
-  title_schedule?: string | null;
+  title_schedule: string;
+  birthday_age?: number | null;
   transport_type?: TransportType | null;
   uber_go_value?: number | null;
   uber_return_value?: number | null;
@@ -271,6 +272,7 @@ function NovoRelatorioContent() {
   const [eventDate, setEventDate] = useState("");
   const [titleSchedule, setTitleSchedule] = useState("");
   const [birthdayContractor, setBirthdayContractor] = useState("");
+  const [birthdayAge, setBirthdayAge] = useState("");
 
   const [transportType, setTransportType] = useState<TransportType>("uber99");
   const [uberGoValue, setUberGoValue] = useState("");
@@ -346,6 +348,7 @@ function NovoRelatorioContent() {
         setEventDate(report.event_date ? isoToDisplay(report.event_date) : "");
         setTitleSchedule(report.title_schedule ?? "");
         setBirthdayContractor(report.contractor_name ?? "");
+        setBirthdayAge(report.birthday_age != null ? String(report.birthday_age) : "");
         setTransportType((report.transport_type as TransportType) ?? "uber99");
         setUberGoValue(report.uber_go_value != null ? String(report.uber_go_value) : "");
         setUberReturnValue(
@@ -535,8 +538,8 @@ function NovoRelatorioContent() {
     const reportPayload = {
       event_date: displayToIso(eventDate),
       contractor_name: birthdayContractor.trim(),
-      location: titleSchedule.trim() || "Nao informado",
-      title_schedule: titleSchedule.trim() || undefined,
+      title_schedule: titleSchedule.trim(),
+      birthday_age: birthdayAge.trim() ? Number(birthdayAge) : undefined,
       transport_type: transportType || undefined,
       uber_go_value:
         transportType === "uber99" && uberGoValue.trim()
@@ -697,27 +700,47 @@ function NovoRelatorioContent() {
               </label>
 
               <label className="field" htmlFor="titleSchedule">
-                <span>Título / Cronograma</span>
+                <span>Título / Cronograma (obrigatório)</span>
                 <input
                   id="titleSchedule"
                   name="titleSchedule"
                   className="input"
                   type="text"
+                  maxLength={200}
                   value={titleSchedule}
                   onChange={(event) => setTitleSchedule(event.target.value)}
+                  required
                 />
               </label>
 
-              <label className="field full" htmlFor="birthdayContractor">
-                <span>Aniversariante / Contratante (obrigatório)</span>
+              <div className="field">
+                <label htmlFor="birthdayContractor">
+                  <span>Aniversariante (obrigatório)</span>
+                </label>
+                <small className="helper">Caso não tenha aniversariante, colocar contratante ou empresa responsável</small>
                 <input
                   id="birthdayContractor"
                   name="birthdayContractor"
                   className="input"
                   type="text"
+                  maxLength={150}
                   value={birthdayContractor}
                   onChange={(event) => setBirthdayContractor(event.target.value)}
                   required
+                />
+              </div>
+
+              <label className="field" htmlFor="birthdayAge" style={{ alignContent: "end" }}>
+                <span>Idade do aniversariante</span>
+                <input
+                  id="birthdayAge"
+                  name="birthdayAge"
+                  className="input"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={birthdayAge}
+                  onChange={(event) => setBirthdayAge(event.target.value)}
                 />
               </label>
             </div>
@@ -799,6 +822,7 @@ function NovoRelatorioContent() {
                     name="otherCarResponsible"
                     className="input"
                     type="text"
+                    maxLength={150}
                     value={otherCarResponsible}
                     onChange={(event) => setOtherCarResponsible(event.target.value)}
                     required
@@ -862,6 +886,7 @@ function NovoRelatorioContent() {
                   name="teamGeneralDescription"
                   className="input"
                   rows={5}
+                  maxLength={200}
                   value={teamGeneralDescription}
                   onChange={(event) => setTeamGeneralDescription(event.target.value)}
                 />

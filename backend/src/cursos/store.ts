@@ -183,6 +183,7 @@ export async function listCourses(): Promise<CourseRecord[]> {
   return courses.map((course) => toCourseRecord(course));
 }
 
+
 export async function listArchivedCourses(): Promise<CourseRecord[]> {
   const courses = await prisma.course.findMany({
     where: { archivedAt: { not: null } },

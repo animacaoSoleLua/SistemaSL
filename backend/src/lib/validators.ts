@@ -17,7 +17,7 @@ export function isValidCPF(cpf: string): boolean {
   return (r2 === 10 || r2 === 11 ? 0 : r2) === parseInt(cleaned[10], 10);
 }
 
-const ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
 const ALLOWED_VIDEO_MIMES = ["video/mp4", "video/quicktime", "video/webm"];
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;  // 5 MB
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024; // 50 MB

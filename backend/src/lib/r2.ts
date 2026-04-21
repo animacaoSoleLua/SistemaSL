@@ -1,8 +1,10 @@
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Writable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
@@ -52,6 +54,22 @@ export async function uploadToR2(options: {
 
   const url = `${process.env.R2_PUBLIC_URL}/${options.key}`;
   return { url, sizeBytes };
+}
+
+export async function getPresignedDownloadUrl(url: string, filename: string): Promise<string | null> {
+  const publicUrl = process.env.R2_PUBLIC_URL;
+  if (!publicUrl || !url.startsWith(publicUrl)) {
+    return null;
+  }
+
+  const key = url.slice(publicUrl.length + 1);
+  const command = new GetObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME!,
+    Key: key,
+    ResponseContentDisposition: `attachment; filename="${filename}"`,
+  });
+
+  return getSignedUrl(r2, command, { expiresIn: 60 });
 }
 
 export async function deleteFromR2(url: string): Promise<void> {

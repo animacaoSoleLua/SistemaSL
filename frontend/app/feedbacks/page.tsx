@@ -277,7 +277,6 @@ export default function FeedbacksPage() {
     setCreateError(null);
   }
 
-  const hasFilters = filterType || filterSearch;
 
   return (
     <main className="app-page">
@@ -309,31 +308,19 @@ export default function FeedbacksPage() {
               />
             </div>
             <div className="feedback-filters-right">
-              <button
-                type="button"
-                className="feedback-filter-clear"
-                onClick={() => { setFilterType(""); setFilterSearch(""); }}
-                style={!hasFilters ? { visibility: "hidden", pointerEvents: "none" } : undefined}
-                tabIndex={hasFilters ? 0 : -1}
-                aria-hidden={!hasFilters}
-              >
-                <FiX aria-hidden="true" />
-                Limpar filtros
-              </button>
-
-              <label className="feedback-filter-field field">
-                <span>Tipo</span>
-                <select
-                  className="input"
-                  aria-label="Filtrar por tipo de feedback"
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-                >
-                  <option value="">Todos</option>
-                  <option value="positive">Positivo</option>
-                  <option value="negative">Negativo</option>
-                </select>
-              </label>
+              <div className="feedback-type-pills" role="group" aria-label="Filtrar por tipo de feedback">
+                {(["", "positive", "negative"] as const).map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    className={`filter-btn${filterType === val ? " active" : ""}`}
+                    onClick={() => setFilterType(val)}
+                    aria-pressed={filterType === val}
+                  >
+                    {val === "" ? "Todos" : val === "positive" ? "Positivos" : "Negativos"}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -353,7 +340,7 @@ export default function FeedbacksPage() {
               <div className="empty-state-icon">
                 <FiMessageSquare aria-hidden="true" />
               </div>
-              <p>{hasFilters ? "Nenhum feedback encontrado com esses filtros." : "Nenhum feedback registrado ainda."}</p>
+              <p>{(filterType || filterSearch.trim()) ? "Nenhum feedback encontrado com esses filtros." : "Nenhum feedback registrado ainda."}</p>
             </div>
           )}
 

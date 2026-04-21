@@ -17,9 +17,43 @@
 
 .feedback-filters-right {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.feedback-type-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(111, 76, 255, 0.25);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.filter-btn:hover {
+  border-color: rgba(111, 76, 255, 0.4);
+  color: var(--ink);
+  background: rgba(111, 76, 255, 0.06);
+}
+
+.filter-btn.active {
+  background: rgba(111, 76, 255, 0.12);
+  border-color: rgba(111, 76, 255, 0.5);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .feedback-filters {
@@ -483,6 +517,19 @@
 }
 
 /* ── Dark mode overrides ───────────────────────────────────── */
+body.theme-purple .filter-btn {
+  border-color: rgba(161, 97, 255, 0.25);
+  color: var(--muted);
+}
+body.theme-purple .filter-btn:hover {
+  border-color: rgba(161, 97, 255, 0.45);
+  background: rgba(161, 97, 255, 0.1);
+}
+body.theme-purple .filter-btn.active {
+  background: rgba(161, 97, 255, 0.18);
+  border-color: rgba(161, 97, 255, 0.55);
+  color: var(--accent);
+}
 body.theme-purple .feedback-badge--positive {
   background: rgba(22, 163, 74, 0.18);
   color: #5ce8a6;
@@ -568,11 +615,22 @@ body.theme-purple .feedback-modal-error {
   .feedback-filters-right {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
   }
 
   .feedback-filters {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .feedback-type-pills {
+    width: 100%;
+  }
+
+  .feedback-type-pills .filter-btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
   }
 
   .feedback-filter-clear {

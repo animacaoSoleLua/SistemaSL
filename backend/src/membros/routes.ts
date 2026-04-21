@@ -81,6 +81,7 @@ const mimeImageExtensions: Record<string, string> = {
   "image/png": ".png",
   "image/webp": ".webp",
   "image/gif": ".gif",
+  "image/heic": ".heic",
 };
 
 const roles: Role[] = ["admin", "animador", "recreador"];

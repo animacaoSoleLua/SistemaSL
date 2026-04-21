@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiAlertTriangle, FiDownload, FiFileText, FiMaximize2, FiX } from "react-icons/fi";
 import {
+  API_ORIGIN,
   deleteReport,
   getReportById,
   getReports,
@@ -27,8 +28,8 @@ interface ReportDetail {
   event_date: string;
   created_at?: string;
   contractor_name: string;
-  location: string;
-  title_schedule?: string | null;
+  birthday_age?: number | null;
+  title_schedule: string;
   transport_type?: string | null;
   uber_go_value?: number | null;
   uber_return_value?: number | null;
@@ -111,7 +112,7 @@ function hasText(value?: string | null) {
 function formatTransportType(value?: string | null) {
   if (!value) return "-";
   if (value === "uber99") return "Uber/99";
-  if (value === "outro") return "Outro";
+  if (value === "outro") return "Carro Pessoal";
   if (value === "carro_empresa") return "Carro da Empresa";
   return value;
 }
@@ -135,6 +136,7 @@ export default function RelatoriosPage() {
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Report | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxMediaId, setLightboxMediaId] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -252,20 +254,19 @@ export default function RelatoriosPage() {
     router.push(`/novo-relatorio?editar=${reportId}`);
   };
 
-  const handleDownload = async (url: string, filename: string) => {
+  const handleDownload = async (reportId: string, mediaId: string, filename: string) => {
     try {
-      const response = await fetch(url, { credentials: "include" });
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
+      const res = await fetch(`${API_ORIGIN}/api/v1/relatorios/${reportId}/media/${mediaId}/download`, { credentials: "include" });
+      if (!res.ok) throw new Error("download_failed");
+      const { url } = await res.json();
       const a = document.createElement("a");
-      a.href = objectUrl;
+      a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(objectUrl);
     } catch {
-      window.open(url, "_blank");
+      // silently fail
     }
   };
 
@@ -329,11 +330,10 @@ export default function RelatoriosPage() {
               {filteredReports.map((report) => (
                 <article className="report-item" key={report.id}>
                   <div className="report-meta">
-                    <span>
-                      Aniversariante/Contratante:{" "}
-                      <strong className="report-name">{report.contractor_name}</strong>
+                    <strong className="report-name">{getText(report.title_schedule)}</strong>
+                    <span className="report-subtitle">
+                      Aniversariante/Contratante: {report.contractor_name}
                     </span>
-                    <span className="report-subtitle">{getText(report.title_schedule)}</span>
                     <span className="report-date">Criado por: {getText(report.author_name)}</span>
                     <span className="report-date">
                       Data do evento: {formatDateBR(report.event_date)}
@@ -404,11 +404,9 @@ export default function RelatoriosPage() {
         >
           <div className="modal-card report-modal">
             <header className="modal-header">
-              <div>
-                <strong id={modalTitleId}>Detalhes do relatório</strong>
-              </div>
-              <button className="button secondary" type="button" onClick={closeViewModal}>
-                Fechar
+              <strong id={modalTitleId} className="modal-title">Detalhes do relatório</strong>
+              <button className="icon-button" type="button" onClick={closeViewModal} aria-label="Fechar">
+                <FiX />
               </button>
             </header>
 
@@ -428,231 +426,271 @@ export default function RelatoriosPage() {
                       hasText(selectedReport.extra_hours_details);
                     const showExtraHoursDetails = hasText(selectedReport.extra_hours_details);
 
-                    return (
-                  <div className="form-grid">
-                    <div className="field full">
-                      <strong>
-                        <h3>Autor do relatório</h3>
-                        </strong>
-                      <p className="helper">
-                        {getText(selectedReport.author_name)}
-                        </p>
-                    </div>
-                    <div className="field">
-                      <span>Data do evento</span>
-                      <p className="helper">{formatDateBR(selectedReport.event_date)}</p>
-                    </div>
-                    <div className="field">
-                      <span>Aniversariante / Contratante</span>
-                      <p className="helper">{getText(selectedReport.contractor_name)}</p>
-                    </div>
-                    <div className="field full">
-                      <span>Título / Cronograma</span>
-                      <p className="helper">{getText(selectedReport.title_schedule)}</p>
-                    </div>
-                    <div className="field">
-                      <span>Locomoção</span>
-                      <p className="helper">{formatTransportType(selectedReport.transport_type)}</p>
-                    </div>
-                    <div className="field">
-                      <span>Evento fora de Brasília</span>
-                      <p className="helper">{formatBoolean(selectedReport.outside_brasilia)}</p>
-                    </div>
-                    <div className="field">
-                      <span>Exclusividade</span>
-                      <p className="helper">{formatBoolean(selectedReport.exclusive_event)}</p>
-                    </div>
-                    <div className="field">
-                      <span>Hora extra</span>
-                      <p className="helper">{formatBoolean(hasExtraHours)}</p>
-                    </div>
-                    {showUberValues && (
-                      <>
-                        <div className="field">
-                          <span>Uber ida</span>
-                          <p className="helper">{formatMoneyBRL(selectedReport.uber_go_value)}</p>
-                        </div>
-                        <div className="field">
-                          <span>Uber volta</span>
-                          <p className="helper">{formatMoneyBRL(selectedReport.uber_return_value)}</p>
-                        </div>
-                      </>
-                    )}
-                    {showOtherCarResponsible && (
-                      <div className="field full">
-                        <span>Responsável do carro</span>
-                        <p className="helper">{getText(selectedReport.other_car_responsible)}</p>
-                      </div>
-                    )}
-                    {showExtraHoursDetails && (
-                      <div className="field full">
-                        <span>Detalhes da hora extra</span>
-                        <p className="helper">{getText(selectedReport.extra_hours_details)}</p>
-                      </div>
-                    )}
-                    <div className="field full">
-                      <span>Descrição geral da equipe</span>
-                      <p className="helper">
-                        {getText(selectedReport.team_general_description)}
-                      </p>
-                    </div>
-                    <div className="field">
-                      <span>Nota geral da equipe</span>
-                      <p className="helper">{formatRating(selectedReport.team_general_score)}</p>
-                    </div>
-                    <div className="field full">
-                      <span>Dificuldades do evento</span>
-                      <p className="helper">{getText(selectedReport.event_difficulties)}</p>
-                    </div>
+                    const topicOrder = [null, "Pintura", "Balão", "Animação", "Personagens", "Oficinas"];
+                    const topicLabels: Record<string, string> = {
+                      Pintura: "Pintura",
+                      "Balão": "Balão",
+                      "Animação": "Animação",
+                      Personagens: "Personagens",
+                      Oficinas: "Oficinas",
+                    };
+                    const groupedMedia = topicOrder
+                      .map((topic) => ({
+                        topic,
+                        label: topic ? topicLabels[topic] : "Avaria no Material",
+                        items: selectedReport.media.filter((m) => (m.topic ?? null) === topic),
+                      }))
+                      .filter((g) => g.items.length > 0);
 
-                    <div className="field">
-                      <span>Nota de dificuldade do evento</span>
-                      <p className="helper">
-                        {formatRating(selectedReport.event_difficulty_score)}
-                      </p>
-                    </div>
-
-                    <div className="field">
-                      <span>Nota de qualidade do evento</span>
-                      <p className="helper">{formatRating(selectedReport.event_quality_score)}</p>
-                    </div>
-
-
-                    <div className="field">
-                      <span>Qualidade da caixa de som</span>
-                      <p className="helper">{formatRating(selectedReport.quality_sound)}</p>
-                    </div>
-
-                    <div className="field">
-                      <span>Qualidade do microfone</span>
-                      <p className="helper">{formatRating(selectedReport.quality_microphone)}</p>
-                    </div>
-
-                    <div className="field">
-                      <span>Número da Caixa de Som</span>
-                      <p className="helper">
-                        {selectedReport.speaker_number ?? "-"}
-                      </p>
-                    </div>
-                    
-                    <div className="field full">
-                      <span>Observações sobre eletrônicos</span>
-                      <p className="helper">{getText(selectedReport.electronics_notes)}</p>
-                    </div>
-                    <div className="field full">
-                      <span>Criado em</span>
-                      <p className="helper">{formatDateTimeBR(selectedReport.created_at)}</p>
-                    </div>
-                  </div>
-                    );
-                  })()}
-
-                  <div className="report-detail-group">
-                    <strong>Mídias anexadas</strong>
-                    {selectedReport.media.length === 0 ? (
-                      <p className="helper">Sem mídias anexadas.</p>
-                    ) : (() => {
-                      const topicOrder = [null, "Pintura", "Balão", "Animação", "Personagens", "Oficinas"];
-                      const topicLabels: Record<string, string> = {
-                        Pintura: "Pintura",
-                        "Balão": "Balão",
-                        "Animação": "Animação",
-                        Personagens: "Personagens",
-                        Oficinas: "Oficinas",
-                      };
-                      const grouped = topicOrder
-                        .map((topic) => ({
-                          topic,
-                          label: topic ? topicLabels[topic] : "Avaria no Material",
-                          items: selectedReport.media.filter((m) => (m.topic ?? null) === topic),
-                        }))
-                        .filter((g) => g.items.length > 0);
-
-                      const renderMediaItem = (item: typeof selectedReport.media[0]) => {
-                        const assetUrl = resolveApiAssetUrl(item.url);
-                        const filename = item.url.split("/").pop() ?? (item.media_type === "image" ? "imagem.jpg" : "video.mp4");
-                        if (item.media_type === "image") {
-                          return (
-                            <div key={item.id} className="media-thumb-wrap">
-                              <button
-                                type="button"
-                                className="media-thumb-btn"
-                                onClick={() => setLightboxUrl(assetUrl)}
-                                aria-label="Ampliar imagem"
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={assetUrl}
-                                  alt="Mídia do relatório"
-                                  className="media-thumb"
-                                  loading="lazy"
-                                />
-                                <span className="media-thumb-overlay" aria-hidden="true">
-                                  <FiMaximize2 />
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                className="media-download-btn"
-                                aria-label="Baixar imagem"
-                                onClick={() => handleDownload(assetUrl, filename)}
-                              >
-                                <FiDownload />
-                              </button>
-                            </div>
-                          );
-                        }
+                    const renderMediaItem = (item: typeof selectedReport.media[0]) => {
+                      const assetUrl = resolveApiAssetUrl(item.url);
+                      const filename = item.url.split("/").pop() ?? (item.media_type === "image" ? "imagem.jpg" : "video.mp4");
+                      if (item.media_type === "image") {
                         return (
-                          <div key={item.id} className="media-thumb-wrap media-thumb-wrap--video">
-                            <a
-                              href={assetUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="media-video-link"
+                          <div key={item.id} className="media-thumb-wrap">
+                            <button
+                              type="button"
+                              className="media-thumb-btn"
+                              onClick={() => { setLightboxUrl(assetUrl); setLightboxMediaId(item.id); }}
+                              aria-label="Ampliar imagem"
                             >
-                              Vídeo
-                            </a>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={assetUrl}
+                                alt="Mídia do relatório"
+                                className="media-thumb"
+                                loading="lazy"
+                              />
+                              <span className="media-thumb-overlay" aria-hidden="true">
+                                <FiMaximize2 />
+                              </span>
+                            </button>
                             <button
                               type="button"
                               className="media-download-btn"
-                              aria-label="Baixar vídeo"
-                              onClick={() => handleDownload(assetUrl, filename)}
+                              aria-label="Baixar imagem"
+                              onClick={() => handleDownload(selectedReport.id, item.id, filename)}
                             >
                               <FiDownload />
                             </button>
                           </div>
                         );
-                      };
-
+                      }
                       return (
-                        <div className="media-topics">
-                          {grouped.map((group) => (
-                            <div key={group.topic ?? "__damage__"} className="media-topic-group">
-                              <span className="media-topic-label">{group.label}</span>
-                              <div className="media-grid">
-                                {group.items.map(renderMediaItem)}
-                              </div>
-                            </div>
-                          ))}
+                        <div key={item.id} className="media-thumb-wrap media-thumb-wrap--video">
+                          <a
+                            href={assetUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="media-video-link"
+                          >
+                            Vídeo
+                          </a>
+                          <button
+                            type="button"
+                            className="media-download-btn"
+                            aria-label="Baixar vídeo"
+                            onClick={() => handleDownload(selectedReport.id, item.id, filename)}
+                          >
+                            <FiDownload />
+                          </button>
                         </div>
                       );
-                    })()}
-                  </div>
+                    };
 
-                  <div className="report-detail-group">
-                    <strong>Feedbacks individuais</strong>
-                    {selectedReport.feedbacks.length === 0 ? (
-                      <p className="helper">Sem feedbacks.</p>
-                    ) : (
-                      <ul className="report-detail-list">
-                        {selectedReport.feedbacks.map((item, index) => (
-                          <li key={`${item.member_id}-${index}`}>
-                            <strong>{getText(item.member_name ?? item.member_id)}:</strong> {item.feedback}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                    return (
+                      <div className="report-sections">
+
+                        {/* ── Informações do Evento ── */}
+                        <div className="report-section">
+                          <div className="report-section-header">
+                            <h3 className="report-section-title">Informações do Evento</h3>
+                          </div>
+                          <div className="form-grid">
+                            <div className="field">
+                              <span>Data do evento</span>
+                              <p className="report-value">{formatDateBR(selectedReport.event_date)}</p>
+                            </div>
+                            <div className="field full">
+                              <span>Título / Cronograma</span>
+                              <p className="report-value">{getText(selectedReport.title_schedule)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Aniversariante / Contratante</span>
+                              <p className="report-value">{getText(selectedReport.contractor_name)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Idade do aniversariante</span>
+                              <p className="report-value">{selectedReport.birthday_age ?? "-"}</p>
+                            </div>
+                            <div className="field">
+                              <span>Evento fora de Brasília</span>
+                              <p className="report-value">{formatBoolean(selectedReport.outside_brasilia)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Exclusividade</span>
+                              <p className="report-value">{formatBoolean(selectedReport.exclusive_event)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Hora extra</span>
+                              <p className="report-value">{formatBoolean(hasExtraHours)}</p>
+                            </div>
+                            {showExtraHoursDetails && (
+                              <div className="field full">
+                                <span>Detalhes da hora extra</span>
+                                <p className="report-value">{getText(selectedReport.extra_hours_details)}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* ── Locomoção ── */}
+                        <div className="report-section">
+                          <div className="report-section-header">
+                            <h3 className="report-section-title">Locomoção</h3>
+                          </div>
+                          <div className="form-grid">
+                            <div className="field">
+                              <span>Tipo de locomoção</span>
+                              <p className="report-value">{formatTransportType(selectedReport.transport_type)}</p>
+                            </div>
+                            {showUberValues && (
+                              <>
+                                <div className="field">
+                                  <span>Uber ida</span>
+                                  <p className="report-value">{formatMoneyBRL(selectedReport.uber_go_value)}</p>
+                                </div>
+                                <div className="field">
+                                  <span>Uber volta</span>
+                                  <p className="report-value">{formatMoneyBRL(selectedReport.uber_return_value)}</p>
+                                </div>
+                              </>
+                            )}
+                            {showOtherCarResponsible && (
+                              <div className="field full">
+                                <span>Responsável do carro</span>
+                                <p className="report-value">{getText(selectedReport.other_car_responsible)}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* ── Feedback da Equipe ── */}
+                        <div className="report-section">
+                          <div className="report-section-header">
+                            <h3 className="report-section-title">Feedback da Equipe</h3>
+                          </div>
+                          <div className="form-grid">
+                            <div className="field full">
+                              <span>Descrição geral da equipe</span>
+                              <p className="report-value">{getText(selectedReport.team_general_description)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Nota geral da equipe</span>
+                              <p className="report-value">{formatRating(selectedReport.team_general_score)}</p>
+                            </div>
+                          </div>
+                          {selectedReport.feedbacks.length === 0 ? (
+                            <p className="helper">Sem feedbacks individuais.</p>
+                          ) : (
+                            <ul className="report-detail-list">
+                              {selectedReport.feedbacks.map((item, index) => (
+                                <li key={`${item.member_id}-${index}`}>
+                                  <strong>{getText(item.member_name ?? item.member_id)}</strong>
+                                  <span>{item.feedback}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        {/* ── Descrição do Evento ── */}
+                        <div className="report-section">
+                          <div className="report-section-header">
+                            <h3 className="report-section-title">Descrição do Evento</h3>
+                          </div>
+                          <div className="form-grid">
+                            <div className="field full">
+                              <span>Dificuldades do evento</span>
+                              <p className="report-value">{getText(selectedReport.event_difficulties)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Nota de dificuldade</span>
+                              <p className="report-value">{formatRating(selectedReport.event_difficulty_score)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Nota de qualidade</span>
+                              <p className="report-value">{formatRating(selectedReport.event_quality_score)}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ── Eletrônicos ── */}
+                        <div className="report-section">
+                          <div className="report-section-header">
+                            <h3 className="report-section-title">Eletrônicos</h3>
+                          </div>
+                          <div className="form-grid">
+                            <div className="field">
+                              <span>Qualidade da caixa de som</span>
+                              <p className="report-value">{formatRating(selectedReport.quality_sound)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Qualidade do microfone</span>
+                              <p className="report-value">{formatRating(selectedReport.quality_microphone)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Número da caixa de som</span>
+                              <p className="report-value">{selectedReport.speaker_number ?? "-"}</p>
+                            </div>
+                            <div className="field full">
+                              <span>Observações sobre eletrônicos</span>
+                              <p className="report-value">{getText(selectedReport.electronics_notes)}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ── Fotos do Evento ── */}
+                        <div className="report-section">
+                          <div className="report-section-header">
+                            <h3 className="report-section-title">Fotos do Evento</h3>
+                          </div>
+                          {selectedReport.media.length === 0 ? (
+                            <p className="helper">Sem mídias anexadas.</p>
+                          ) : (
+                            <div className="media-topics">
+                              {groupedMedia.map((group) => (
+                                <div key={group.topic ?? "__damage__"} className="media-topic-group">
+                                  <span className="media-topic-label">{group.label}</span>
+                                  <div className="media-grid">
+                                    {group.items.map(renderMediaItem)}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* ── Metadados ── */}
+                        <div className="report-section">
+                          <div className="report-section-header">
+                            <h3 className="report-section-title">Informações do Registro</h3>
+                          </div>
+                          <div className="form-grid">
+                            <div className="field">
+                              <span>Autor do relatório</span>
+                              <p className="report-value">{getText(selectedReport.author_name)}</p>
+                            </div>
+                            <div className="field">
+                              <span>Criado em</span>
+                              <p className="report-value">{formatDateTimeBR(selectedReport.created_at)}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    );
+                  })()}
                 </>
               ) : (
                 <p className="helper">Nenhum relatório selecionado.</p>
@@ -683,14 +721,14 @@ export default function RelatoriosPage() {
           role="dialog"
           aria-modal="true"
           aria-label="Visualizar imagem"
-          onClick={() => setLightboxUrl(null)}
-          onKeyDown={(e) => { if (e.key === "Escape") setLightboxUrl(null); }}
+          onClick={() => { setLightboxUrl(null); setLightboxMediaId(null); }}
+          onKeyDown={(e) => { if (e.key === "Escape") { setLightboxUrl(null); setLightboxMediaId(null); } }}
         >
           <button
             type="button"
             className="lightbox-close"
             aria-label="Fechar"
-            onClick={() => setLightboxUrl(null)}
+            onClick={() => { setLightboxUrl(null); setLightboxMediaId(null); }}
           >
             <FiX />
           </button>
@@ -704,7 +742,7 @@ export default function RelatoriosPage() {
           <button
             type="button"
             className="lightbox-download"
-            onClick={(e) => { e.stopPropagation(); handleDownload(lightboxUrl, lightboxUrl.split("/").pop() ?? "imagem.jpg"); }}
+            onClick={(e) => { e.stopPropagation(); if (selectedReport && lightboxMediaId) handleDownload(selectedReport.id, lightboxMediaId, lightboxUrl?.split("/").pop() ?? "imagem.jpg"); }}
             aria-label="Baixar imagem"
           >
             <FiDownload /> Baixar

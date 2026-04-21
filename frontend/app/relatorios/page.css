@@ -40,8 +40,10 @@
 
 .report-modal-body {
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 6px;
   min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(111, 76, 255, 0.25) transparent;
 }
 
 .report-detail-group {
@@ -49,21 +51,53 @@
   gap: 8px;
 }
 
-.report-modal .field > span {
-  color: var(--ink);
+.modal-title {
+  font-size: 18px;
   font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
 }
 
-.report-modal .field h3 {
+.report-modal .field > span {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.report-value {
+  font-size: 15px;
+  font-weight: 500;
   color: var(--ink);
-  font-weight: 700;
 }
 
 .report-detail-list {
   display: grid;
   gap: 8px;
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.report-detail-list li {
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border-radius: 10px;
+  border: 1px solid rgba(111, 76, 255, 0.1);
+}
+
+.report-detail-list li strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.report-detail-list li span {
+  font-size: 14px;
+  color: var(--muted);
 }
 
 /* ── Media grid (thumbnails) ── */
@@ -244,6 +278,38 @@
   background: rgba(255, 255, 255, 0.24);
 }
 
+/* ── Report modal sections ── */
+.report-section {
+  display: grid;
+  gap: 16px;
+  background: #faf9ff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid rgba(111, 76, 255, 0.08);
+}
+
+.report-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(111, 76, 255, 0.12);
+}
+
+.report-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent, #6f4cff);
+  margin: 0;
+}
+
+.report-sections {
+  display: grid;
+  gap: 14px;
+}
+
 /* ── Dark mode overrides ───────────────────────────────────── */
 body.theme-purple .report-item {
   background: rgba(21, 11, 34, 0.85);
@@ -252,6 +318,14 @@ body.theme-purple .report-item {
 body.theme-purple .media-thumb-wrap {
   background: rgba(161, 97, 255, 0.12);
   border-color: rgba(161, 97, 255, 0.25);
+}
+body.theme-purple .report-section {
+  background: rgba(21, 11, 34, 0.7);
+  border-color: rgba(161, 97, 255, 0.12);
+}
+body.theme-purple .report-detail-list li {
+  background: rgba(12, 7, 18, 0.8);
+  border-color: rgba(161, 97, 255, 0.15);
 }
 
 @media (max-width: 960px) {
@@ -278,5 +352,18 @@ body.theme-purple .media-thumb-wrap {
   .lightbox-close {
     top: 12px;
     right: 12px;
+  }
+
+  /* Colapsa form-grid para 1 coluna dentro do modal em mobile */
+  .report-modal .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-modal .field.full {
+    grid-column: span 1;
+  }
+
+  .report-section {
+    padding: 14px 16px;
   }
 }

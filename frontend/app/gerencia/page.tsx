@@ -210,8 +210,14 @@ export default function GerenciaPage() {
         // 3 & 4. Taxa de Assiduidade & Cancelamento: from course enrollments last 30 days
         let attendanceScore = 0;
         let cancelationScore = 0;
-        const coursesRes = await getCourses({ status: "all", limit: 1000 });
-        const allCourses = (coursesRes.data ?? []) as CourseItem[];
+        const [activeCoursesRes, archivedCoursesRes] = await Promise.all([
+          getCourses({ status: "all", limit: 1000 }),
+          getCourses({ status: "archived", limit: 1000 }),
+        ]);
+        const allCourses = [
+          ...((activeCoursesRes.data ?? []) as CourseItem[]),
+          ...((archivedCoursesRes.data ?? []) as CourseItem[]),
+        ];
 
         let totalEnrollmentsLast30d = 0;
         let attendedCount = 0;
@@ -273,13 +279,14 @@ export default function GerenciaPage() {
     };
 
     const loadCoursesStats = async () => {
-      const coursesRes = await getCourses({
-        status: "all",
-        period_start: start,
-        period_end: end,
-        limit: 1000
-      });
-      const courses = (coursesRes.data ?? []) as CourseItem[];
+      const [activeRes, archivedRes] = await Promise.all([
+        getCourses({ status: "all", period_start: start, period_end: end, limit: 1000 }),
+        getCourses({ status: "archived", period_start: start, period_end: end, limit: 1000 }),
+      ]);
+      const courses = [
+        ...((activeRes.data ?? []) as CourseItem[]),
+        ...((archivedRes.data ?? []) as CourseItem[]),
+      ];
 
       // Calculate occupancy average
       const occupancyRates = courses
@@ -340,8 +347,13 @@ export default function GerenciaPage() {
     if (!canLoad) return;
     setCoursesLoading(true);
     const { start, end } = getMonthBounds(coursesMonth, coursesYear);
-    getCourses({ status: "all", period_start: start, period_end: end, limit: 1000 })
-      .then((res) => setCourseItems(res.data ?? []))
+    Promise.all([
+      getCourses({ status: "all", period_start: start, period_end: end, limit: 1000 }),
+      getCourses({ status: "archived", period_start: start, period_end: end, limit: 1000 }),
+    ])
+      .then(([activeRes, archivedRes]) =>
+        setCourseItems([...(activeRes.data ?? []), ...(archivedRes.data ?? [])])
+      )
       .finally(() => setCoursesLoading(false));
   }, [canLoad, coursesMonth, coursesYear]);
 

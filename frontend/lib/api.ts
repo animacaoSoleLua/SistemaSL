@@ -28,7 +28,7 @@ export function getErrorMessage(err: unknown, fallback = "Erro desconhecido."): 
 const RAW_API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001/api/v1";
 const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, "");
-const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1$/, "");
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1$/, "");
 
 async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -148,8 +148,7 @@ export async function deleteReport(id: string) {
 type ReportPayload = {
   event_date: string;
   contractor_name: string;
-  location: string;
-  title_schedule?: string;
+  title_schedule: string;
   transport_type?: string;
   uber_go_value?: number;
   uber_return_value?: number;

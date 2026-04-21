@@ -2,7 +2,7 @@ import type { Multipart } from "@fastify/multipart";
 import { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
-import { deleteFromR2, uploadToR2 } from "../lib/r2.js";
+import { deleteFromR2, getPresignedDownloadUrl, uploadToR2 } from "../lib/r2.js";
 import {
   addMediaToReport,
   createReport,
@@ -28,6 +28,7 @@ const mediaMimeExtensions: Record<MediaType, Record<string, string>> = {
     "image/jpeg": ".jpg",
     "image/png": ".png",
     "image/webp": ".webp",
+    "image/heic": ".heic",
   },
   video: {
     "video/mp4": ".mp4",
@@ -39,8 +40,8 @@ const mediaMimeExtensions: Record<MediaType, Record<string, string>> = {
 interface ReportBody {
   event_date?: string;
   contractor_name?: string;
-  location?: string;
   title_schedule?: string;
+  birthday_age?: number;
   transport_type?: string;
   uber_go_value?: number;
   uber_return_value?: number;
@@ -243,6 +244,24 @@ function isValidOptionalMoney(value: number | undefined): boolean {
   return value === undefined || (Number.isFinite(value) && value >= 0);
 }
 
+const FIELD_LIMITS: Array<{ field: keyof ReportBody; label: string; max: number }> = [
+  { field: "contractor_name", label: "Aniversariante/Contratante", max: 150 },
+  { field: "title_schedule", label: "Título / Cronograma", max: 200 },
+  { field: "other_car_responsible", label: "Responsável pelo carro", max: 150 },
+  { field: "extra_hours_details", label: "Horas extras", max: 120 },
+  { field: "team_summary", label: "Resumo da equipe", max: 200 },
+];
+
+function validateFieldLengths(body: ReportBody): string | null {
+  for (const { field, label, max } of FIELD_LIMITS) {
+    const value = body[field];
+    if (typeof value === "string" && value.length > max) {
+      return `O campo "${label}" excede o limite de ${max} caracteres (atual: ${value.length}).`;
+    }
+  }
+  return null;
+}
+
 export async function relatoriosRoutes(app: FastifyInstance) {
   app.get("/api/v1/relatorios", async (request, reply) => {
     if (!request.user) {
@@ -312,8 +331,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
         return (
           report.authorName.toLowerCase().includes(search) ||
           report.contractorName.toLowerCase().includes(search) ||
-          report.location.toLowerCase().includes(search) ||
-          (report.titleSchedule?.toLowerCase().includes(search) ?? false) ||
+          report.titleSchedule.toLowerCase().includes(search) ||
           report.teamSummary.toLowerCase().includes(search) ||
           (report.teamGeneralDescription?.toLowerCase().includes(search) ?? false) ||
           (report.eventDifficulties?.toLowerCase().includes(search) ?? false) ||
@@ -363,8 +381,8 @@ export async function relatoriosRoutes(app: FastifyInstance) {
     const {
       event_date,
       contractor_name,
-      location,
       title_schedule,
+      birthday_age,
       transport_type,
       uber_go_value,
       uber_return_value,
@@ -387,7 +405,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       feedbacks,
     } = request.body as ReportBody;
 
-    if (!event_date || !contractor_name || !location || !team_summary) {
+    if (!event_date || !contractor_name || !team_summary || !title_schedule) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Campos obrigatorios ausentes",
@@ -462,6 +480,14 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
+    const fieldLengthError = validateFieldLengths(request.body as ReportBody);
+    if (fieldLengthError) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: fieldLengthError,
+      });
+    }
+
     const normalizedExtraHours = normalizeExtraHours({
       hasExtraHours: has_extra_hours,
       extraHoursDetails: extra_hours_details,
@@ -470,8 +496,8 @@ export async function relatoriosRoutes(app: FastifyInstance) {
     const report = await createReport(request.user.id, {
       eventDate,
       contractorName: contractor_name,
-      location,
       titleSchedule: title_schedule,
+      birthdayAge: birthday_age,
       transportType: transport_type,
       uberGoValue: uber_go_value,
       uberReturnValue: uber_return_value,
@@ -563,8 +589,8 @@ export async function relatoriosRoutes(app: FastifyInstance) {
         id: report.id,
         event_date: formatDate(report.eventDate),
         contractor_name: report.contractorName,
-        location: report.location,
         title_schedule: report.titleSchedule,
+        birthday_age: report.birthdayAge,
         transport_type: report.transportType,
         uber_go_value: report.uberGoValue,
         uber_return_value: report.uberReturnValue,
@@ -637,8 +663,8 @@ export async function relatoriosRoutes(app: FastifyInstance) {
     const {
       event_date,
       contractor_name,
-      location,
       title_schedule,
+      birthday_age,
       transport_type,
       uber_go_value,
       uber_return_value,
@@ -661,7 +687,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       feedbacks,
     } = request.body as ReportBody;
 
-    if (!event_date || !contractor_name || !location || !team_summary) {
+    if (!event_date || !contractor_name || !team_summary || !title_schedule) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Campos obrigatorios ausentes",
@@ -732,6 +758,14 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
+    const fieldLengthError = validateFieldLengths(request.body as ReportBody);
+    if (fieldLengthError) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: fieldLengthError,
+      });
+    }
+
     const normalizedExtraHours = normalizeExtraHours({
       hasExtraHours: has_extra_hours,
       extraHoursDetails: extra_hours_details,
@@ -740,8 +774,8 @@ export async function relatoriosRoutes(app: FastifyInstance) {
     const updated = await updateReport(report.id, {
       eventDate,
       contractorName: contractor_name,
-      location,
       titleSchedule: title_schedule,
+      birthdayAge: birthday_age,
       transportType: transport_type,
       uberGoValue: uber_go_value,
       uberReturnValue: uber_return_value,
@@ -857,8 +891,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       `Relatorio ${report.id}`,
       `Data: ${formatDate(report.eventDate)}`,
       `Contratante: ${report.contractorName}`,
-      `Local: ${report.location}`,
-      `Titulo/Cronograma: ${report.titleSchedule ?? "-"}`,
+      `Titulo/Cronograma: ${report.titleSchedule}`,
       `Locomocao: ${report.transportType ?? "-"}`,
       `Resumo: ${report.teamSummary}`,
       `Descricao da equipe: ${report.teamGeneralDescription ?? "-"}`,
@@ -884,6 +917,39 @@ export async function relatoriosRoutes(app: FastifyInstance) {
         `attachment; filename="relatorio-${report.id}.pdf"`
       )
       .send(pdf);
+  });
+
+  app.get("/api/v1/relatorios/:id/media/:mediaId/download", async (request, reply) => {
+    const { id, mediaId } = request.params as { id?: string; mediaId?: string };
+    if (!id || !mediaId) {
+      return reply.status(400).send({ error: "invalid_request", message: "Parametros invalidos" });
+    }
+
+    const report = await getReportById(id);
+    if (!report) {
+      return reply.status(404).send({ error: "not_found", message: "Relatorio nao encontrado" });
+    }
+
+    if (!request.user) {
+      return reply.status(401).send({ error: "unauthorized", message: "Token ausente" });
+    }
+
+    if (request.user.role !== "admin" && request.user.id !== report.authorId) {
+      return reply.status(403).send({ error: "forbidden", message: "Acesso negado" });
+    }
+
+    const media = report.media.find((m) => m.id === mediaId);
+    if (!media) {
+      return reply.status(404).send({ error: "not_found", message: "Midia nao encontrada" });
+    }
+
+    const filename = media.url.split("/").pop() ?? mediaId;
+    const presignedUrl = await getPresignedDownloadUrl(media.url, filename);
+    if (!presignedUrl) {
+      return reply.status(404).send({ error: "not_found", message: "Arquivo nao encontrado" });
+    }
+
+    return reply.status(200).send({ url: presignedUrl });
   });
 
   app.post("/api/v1/relatorios/:id/media", async (request, reply) => {

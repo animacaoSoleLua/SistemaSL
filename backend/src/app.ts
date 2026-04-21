@@ -152,6 +152,21 @@ export function buildServer(): FastifyInstance {
     },
   });
 
+  app.setErrorHandler((error, _request, reply) => {
+    const code = (error as Record<string, unknown>).code;
+    if (code === "P2000") {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Um ou mais campos excedem o tamanho máximo permitido.",
+      });
+    }
+    app.log.error(error);
+    return reply.status(500).send({
+      error: "internal_error",
+      message: "Erro interno do servidor.",
+    });
+  });
+
   app.register(authRoutes, { prefix: "/api/v1/auth" });
   app.register(healthRoutes);
   app.register(membrosRoutes);
