@@ -801,8 +801,8 @@ export default function GerenciaPage() {
                 <thead>
                   <tr>
                     <th>Data do Evento</th>
-                    <th>Contratante</th>
-                    <th>Título do Roteiro</th>
+                    <th>Aniversariante</th>
+                    <th>Título do Evento</th>
                     <th>Autor</th>
                   </tr>
                 </thead>

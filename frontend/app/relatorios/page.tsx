@@ -293,7 +293,7 @@ export default function RelatoriosPage() {
             <label className="field report-search">
               <input
                 type="text"
-                placeholder="Buscar por contratante, título ou autor..."
+                placeholder="Buscar por animador ou título..."
                 className="input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -332,7 +332,7 @@ export default function RelatoriosPage() {
                   <div className="report-meta">
                     <strong className="report-name">{getText(report.title_schedule)}</strong>
                     <span className="report-subtitle">
-                      Aniversariante/Contratante: {report.contractor_name}
+                      Aniversariante: {report.contractor_name}
                     </span>
                     <span className="report-date">Criado por: {getText(report.author_name)}</span>
                     <span className="report-date">
