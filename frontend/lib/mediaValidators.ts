@@ -1,5 +1,5 @@
 const MAX_IMAGE_SIZE = 15 * 1024 * 1024; // 15MB
-const MAX_VIDEO_SIZE = 30 * 1024 * 1024; // 30MB
+const MAX_VIDEO_SIZE = 200 * 1024 * 1024; // 200MB
 
 export function isValidMediaType(file: File): boolean {
   const mimeType = (file.type || "").toLowerCase();
@@ -18,7 +18,7 @@ export function getMediaValidationError(file: File): string | null {
   }
   if (!isValidMediaSize(file)) {
     const mimeType = (file.type || "").toLowerCase();
-    const label = mimeType.startsWith("video/") ? "30MB" : "15MB";
+    const label = mimeType.startsWith("video/") ? "200MB" : "15MB";
     return `Arquivo muito grande (máx ${label}).`;
   }
   return null;

@@ -15,7 +15,7 @@ import {
 } from "../../lib/api";
 import { getMediaValidationError } from "../../lib/mediaValidators";
 import { normalizeString } from "../../lib/validators";
-import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
+import { displayToIsoWithShortYear, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
 
 type TransportType = "" | "uber99" | "carro_empresa" | "outro";
 type YesNo = "" | "sim" | "nao";
@@ -531,7 +531,7 @@ function NovoRelatorioContent() {
     setIsSubmitting(true);
 
     const reportPayload = {
-      event_date: displayToIso(eventDate),
+      event_date: displayToIsoWithShortYear(eventDate),
       contractor_name: birthdayContractor.trim(),
       title_schedule: titleSchedule.trim(),
       birthday_age: birthdayAge.trim() ? Number(birthdayAge) : undefined,

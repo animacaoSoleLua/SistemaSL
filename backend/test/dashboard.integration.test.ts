@@ -25,7 +25,6 @@ describe("Dashboard (integration)", () => {
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-10"),
       contractorName: "Hotel Sol",
-      location: "Brasilia",
       teamSummary: "Equipe A",
       teamGeneralScore: 3,
       qualitySound: 4,
@@ -35,7 +34,6 @@ describe("Dashboard (integration)", () => {
     await createReport(animador!.id, {
       eventDate: new Date("2026-02-10"),
       contractorName: "Clube Lua",
-      location: "Goiania",
       teamSummary: "Equipe B",
       qualitySound: 2,
     });
@@ -70,19 +68,16 @@ describe("Dashboard (integration)", () => {
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-10"),
       contractorName: "Hotel Sol",
-      location: "Brasilia",
       teamSummary: "Equipe A",
     });
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-11"),
       contractorName: "Clube Lua",
-      location: "Goiania",
       teamSummary: "Equipe B",
     });
     await createReport(admin!.id, {
       eventDate: new Date("2026-01-12"),
       contractorName: "Outro",
-      location: "Anapolis",
       teamSummary: "Equipe C",
     });
 
@@ -114,13 +109,11 @@ describe("Dashboard (integration)", () => {
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-05"),
       contractorName: "Hotel Sol",
-      location: "Brasilia",
       teamSummary: "Equipe A",
     });
     await createReport(animador!.id, {
       eventDate: new Date("2026-02-05"),
       contractorName: "Clube Lua",
-      location: "Goiania",
       teamSummary: "Equipe B",
     });
 
@@ -151,7 +144,6 @@ describe("Dashboard (integration)", () => {
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-10"),
       contractorName: "Hotel Sol",
-      location: "Brasilia",
       teamSummary: "Equipe A",
       eventQualityScore: 4,
       eventDifficultyScore: 2,
@@ -161,7 +153,6 @@ describe("Dashboard (integration)", () => {
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-11"),
       contractorName: "Clube Lua",
-      location: "Goiania",
       teamSummary: "Equipe B",
       eventQualityScore: 2,
       eventDifficultyScore: 4,
@@ -198,7 +189,6 @@ describe("Dashboard (integration)", () => {
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-10"),
       contractorName: "Hotel Sol",
-      location: "Brasilia",
       teamSummary: "Equipe A",
       eventQualityScore: 5,
       eventDifficultyScore: 1,
@@ -208,7 +198,6 @@ describe("Dashboard (integration)", () => {
     await createReport(animador!.id, {
       eventDate: new Date("2026-02-11"),
       contractorName: "Clube Lua",
-      location: "Goiania",
       teamSummary: "Equipe B",
       eventQualityScore: 2,
       eventDifficultyScore: 4,

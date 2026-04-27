@@ -40,7 +40,6 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-10",
         contractor_name: "Hotel Sol",
-        location: "Brasilia",
         title_schedule: "Festa infantil - tarde",
         transport_type: "uber99",
         uber_go_value: 35.5,
@@ -110,7 +109,6 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-16",
         contractor_name: "Buffet Lua",
-        location: "Brasilia",
         team_summary: "Equipe C",
         extra_hours_details: "1 hora e 30 minutos",
       },
@@ -138,7 +136,6 @@ describe("Relatorios (integration)", () => {
     const ownReport = await createReport(animador!.id, {
       eventDate: new Date("2026-01-10"),
       contractorName: "Hotel Sol",
-      location: "Brasilia",
       titleSchedule: "Manhã recreativa",
       teamSummary: "Equipe A",
     });
@@ -150,7 +147,6 @@ describe("Relatorios (integration)", () => {
     await createReport(admin!.id, {
       eventDate: new Date("2026-01-11"),
       contractorName: "Clube Lua",
-      location: "Goiania",
       teamSummary: "Equipe B",
     });
 
@@ -198,7 +194,6 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-10",
         contractor_name: "Hotel Sol",
-        location: "Brasilia",
         team_summary: "Equipe A",
       },
     });
@@ -236,7 +231,6 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-15",
         contractor_name: "Clube Sol",
-        location: "Brasilia",
         team_summary: "Equipe B",
         team_general_score: 0,
         event_difficulty_score: 0,
@@ -256,20 +250,17 @@ describe("Relatorios (integration)", () => {
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-10"),
       contractorName: "Hotel Sol",
-      location: "Brasilia",
       titleSchedule: "Cronograma Hotel Sol",
       teamSummary: "Equipe A",
     });
     await createReport(animador!.id, {
       eventDate: new Date("2026-01-12"),
       contractorName: "Clube Lua",
-      location: "Brasilia",
       teamSummary: "Equipe B",
     });
     await createReport(admin!.id, {
       eventDate: new Date("2026-01-11"),
       contractorName: "Outro",
-      location: "Anapolis",
       teamSummary: "Equipe C",
     });
 
@@ -324,7 +315,6 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-20",
         contractor_name: "Buffet Sol",
-        location: "Brasilia",
         team_summary: "Equipe C",
       },
     });
@@ -364,7 +354,6 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-20",
         contractor_name: "Buffet Sol",
-        location: "Brasilia",
         transport_type: "uber99",
         uber_go_value: 25,
         uber_return_value: 30,
@@ -380,7 +369,6 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-20",
         contractor_name: "Buffet Sol Atualizado",
-        location: "Brasilia",
         title_schedule: "Cronograma atualizado",
         transport_type: "outro",
         other_car_responsible: "Motorista parceiro",

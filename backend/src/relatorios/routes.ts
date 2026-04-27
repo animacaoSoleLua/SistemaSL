@@ -16,7 +16,7 @@ import {
 import type { ReportsStatsResponse } from "./dto/reports-stats.dto.js";
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
-const MAX_VIDEO_SIZE_BYTES = 30 * 1024 * 1024;
+const MAX_VIDEO_SIZE_BYTES = 200 * 1024 * 1024;
 
 const mediaExtensions: Record<MediaType, string[]> = {
   image: [".jpg", ".jpeg", ".png", ".webp"],

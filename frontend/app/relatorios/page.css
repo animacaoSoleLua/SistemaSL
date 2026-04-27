@@ -310,6 +310,33 @@
   gap: 14px;
 }
 
+/* ── Filtros de busca e data ── */
+.report-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.report-date-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.report-date-field {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.report-date-field .input {
+  width: 136px;
+}
+
 /* ── Dark mode overrides ───────────────────────────────────── */
 body.theme-purple .report-item {
   background: rgba(21, 11, 34, 0.85);

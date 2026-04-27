@@ -252,7 +252,6 @@ describe("Membros (integration)", () => {
     await createReport(admin!.id, {
       eventDate: new Date("2026-03-15"),
       contractorName: "Clube Teste",
-      location: "Brasília",
       teamSummary: "Equipe bem entrosada",
       feedbacks: [
         { memberId: member.id, feedback: "Excelente desempenho no evento" },

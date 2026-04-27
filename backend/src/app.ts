@@ -18,7 +18,7 @@ import { scheduleCleanup } from "./relatorios/cleanup.js";
 import { relatoriosRoutes } from "./relatorios/routes.js";
 import { healthRoutes } from "./routes/health.js";
 
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
 
 export function buildServer(): FastifyInstance {
   const isPrettyLogs =

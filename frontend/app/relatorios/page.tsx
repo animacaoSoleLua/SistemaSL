@@ -13,6 +13,7 @@ import {
   resolveApiAssetUrl,
 } from "../../lib/api";
 import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { displayToIsoWithShortYear, formatDateInput } from "../../lib/dateValidators";
 import { normalizeString } from "../../lib/validators";
 
 interface Report {
@@ -125,6 +126,10 @@ export default function RelatoriosPage() {
   const deleteModalDescriptionId = useId();
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [dateStartDisplay, setDateStartDisplay] = useState("");
+  const [dateEndDisplay, setDateEndDisplay] = useState("");
+  const [dateStart, setDateStart] = useState("");
+  const [dateEnd, setDateEnd] = useState("");
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,7 +158,13 @@ export default function RelatoriosPage() {
 
   useEffect(() => {
     if (!currentRole) return;
-    getReports()
+    setLoading(true);
+    setError(null);
+    getReports({
+      period_start: dateStart || undefined,
+      period_end: dateEnd || undefined,
+      limit: 500,
+    })
       .then((data) => {
         setReports(data.data);
         setLoading(false);
@@ -162,7 +173,7 @@ export default function RelatoriosPage() {
         setError(err.message);
         setLoading(false);
       });
-  }, [currentRole]);
+  }, [currentRole, dateStart, dateEnd]);
 
   useEffect(() => {
     if (!viewModalOpen || !selectedReportId) return;
@@ -188,6 +199,20 @@ export default function RelatoriosPage() {
       cancelled = true;
     };
   }, [viewModalOpen, selectedReportId]);
+
+  const handleDateStartChange = (raw: string) => {
+    const formatted = formatDateInput(raw);
+    setDateStartDisplay(formatted);
+    if (formatted.length === 0) setDateStart("");
+    else if (formatted.length === 10) setDateStart(displayToIsoWithShortYear(formatted));
+  };
+
+  const handleDateEndChange = (raw: string) => {
+    const formatted = formatDateInput(raw);
+    setDateEndDisplay(formatted);
+    if (formatted.length === 0) setDateEnd("");
+    else if (formatted.length === 10) setDateEnd(displayToIsoWithShortYear(formatted));
+  };
 
   const normalizedSearch = normalizeString(searchTerm.trim());
   const filteredReports = reports.filter((report) => {
@@ -290,16 +315,46 @@ export default function RelatoriosPage() {
               <h2 className="section-title">Listagem de relatórios</h2>
               <p>Dos últimos 90 dias</p>
             </div>
-            <label className="field report-search">
-              <input
-                type="text"
-                placeholder="Buscar por animador ou título..."
-                className="input"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                aria-label="Buscar relatório"
-              />
-            </label>
+            <div className="report-filters">
+              <label className="field report-search">
+                <input
+                  type="text"
+                  placeholder="Buscar por animador ou título..."
+                  className="input"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  aria-label="Buscar relatório"
+                />
+              </label>
+              <div className="report-date-filters">
+                <label className="report-date-field">
+                  <span>De</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="input"
+                    maxLength={10}
+                    placeholder="DD/MM/AAAA"
+                    value={dateStartDisplay}
+                    onChange={(e) => handleDateStartChange(e.target.value)}
+                    aria-label="Data inicial"
+                  />
+                </label>
+                <label className="report-date-field">
+                  <span>Até</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="input"
+                    maxLength={10}
+                    placeholder="DD/MM/AAAA"
+                    value={dateEndDisplay}
+                    onChange={(e) => handleDateEndChange(e.target.value)}
+                    aria-label="Data final"
+                  />
+                </label>
+              </div>
+            </div>
           </div>
 
           <p className="sr-only" aria-live="polite" aria-atomic="true">

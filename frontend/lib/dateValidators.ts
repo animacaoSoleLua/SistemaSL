@@ -17,6 +17,21 @@ export function displayToIso(display: string): string {
 }
 
 /**
+ * Like displayToIso, but also accepts DD/MM/YY (2-digit year), expanding it to 20YY.
+ * Use this in the report form so users can type "26" instead of "2026".
+ */
+export function displayToIsoWithShortYear(display: string): string {
+  if (!display) return '';
+  if (display.length === 10) return displayToIso(display);
+  if (display.length === 8) {
+    const [day, month, year] = display.split('/');
+    if (!day || !month || !year) return '';
+    return `20${year}-${month}-${day}`;
+  }
+  return '';
+}
+
+/**
  * Formats a string of numbers into DD/MM/YYYY format
  * Only keeps the first 8 digits
  */
