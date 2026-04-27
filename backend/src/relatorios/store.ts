@@ -379,6 +379,7 @@ export async function createReport(
       eventDate: input?.eventDate ?? new Date(),
       contractorName: input?.contractorName ?? "Nao informado",
       titleSchedule: input?.titleSchedule ?? "Nao informado",
+      transportType: input?.transportType ?? "",
       teamSummary: input?.teamSummary ?? "Nao informado",
       qualitySound: input?.qualitySound,
       qualityMicrophone: input?.qualityMicrophone,
@@ -424,7 +425,7 @@ export async function createReport(
   });
 
   const extra = await getReportExtraFields(report.id);
-  return toReportRecord({ ...report, ...extra });
+  return toReportRecord({ ...report, ...extra, media: report.media, feedbacks: report.feedbacks });
 }
 
 export async function updateReport(
@@ -509,7 +510,7 @@ export async function getReportById(
   }
 
   const extra = await getReportExtraFields(report.id);
-  return toReportRecord({ ...report, ...extra });
+  return toReportRecord({ ...report, ...extra, media: report.media, feedbacks: report.feedbacks });
 }
 
 export async function listReports(): Promise<ReportRecord[]> {
