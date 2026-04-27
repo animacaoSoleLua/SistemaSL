@@ -249,7 +249,6 @@ const FIELD_LIMITS: Array<{ field: keyof ReportBody; label: string; max: number 
   { field: "title_schedule", label: "Título / Cronograma", max: 200 },
   { field: "other_car_responsible", label: "Responsável pelo carro", max: 150 },
   { field: "extra_hours_details", label: "Horas extras", max: 120 },
-  { field: "team_summary", label: "Resumo da equipe", max: 200 },
 ];
 
 function validateFieldLengths(body: ReportBody): string | null {

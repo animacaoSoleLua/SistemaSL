@@ -81,7 +81,7 @@ model Report {
   extraHoursDetails      String?          @map("extra_hours_details") @db.VarChar(120)
   outsideBrasilia        Boolean          @default(false) @map("outside_brasilia")
   exclusiveEvent         Boolean          @default(false) @map("exclusive_event")
-  teamSummary            String?          @map("team_summary") @db.VarChar(200)
+  teamSummary            String?          @map("team_summary") @db.Text
   teamGeneralDescription String?          @map("team_general_description") @db.Text
   teamGeneralScore       Int?             @map("team_general_score")
   eventDifficulties      String?          @map("event_difficulties") @db.Text
