@@ -193,7 +193,7 @@ function MediaUploadField(props: {
       <div className="media-upload-row">
         {!isAtLimit && (
           <label className="profile-photo-upload" htmlFor={props.id}>
-            <span>Adicionar foto</span>
+            <span>Adicionar mídia</span>
             <input
               id={props.id}
               name={props.name}
@@ -527,11 +527,6 @@ function NovoRelatorioContent() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!teamGeneralScore) {
-      setSubmitError("A avaliação geral da equipe é obrigatória.");
-      return;
-    }
-
     setSubmitError("");
     setIsSubmitting(true);
 
@@ -540,7 +535,7 @@ function NovoRelatorioContent() {
       contractor_name: birthdayContractor.trim(),
       title_schedule: titleSchedule.trim(),
       birthday_age: birthdayAge.trim() ? Number(birthdayAge) : undefined,
-      transport_type: transportType || undefined,
+      transport_type: transportType,
       uber_go_value:
         transportType === "uber99" && uberGoValue.trim()
           ? Number(uberGoValue)
@@ -557,7 +552,7 @@ function NovoRelatorioContent() {
         hasExtraHours === "" ? undefined : hasExtraHours === "sim",
       extra_hours_details:
         hasExtraHours === "sim" && extraHoursDetails.trim()
-          ? extraHoursDetails.trim()
+          ? Number(extraHoursDetails)
           : undefined,
       outside_brasilia: outsideBrasilia,
       exclusive_event: exclusiveEvent,
@@ -571,7 +566,6 @@ function NovoRelatorioContent() {
       quality_microphone: scoreToNumber(microphoneQualityScore),
       speaker_number: speakerNumber.trim() ? Number(speakerNumber) : undefined,
       electronics_notes: electronicsNotes.trim() || undefined,
-      notes: electronicsNotes.trim() || undefined,
       feedbacks: teamMemberFeedbacks
         .filter((member) => member.feedback.trim())
         .map((member) => ({
@@ -880,7 +874,7 @@ function NovoRelatorioContent() {
             </div>
             <div className="team-feedback-summary">
               <label className="field full" htmlFor="teamGeneralDescription">
-                <span>Descrição geral da equipe</span>
+                <span>Descrição geral da equipe (obrigatório)</span>
                 <textarea
                   id="teamGeneralDescription"
                   name="teamGeneralDescription"
@@ -888,14 +882,14 @@ function NovoRelatorioContent() {
                   rows={5}
                   value={teamGeneralDescription}
                   onChange={(event) => setTeamGeneralDescription(event.target.value)}
+                  required
                 />
               </label>
               <StarScoreField
                 id="teamGeneralScore"
-                label="Avaliação geral da equipe (0 a 5) (obrigatório)"
+                label="Avaliação geral da equipe (0 a 5)"
                 value={teamGeneralScore}
                 onChange={setTeamGeneralScore}
-                required
               />
             </div>
 

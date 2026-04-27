@@ -16,7 +16,7 @@ import {
 import type { ReportsStatsResponse } from "./dto/reports-stats.dto.js";
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
-const MAX_VIDEO_SIZE_BYTES = 15 * 1024 * 1024;
+const MAX_VIDEO_SIZE_BYTES = 30 * 1024 * 1024;
 
 const mediaExtensions: Record<MediaType, string[]> = {
   image: [".jpg", ".jpeg", ".png", ".webp"],
@@ -42,12 +42,12 @@ interface ReportBody {
   contractor_name?: string;
   title_schedule?: string;
   birthday_age?: number;
-  transport_type?: string;
+  transport_type: string;
   uber_go_value?: number;
   uber_return_value?: number;
   other_car_responsible?: string;
   has_extra_hours?: boolean;
-  extra_hours_details?: string;
+  extra_hours_details?: number;
   outside_brasilia?: boolean;
   exclusive_event?: boolean;
   team_summary?: string;
@@ -147,16 +147,16 @@ function formatDate(date: Date): string {
 
 function normalizeExtraHours(input: {
   hasExtraHours?: boolean;
-  extraHoursDetails?: string;
-}): { hasExtraHours?: boolean; extraHoursDetails?: string } {
-  const details = input.extraHoursDetails?.trim();
+  extraHoursDetails?: number;
+}): { hasExtraHours?: boolean; extraHoursDetails?: number } {
+  const details = input.extraHoursDetails;
   if (input.hasExtraHours === false) {
     return { hasExtraHours: false, extraHoursDetails: undefined };
   }
   if (input.hasExtraHours === true) {
     return { hasExtraHours: true, extraHoursDetails: details };
   }
-  if (details) {
+  if (details !== undefined) {
     return { hasExtraHours: true, extraHoursDetails: details };
   }
   return { hasExtraHours: undefined, extraHoursDetails: undefined };
@@ -226,7 +226,7 @@ function buildPdfDocument(lines: string[]): Buffer {
 }
 
 function isValidRating(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 10;
+  return Number.isInteger(value) && value >= 0 && value <= 5;
 }
 
 function parsePositiveInt(value: string | undefined): number | undefined {
@@ -245,10 +245,9 @@ function isValidOptionalMoney(value: number | undefined): boolean {
 }
 
 const FIELD_LIMITS: Array<{ field: keyof ReportBody; label: string; max: number }> = [
-  { field: "contractor_name", label: "Aniversariante/Contratante", max: 150 },
-  { field: "title_schedule", label: "Título / Cronograma", max: 200 },
+  { field: "contractor_name", label: "Aniversariante/Contratante", max: 250 },
+  { field: "title_schedule", label: "Título / Cronograma", max: 300 },
   { field: "other_car_responsible", label: "Responsável pelo carro", max: 150 },
-  { field: "extra_hours_details", label: "Horas extras", max: 120 },
 ];
 
 function validateFieldLengths(body: ReportBody): string | null {
@@ -404,7 +403,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       feedbacks,
     } = request.body as ReportBody;
 
-    if (!event_date || !contractor_name || !team_summary || !title_schedule) {
+    if (!event_date || !contractor_name || !team_summary || !title_schedule || !transport_type) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Campos obrigatorios ausentes",
@@ -686,7 +685,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       feedbacks,
     } = request.body as ReportBody;
 
-    if (!event_date || !contractor_name || !team_summary || !title_schedule) {
+    if (!event_date || !contractor_name || !team_summary || !title_schedule || !transport_type) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Campos obrigatorios ausentes",

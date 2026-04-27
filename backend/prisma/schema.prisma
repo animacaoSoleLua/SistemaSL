@@ -70,18 +70,18 @@ model Report {
   id                     String           @id @default(uuid()) @db.Uuid
   authorId               String           @map("author_id") @db.Uuid
   eventDate              DateTime         @map("event_date") @db.Date
-  contractorName         String           @map("contractor_name") @db.VarChar(150)
-  titleSchedule          String           @map("title_schedule") @db.VarChar(200)
+  contractorName         String           @map("contractor_name") @db.VarChar(250)
+  titleSchedule          String           @map("title_schedule") @db.VarChar(300)
   birthdayAge            Int?             @map("birthday_age")
-  transportType          String?          @map("transport_type") @db.VarChar(30)
+  transportType          String           @map("transport_type") @db.VarChar(30)
   uberGoValue            Float?           @map("uber_go_value")
   uberReturnValue        Float?           @map("uber_return_value")
   otherCarResponsible    String?          @map("other_car_responsible") @db.VarChar(150)
   hasExtraHours          Boolean?         @map("has_extra_hours")
-  extraHoursDetails      String?          @map("extra_hours_details") @db.VarChar(120)
+  extraHoursDetails      Int?             @map("extra_hours_details")
   outsideBrasilia        Boolean          @default(false) @map("outside_brasilia")
   exclusiveEvent         Boolean          @default(false) @map("exclusive_event")
-  teamSummary            String?          @map("team_summary") @db.Text
+  teamSummary            String           @map("team_summary") @db.Text
   teamGeneralDescription String?          @map("team_general_description") @db.Text
   teamGeneralScore       Int?             @map("team_general_score")
   eventDifficulties      String?          @map("event_difficulties") @db.Text

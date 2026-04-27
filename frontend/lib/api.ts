@@ -149,12 +149,12 @@ type ReportPayload = {
   event_date: string;
   contractor_name: string;
   title_schedule: string;
-  transport_type?: string;
+  transport_type: string;
   uber_go_value?: number;
   uber_return_value?: number;
   other_car_responsible?: string;
   has_extra_hours?: boolean;
-  extra_hours_details?: string;
+  extra_hours_details?: number;
   outside_brasilia?: boolean;
   exclusive_event?: boolean;
   team_summary: string;

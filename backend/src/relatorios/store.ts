@@ -45,7 +45,7 @@ export interface ReportRecord {
   uberReturnValue?: number;
   otherCarResponsible?: string;
   hasExtraHours?: boolean;
-  extraHoursDetails?: string;
+  extraHoursDetails?: number;
   outsideBrasilia: boolean;
   exclusiveEvent: boolean;
   teamSummary: string;
@@ -69,12 +69,12 @@ export interface CreateReportInput {
   contractorName: string;
   titleSchedule: string;
   birthdayAge?: number;
-  transportType?: string;
+  transportType: string;
   uberGoValue?: number;
   uberReturnValue?: number;
   otherCarResponsible?: string;
   hasExtraHours?: boolean;
-  extraHoursDetails?: string;
+  extraHoursDetails?: number;
   outsideBrasilia?: boolean;
   exclusiveEvent?: boolean;
   teamSummary: string;
@@ -155,7 +155,7 @@ function toReportRecord(report: {
   uberReturnValue?: number | null;
   otherCarResponsible?: string | null;
   hasExtraHours?: boolean | null;
-  extraHoursDetails?: string | null;
+  extraHoursDetails?: string | number | null;
   outsideBrasilia?: boolean;
   exclusiveEvent?: boolean;
   teamSummary: string | null;
@@ -207,10 +207,10 @@ function toReportRecord(report: {
     uberReturnValue: report.uberReturnValue ?? undefined,
     otherCarResponsible: report.otherCarResponsible ?? undefined,
     hasExtraHours: report.hasExtraHours ?? undefined,
-    extraHoursDetails: report.extraHoursDetails ?? undefined,
+    extraHoursDetails: report.extraHoursDetails != null ? Number(report.extraHoursDetails) : undefined,
     outsideBrasilia: report.outsideBrasilia ?? false,
     exclusiveEvent: report.exclusiveEvent ?? false,
-    teamSummary: report.teamSummary ?? "Nao informado",
+    teamSummary: report.teamSummary ?? "",
     teamGeneralDescription: report.teamGeneralDescription ?? undefined,
     teamGeneralScore: report.teamGeneralScore ?? undefined,
     eventDifficulties: report.eventDifficulties ?? undefined,
@@ -288,7 +288,7 @@ async function getReportExtraFields(
   uberReturnValue?: number | null;
   otherCarResponsible?: string | null;
   hasExtraHours?: boolean | null;
-  extraHoursDetails?: string | null;
+  extraHoursDetails?: number | null;
   outsideBrasilia?: boolean;
   exclusiveEvent?: boolean;
   teamGeneralDescription?: string | null;
@@ -308,7 +308,7 @@ async function getReportExtraFields(
       uber_return_value: number | null;
       other_car_responsible: string | null;
       has_extra_hours: boolean | null;
-      extra_hours_details: string | null;
+      extra_hours_details: number | null;
       outside_brasilia: boolean;
       exclusive_event: boolean;
       team_general_description: string | null;
