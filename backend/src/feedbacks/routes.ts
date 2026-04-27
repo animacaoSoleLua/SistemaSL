@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
 import { requireRole } from "../auth/guard.js";
-import { deleteFromR2, uploadToR2 } from "../lib/r2.js";
+import { deleteFromR2, getPresignedViewUrl, uploadToR2 } from "../lib/r2.js";
 import {
   createFeedback,
   deleteFeedback,
@@ -70,11 +70,11 @@ export async function feedbacksRoutes(app: FastifyInstance) {
     });
 
     return reply.status(200).send({
-      data: result.feedbacks.map((f) => ({
+      data: await Promise.all(result.feedbacks.map(async (f) => ({
         id: f.id,
         type: f.type,
         text: f.text,
-        audio_url: f.audioUrl,
+        audio_url: f.audioUrl ? await getPresignedViewUrl(f.audioUrl) : null,
         event_date: null,
         created_at: f.createdAt.toISOString(),
         created_by: {
@@ -88,7 +88,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
           last_name: m.lastName,
           role: m.role,
         })),
-      })),
+      }))),
       total: result.total,
       pages: result.pages,
       page,
@@ -144,13 +144,13 @@ export async function feedbacksRoutes(app: FastifyInstance) {
           const key = `feedbacks/${feedbackId}/${filename}`;
 
           try {
-            const { url } = await uploadToR2({
+            const { key: uploadedKey } = await uploadToR2({
               stream: part.file,
               key,
               contentType: mimeType || "audio/mpeg",
               maxSize: MAX_AUDIO_SIZE_BYTES,
             });
-            audioUrl = url;
+            audioUrl = uploadedKey;
           } catch {
             return reply.status(400).send({
               error: "file_too_large",
@@ -195,7 +195,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
           id: feedback.id,
           type: feedback.type,
           text: feedback.text,
-          audio_url: feedback.audioUrl,
+          audio_url: feedback.audioUrl ? await getPresignedViewUrl(feedback.audioUrl) : null,
           event_date: null,
           created_at: feedback.createdAt.toISOString(),
           members: feedback.members.map((m) => ({
@@ -296,7 +296,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
         id: feedback.id,
         type: feedback.type,
         text: feedback.text,
-        audio_url: feedback.audioUrl,
+        audio_url: feedback.audioUrl ? await getPresignedViewUrl(feedback.audioUrl) : null,
         event_date: null,
         created_at: feedback.createdAt.toISOString(),
         created_by: {

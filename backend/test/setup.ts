@@ -22,6 +22,3 @@ if (!process.env.R2_SECRET_ACCESS_KEY) {
 if (!process.env.R2_BUCKET_NAME) {
   process.env.R2_BUCKET_NAME = "test-bucket";
 }
-if (!process.env.R2_PUBLIC_URL) {
-  process.env.R2_PUBLIC_URL = "https://test-pub.r2.dev";
-}

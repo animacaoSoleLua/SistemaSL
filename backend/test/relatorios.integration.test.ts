@@ -1,5 +1,12 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildServer } from "../src/app.js";
+
+vi.mock("../src/lib/r2.js", () => ({
+  uploadToR2: vi.fn(async ({ key }: { key: string }) => ({ key, sizeBytes: 100 })),
+  deleteFromR2: vi.fn(async () => {}),
+  getPresignedViewUrl: vi.fn(async (key: string) => `https://presigned.example.com/${key}?sig=test`),
+  getPresignedDownloadUrl: vi.fn(async (key: string, filename: string) => `https://presigned.example.com/${key}?download=${filename}`),
+}));
 import { getUserByEmail } from "../src/auth/store.js";
 import { addMediaToReport, createReport } from "../src/relatorios/store.js";
 import { disconnectDatabase, resetDatabase } from "./helpers/db.js";
@@ -141,7 +148,7 @@ describe("Relatorios (integration)", () => {
     });
     await addMediaToReport(ownReport.id, {
       type: "image",
-      url: "https://test-pub.r2.dev/relatorios/foto-evento.jpg",
+      url: "relatorios/foto-evento.jpg",
       sizeBytes: 15360,
     });
     await createReport(admin!.id, {
@@ -173,7 +180,7 @@ describe("Relatorios (integration)", () => {
     expect(body.data[0].title_schedule).toBe("Manhã recreativa");
     expect(body.data[0].media).toHaveLength(1);
     expect(body.data[0].media[0].media_type).toBe("image");
-    expect(body.data[0].media[0].url).toBe("https://test-pub.r2.dev/relatorios/foto-evento.jpg");
+    expect(body.data[0].media[0].url).toContain("presigned.example.com/relatorios/foto-evento.jpg");
   });
 
   it("exports report as PDF for the owner", async () => {

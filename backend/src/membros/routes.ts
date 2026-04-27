@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
 import { z } from "zod";
-import { deleteFromR2, uploadToR2 } from "../lib/r2.js";
+import { deleteFromR2, getPresignedViewUrl, uploadToR2 } from "../lib/r2.js";
 import { requireRole } from "../auth/guard.js";
 import { auditLog } from "../lib/audit.js";
 import { isValidCPF, validateUpload } from "../lib/validators.js";
@@ -266,7 +266,10 @@ export async function membrosRoutes(app: FastifyInstance) {
     const paged = members.slice(start, start + limit);
 
     return reply.status(200).send({
-      data: paged.map((member) => toMemberSummary(member)),
+      data: await Promise.all(paged.map(async (member) => ({
+        ...toMemberSummary(member),
+        photo_url: member.photoUrl ? await getPresignedViewUrl(member.photoUrl) : null,
+      }))),
     });
   });
 
@@ -433,7 +436,7 @@ export async function membrosRoutes(app: FastifyInstance) {
         emergency_contact_name: member.emergencyContactName ?? null,
         emergency_contact_phone: member.emergencyContactPhone ?? null,
         role: member.role,
-        photo_url: member.photoUrl ?? null,
+        photo_url: member.photoUrl ? await getPresignedViewUrl(member.photoUrl) : null,
         // GOOGLE_CALENDAR_DISABLED_START
         // google_connected: member.googleConnected,
         // google_email: member.googleEmail ?? null,
@@ -709,9 +712,9 @@ export async function membrosRoutes(app: FastifyInstance) {
     const key = `membros/${member.id}/${filename}`;
     const fileStream = fileData.file as NodeJS.ReadableStream;
 
-    let url: string;
+    let uploadedKey: string;
     try {
-      ({ url } = await uploadToR2({
+      ({ key: uploadedKey } = await uploadToR2({
         stream: fileStream,
         key,
         contentType: fileData.mimetype ?? "image/jpeg",
@@ -727,7 +730,7 @@ export async function membrosRoutes(app: FastifyInstance) {
       throw error;
     }
 
-    const updated = await updateUser(member.id, { photoUrl: url });
+    const updated = await updateUser(member.id, { photoUrl: uploadedKey });
     if (!updated) {
       return reply.status(404).send({
         error: "not_found",
@@ -735,10 +738,12 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
+    const viewUrl = await getPresignedViewUrl(uploadedKey);
+
     return reply.status(200).send({
       data: {
         id: updated.id,
-        photo_url: updated.photoUrl ?? null,
+        photo_url: viewUrl,
       },
     });
   });

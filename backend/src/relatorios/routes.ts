@@ -2,7 +2,7 @@ import type { Multipart } from "@fastify/multipart";
 import { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
-import { deleteFromR2, getPresignedDownloadUrl, uploadToR2 } from "../lib/r2.js";
+import { deleteFromR2, getPresignedDownloadUrl, getPresignedViewUrl, uploadToR2 } from "../lib/r2.js";
 import {
   addMediaToReport,
   createReport,
@@ -350,21 +350,21 @@ export async function relatoriosRoutes(app: FastifyInstance) {
     const paged = reports.slice(start, start + limit);
 
     return reply.status(200).send({
-      data: paged.map((report) => ({
+      data: await Promise.all(paged.map(async (report) => ({
         id: report.id,
         event_date: formatDate(report.eventDate),
         contractor_name: report.contractorName,
         title_schedule: report.titleSchedule,
         author_id: report.authorId,
         author_name: report.authorName,
-        media: report.media.map((media) => ({
+        media: await Promise.all(report.media.map(async (media) => ({
           id: media.id,
-          url: media.url,
+          url: await getPresignedViewUrl(media.url),
           media_type: media.type,
           topic: media.topic,
           size_bytes: media.sizeBytes,
-        })),
-      })),
+        }))),
+      }))),
     });
   });
 
@@ -611,13 +611,13 @@ export async function relatoriosRoutes(app: FastifyInstance) {
         author_id: report.authorId,
         author_name: report.authorName,
         created_at: report.createdAt.toISOString(),
-        media: report.media.map((media) => ({
+        media: await Promise.all(report.media.map(async (media) => ({
           id: media.id,
-          url: media.url,
+          url: await getPresignedViewUrl(media.url),
           media_type: media.type,
           topic: media.topic,
           size_bytes: media.sizeBytes,
-        })),
+        }))),
         feedbacks: report.feedbacks.map((feedback) => ({
           member_id: feedback.memberId,
           member_name: feedback.memberName,
@@ -943,9 +943,6 @@ export async function relatoriosRoutes(app: FastifyInstance) {
 
     const filename = media.url.split("/").pop() ?? mediaId;
     const presignedUrl = await getPresignedDownloadUrl(media.url, filename);
-    if (!presignedUrl) {
-      return reply.status(404).send({ error: "not_found", message: "Arquivo nao encontrado" });
-    }
 
     return reply.status(200).send({ url: presignedUrl });
   });
@@ -1030,10 +1027,10 @@ export async function relatoriosRoutes(app: FastifyInstance) {
     const key = `relatorios/${report.id}/${filename}`;
 
     const fileStream = fileData.file as NodeJS.ReadableStream;
-    let url: string;
+    let uploadedKey: string;
     let sizeBytes: number;
     try {
-      ({ url, sizeBytes } = await uploadToR2({
+      ({ key: uploadedKey, sizeBytes } = await uploadToR2({
         stream: fileStream,
         key,
         contentType: fileData.mimetype ?? "application/octet-stream",
@@ -1052,7 +1049,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
     const media = await addMediaToReport(report.id, {
       type: mediaType,
       topic,
-      url,
+      url: uploadedKey,
       sizeBytes,
     });
 
@@ -1063,10 +1060,12 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
+    const viewUrl = await getPresignedViewUrl(uploadedKey);
+
     return reply.status(201).send({
       data: {
         id: media.id,
-        url: media.url,
+        url: viewUrl,
         media_type: media.type,
         topic: media.topic,
         size_bytes: media.sizeBytes,

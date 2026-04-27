@@ -14,10 +14,12 @@ vi.mock("../src/lib/r2.js", () => ({
         if (sizeBytes > maxSize) throw new Error("file_too_large");
         chunks.push(chunk);
       }
-      return { url: `${process.env.R2_PUBLIC_URL}/${key}`, sizeBytes };
+      return { key, sizeBytes };
     }
   ),
   deleteFromR2: vi.fn(async () => {}),
+  getPresignedViewUrl: vi.fn(async (key: string) => `https://presigned.example.com/${key}?sig=test`),
+  getPresignedDownloadUrl: vi.fn(async (key: string, filename: string) => `https://presigned.example.com/${key}?download=${filename}`),
 }));
 
 function buildMultipartPayload(options: {
@@ -105,7 +107,8 @@ describe("Relatorios media (integration)", () => {
 
     expect(response.statusCode).toBe(201);
     const body = response.json();
-    expect(body.data.url).toContain(`${process.env.R2_PUBLIC_URL}/relatorios/${report.id}/`);
+    expect(body.data.url).toContain("presigned.example.com/relatorios/");
+    expect(body.data.url).toContain(report.id);
     expect(body.data.media_type).toBe("image");
 
     const stored = await getReportById(report.id);

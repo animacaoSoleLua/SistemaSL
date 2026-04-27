@@ -22,7 +22,7 @@ export async function uploadToR2(options: {
   key: string;
   contentType: string;
   maxSize: number;
-}): Promise<{ url: string; sizeBytes: number }> {
+}): Promise<{ key: string; sizeBytes: number }> {
   const chunks: Buffer[] = [];
   let sizeBytes = 0;
 
@@ -52,33 +52,27 @@ export async function uploadToR2(options: {
     })
   );
 
-  const url = `${process.env.R2_PUBLIC_URL}/${options.key}`;
-  return { url, sizeBytes };
+  return { key: options.key, sizeBytes };
 }
 
-export async function getPresignedDownloadUrl(url: string, filename: string): Promise<string | null> {
-  const publicUrl = process.env.R2_PUBLIC_URL;
-  if (!publicUrl || !url.startsWith(publicUrl)) {
-    return null;
-  }
+export async function getPresignedViewUrl(key: string): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME!,
+    Key: key,
+  });
+  return getSignedUrl(r2, command, { expiresIn: 3600 });
+}
 
-  const key = url.slice(publicUrl.length + 1);
+export async function getPresignedDownloadUrl(key: string, filename: string): Promise<string> {
   const command = new GetObjectCommand({
     Bucket: process.env.R2_BUCKET_NAME!,
     Key: key,
     ResponseContentDisposition: `attachment; filename="${filename}"`,
   });
-
   return getSignedUrl(r2, command, { expiresIn: 60 });
 }
 
-export async function deleteFromR2(url: string): Promise<void> {
-  const publicUrl = process.env.R2_PUBLIC_URL;
-  if (!publicUrl || !url.startsWith(publicUrl)) {
-    return;
-  }
-
-  const key = url.slice(publicUrl.length + 1);
+export async function deleteFromR2(key: string): Promise<void> {
   try {
     await r2.send(
       new DeleteObjectCommand({

@@ -1,5 +1,12 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildServer } from "../src/app.js";
+
+vi.mock("../src/lib/r2.js", () => ({
+  uploadToR2: vi.fn(async ({ key }: { key: string }) => ({ key, sizeBytes: 100 })),
+  deleteFromR2: vi.fn(async () => {}),
+  getPresignedViewUrl: vi.fn(async (key: string) => `https://presigned.example.com/${key}?sig=test`),
+  getPresignedDownloadUrl: vi.fn(async (key: string, filename: string) => `https://presigned.example.com/${key}?download=${filename}`),
+}));
 import { getUserByEmail } from "../src/auth/store.js";
 import { createReport } from "../src/relatorios/store.js";
 import { disconnectDatabase, resetDatabase } from "./helpers/db.js";
