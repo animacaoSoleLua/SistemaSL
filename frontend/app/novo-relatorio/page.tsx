@@ -706,7 +706,7 @@ function NovoRelatorioContent() {
                   name="titleSchedule"
                   className="input"
                   type="text"
-                  maxLength={200}
+                  maxLength={300}
                   value={titleSchedule}
                   onChange={(event) => setTitleSchedule(event.target.value)}
                   required
@@ -723,7 +723,7 @@ function NovoRelatorioContent() {
                   name="birthdayContractor"
                   className="input"
                   type="text"
-                  maxLength={150}
+                  maxLength={250}
                   value={birthdayContractor}
                   onChange={(event) => setBirthdayContractor(event.target.value)}
                   required
@@ -886,7 +886,6 @@ function NovoRelatorioContent() {
                   name="teamGeneralDescription"
                   className="input"
                   rows={5}
-                  maxLength={200}
                   value={teamGeneralDescription}
                   onChange={(event) => setTeamGeneralDescription(event.target.value)}
                 />
