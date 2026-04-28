@@ -31,6 +31,7 @@ import {
   listArchivedCourses,
   listCourses,
   removeEnrollment,
+  syncParticipants,
   updateCourse,
   // updateCourseCalendarEventId, // GOOGLE_CALENDAR_DISABLED
   // updateEnrollmentCalendarEventId, // GOOGLE_CALENDAR_DISABLED
@@ -53,6 +54,17 @@ const UpdateCourseSchema = z.object({
   location: z.string().optional(),
   capacity: z.number().int().positive().nullable().optional(),
   instructor_id: z.string().min(1).optional(),
+});
+
+const SyncParticipantsSchema = z.object({
+  members: z
+    .array(
+      z.object({
+        member_id: z.string().min(1),
+        status: z.enum(["attended", "missed"]),
+      })
+    )
+    .default([]),
 });
 
 const ImportCourseSchema = z.object({
@@ -502,6 +514,86 @@ export async function cursosRoutes(app: FastifyInstance) {
           id: course.id,
           imported_count: course.enrollments.length,
         },
+      });
+    }
+  );
+
+  app.patch(
+    "/api/v1/cursos/:id/participantes",
+    { preHandler: requireRole(["admin", "animador"]) },
+    async (request, reply) => {
+      const params = request.params as { id?: string };
+      if (!params.id) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Curso invalido",
+        });
+      }
+
+      if (!request.user) {
+        return reply.status(401).send({
+          error: "unauthorized",
+          message: "Token ausente",
+        });
+      }
+
+      const course = await getCourseById(params.id);
+      if (!course) {
+        return reply.status(404).send({
+          error: "not_found",
+          message: "Curso nao encontrado",
+        });
+      }
+
+      if (!course.archivedAt) {
+        return reply.status(409).send({
+          error: "invalid_request",
+          message: "Apenas cursos arquivados podem ter participantes sincronizados",
+        });
+      }
+
+      if (request.user.role !== "admin" && course.createdBy !== request.user.id) {
+        return reply.status(403).send({
+          error: "forbidden",
+          message: "Acesso negado",
+        });
+      }
+
+      const parsedBody = SyncParticipantsSchema.safeParse(request.body);
+      if (!parsedBody.success) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: parsedBody.error.issues[0].message,
+        });
+      }
+
+      const { members } = parsedBody.data;
+
+      const memberIds = members.map((m) => m.member_id);
+      const uniqueIds = new Set(memberIds);
+      if (uniqueIds.size !== memberIds.length) {
+        return reply.status(400).send({
+          error: "invalid_request",
+          message: "Membros duplicados na lista",
+        });
+      }
+
+      for (const memberId of memberIds) {
+        if (!(await getUserById(memberId))) {
+          return reply.status(404).send({
+            error: "not_found",
+            message: "Membro nao encontrado",
+          });
+        }
+      }
+
+      await syncParticipants(
+        course.id,
+        members.map((m) => ({ memberId: m.member_id, status: m.status }))
+      );
+
+      return reply.status(200).send({
+        data: { updated: members.length },
       });
     }
   );
