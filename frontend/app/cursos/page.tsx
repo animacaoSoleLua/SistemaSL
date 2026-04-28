@@ -17,6 +17,7 @@ import {
   getMember,
   getMembers,
   importCourse,
+  syncCourseParticipants,
   updateCourse,
 } from "../../lib/api";
 import {
@@ -154,6 +155,8 @@ export default function CursosPage() {
     Array<{ id: string; name: string; status: "attended" | "missed" }>
   >([]);
   const importTrapRef = useFocusTrap(importModalOpen);
+  const [importEditingId, setImportEditingId] = useState<string | null>(null);
+  const [importEditingLoading, setImportEditingLoading] = useState(false);
 
   const createEditTrapRef = useFocusTrap(modalOpen);
   const viewTrapRef = useFocusTrap(viewModalOpen);
@@ -535,7 +538,45 @@ export default function CursosPage() {
     setImportSearch("");
     setImportParticipants([]);
     setImportFormError(null);
+    setImportEditingId(null);
+    setImportEditingLoading(false);
   }
+
+  const openEditImportModal = async (courseId: string) => {
+    setImportEditingId(courseId);
+    setImportEditingLoading(true);
+    setImportModalOpen(true);
+    setImportFormError(null);
+    try {
+      const response = await getCourse(courseId);
+      const data = response.data as CourseDetails;
+      const rawDate = data.course_date ?? "";
+      const sep = rawDate.includes("T") ? "T" : " ";
+      const [datePart = "", timeFull = ""] = rawDate.split(sep);
+      setImportTitle(data.title ?? "");
+      setImportDescription(data.description ?? "");
+      setImportDate(isoToDisplay(datePart));
+      setImportTime(timeFull.slice(0, 5) || "08:00");
+      setImportLocation(data.location ?? "");
+      setImportInstructorId(data.instructor?.id ?? "");
+      setImportParticipants(
+        (data.enrollments ?? []).map((e) => ({
+          id: e.member_id,
+          name: e.member_name,
+          status: e.status as "attended" | "missed",
+        }))
+      );
+    } catch (err: unknown) {
+      setNotice({
+        type: "error",
+        message: getErrorMessage(err, "Não foi possível carregar o curso para edição."),
+      });
+      setImportModalOpen(false);
+      setImportEditingId(null);
+    } finally {
+      setImportEditingLoading(false);
+    }
+  };
 
   async function handleImportSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -556,20 +597,37 @@ export default function CursosPage() {
 
     setImportSaving(true);
     try {
-      await importCourse({
-        title: importTitle.trim(),
-        description: importDescription.trim() || undefined,
-        course_date: `${displayToIso(importDate)}T${importTime}`,
-        location: importLocation.trim() || undefined,
-        instructor_id: importInstructorId,
-        members: importParticipants.map((p) => ({
-          member_id: p.id,
-          status: p.status,
-        })),
-      });
-      setImportModalOpen(false);
-      resetImportModal();
-      setNotice({ type: "success", message: "Curso importado com sucesso!" });
+      if (importEditingId) {
+        await updateCourse(importEditingId, {
+          title: importTitle.trim(),
+          description: importDescription.trim() || undefined,
+          course_date: `${displayToIso(importDate)}T${importTime}`,
+          location: importLocation.trim() || undefined,
+          instructor_id: importInstructorId,
+        });
+        await syncCourseParticipants(
+          importEditingId,
+          importParticipants.map((p) => ({ member_id: p.id, status: p.status }))
+        );
+        setImportModalOpen(false);
+        resetImportModal();
+        setNotice({ type: "success", message: "Curso atualizado com sucesso!" });
+      } else {
+        await importCourse({
+          title: importTitle.trim(),
+          description: importDescription.trim() || undefined,
+          course_date: `${displayToIso(importDate)}T${importTime}`,
+          location: importLocation.trim() || undefined,
+          instructor_id: importInstructorId,
+          members: importParticipants.map((p) => ({
+            member_id: p.id,
+            status: p.status,
+          })),
+        });
+        setImportModalOpen(false);
+        resetImportModal();
+        setNotice({ type: "success", message: "Curso importado com sucesso!" });
+      }
       getCourses({ status: statusFilter }).then((data) => setCourses(data.data));
     } catch (err) {
       setImportFormError(getErrorMessage(err));
@@ -950,20 +1008,36 @@ export default function CursosPage() {
                           </button>
                         </>
                       )}
-                      {statusFilter === "archived" && currentRole === "admin" && (
-                        <button
-                          type="button"
-                          className="button danger"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleDeleteCourse(course.id, course.title);
-                          }}
-                          disabled={deletingId === course.id}
-                          aria-label={`Deletar curso ${course.title}`}
-                        >
-                          <FiTrash2 style={{ marginRight: "4px" }} />
-                          {deletingId === course.id ? "Apagando..." : "Apagar"}
-                        </button>
+                      {statusFilter === "archived" &&
+                        currentUser &&
+                        (currentRole === "admin" || course.created_by === currentUser.id) && (
+                        <>
+                          <button
+                            type="button"
+                            className="button secondary"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openEditImportModal(course.id);
+                            }}
+                            aria-label={`Editar curso ${course.title}`}
+                          >
+                            <FiEdit2 size={14} />
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            className="button danger"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleDeleteCourse(course.id, course.title);
+                            }}
+                            disabled={deletingId === course.id}
+                            aria-label={`Deletar curso ${course.title}`}
+                          >
+                            <FiTrash2 style={{ marginRight: "4px" }} />
+                            {deletingId === course.id ? "Apagando..." : "Apagar"}
+                          </button>
+                        </>
                       )}
                       {statusFilter !== "archived" && canFinalize && (
                         <button
@@ -1573,7 +1647,7 @@ export default function CursosPage() {
           <div className="modal-card modal-lg import-modal" ref={importTrapRef}>
             <header className="modal-header">
               <h2 className="section-title" id={importModalTitleId}>
-                Importar Curso Histórico
+                {importEditingId ? "Editar Curso Importado" : "Importar Curso Histórico"}
               </h2>
               <button
                 type="button"
@@ -1589,6 +1663,9 @@ export default function CursosPage() {
             </header>
 
             <div className="modal-body">
+              {importEditingLoading ? (
+                <p className="helper">Carregando dados do curso...</p>
+              ) : (
               <form id="import-course-form" onSubmit={handleImportSubmit}>
                 <div className="form-group">
                   <label htmlFor="import-title">Título *</label>
@@ -1779,6 +1856,7 @@ export default function CursosPage() {
                   </p>
                 )}
               </form>
+              )}
             </div>
 
             <div className="modal-footer">
@@ -1797,9 +1875,11 @@ export default function CursosPage() {
                 type="submit"
                 form="import-course-form"
                 className="button"
-                disabled={importSaving}
+                disabled={importSaving || importEditingLoading}
               >
-                {importSaving ? "Importando..." : "Importar Curso"}
+                {importSaving
+                  ? importEditingId ? "Salvando..." : "Importando..."
+                  : importEditingId ? "Salvar alterações" : "Importar Curso"}
               </button>
             </div>
           </div>
