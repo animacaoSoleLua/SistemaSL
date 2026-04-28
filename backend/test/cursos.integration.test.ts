@@ -627,4 +627,207 @@ describe("Cursos (integration)", () => {
     });
     expect(importResponse.statusCode).toBe(403);
   });
+
+  it("allows admin to sync participants of an archived course", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminToken = loginAdmin.json().data.access_token;
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
+    const animador = await getUserByEmail("animador@sol-e-lua.com");
+    const recreador = await getUserByEmail("recreador@sol-e-lua.com");
+
+    const importResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos/importar",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        title: "Curso Sync Test",
+        course_date: "2024-01-15T09:00",
+        instructor_id: adminUser!.id,
+        members: [{ member_id: animador!.id, status: "attended" }],
+      },
+    });
+    expect(importResponse.statusCode).toBe(201);
+    const courseId = importResponse.json().data.id;
+
+    const syncResponse = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/cursos/${courseId}/participantes`,
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        members: [{ member_id: recreador!.id, status: "missed" }],
+      },
+    });
+    expect(syncResponse.statusCode).toBe(200);
+    expect(syncResponse.json().data.updated).toBe(1);
+
+    const courseResponse = await app.inject({
+      method: "GET",
+      url: `/api/v1/cursos/${courseId}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const enrollments = courseResponse.json().data.enrollments as Array<{
+      member_id: string;
+      status: string;
+    }>;
+    expect(enrollments).toHaveLength(1);
+    expect(enrollments[0].member_id).toBe(recreador!.id);
+    expect(enrollments[0].status).toBe("missed");
+  });
+
+  it("allows animador to sync participants of their own imported course", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
+
+    const loginAnimador = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "animador@sol-e-lua.com", password: "animador123" },
+    });
+    const animadorToken = loginAnimador.json().data.access_token;
+    const animador = await getUserByEmail("animador@sol-e-lua.com");
+    const recreador = await getUserByEmail("recreador@sol-e-lua.com");
+
+    const importResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos/importar",
+      headers: { authorization: `Bearer ${animadorToken}` },
+      payload: {
+        title: "Curso do Animador",
+        course_date: "2024-02-10T14:00",
+        instructor_id: adminUser!.id,
+        members: [],
+      },
+    });
+    expect(importResponse.statusCode).toBe(201);
+    const courseId = importResponse.json().data.id;
+
+    const syncResponse = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/cursos/${courseId}/participantes`,
+      headers: { authorization: `Bearer ${animadorToken}` },
+      payload: {
+        members: [
+          { member_id: animador!.id, status: "attended" },
+          { member_id: recreador!.id, status: "missed" },
+        ],
+      },
+    });
+    expect(syncResponse.statusCode).toBe(200);
+    expect(syncResponse.json().data.updated).toBe(2);
+  });
+
+  it("blocks animador from syncing participants of another user's imported course", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminToken = loginAdmin.json().data.access_token;
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
+
+    const loginAnimador = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "animador@sol-e-lua.com", password: "animador123" },
+    });
+    const animadorToken = loginAnimador.json().data.access_token;
+
+    const importResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos/importar",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        title: "Curso do Admin",
+        course_date: "2024-03-05T10:00",
+        instructor_id: adminUser!.id,
+        members: [],
+      },
+    });
+    const courseId = importResponse.json().data.id;
+
+    const syncResponse = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/cursos/${courseId}/participantes`,
+      headers: { authorization: `Bearer ${animadorToken}` },
+      payload: { members: [] },
+    });
+    expect(syncResponse.statusCode).toBe(403);
+  });
+
+  it("rejects sync on non-archived course", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminToken = loginAdmin.json().data.access_token;
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        title: "Curso Ativo",
+        course_date: "2027-01-01T10:00",
+        instructor_id: adminUser!.id,
+        capacity: 10,
+      },
+    });
+    const courseId = createResponse.json().data.id;
+
+    const syncResponse = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/cursos/${courseId}/participantes`,
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { members: [] },
+    });
+    expect(syncResponse.statusCode).toBe(409);
+    expect(syncResponse.json().error).toBe("invalid_request");
+  });
+
+  it("rejects sync with duplicate member_ids", async () => {
+    const loginAdmin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminToken = loginAdmin.json().data.access_token;
+    const adminUser = await getUserByEmail("arthurssousa2004@gmail.com");
+
+    const importResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/cursos/importar",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        title: "Curso Dup Test",
+        course_date: "2024-04-01T08:00",
+        instructor_id: adminUser!.id,
+        members: [],
+      },
+    });
+    const courseId = importResponse.json().data.id;
+
+    const syncResponse = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/cursos/${courseId}/participantes`,
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        members: [
+          { member_id: adminUser!.id, status: "attended" },
+          { member_id: adminUser!.id, status: "missed" },
+        ],
+      },
+    });
+    expect(syncResponse.statusCode).toBe(400);
+    expect(syncResponse.json().error).toBe("invalid_request");
+  });
 });
