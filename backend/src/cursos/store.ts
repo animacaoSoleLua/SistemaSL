@@ -372,6 +372,47 @@ export async function removeEnrollment(enrollmentId: string): Promise<void> {
 // }
 // GOOGLE_CALENDAR_DISABLED_END
 
+export async function syncParticipants(
+  courseId: string,
+  members: Array<{ memberId: string; status: "attended" | "missed" }>
+): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const current = await tx.courseEnrollment.findMany({
+      where: { courseId },
+    });
+    const currentMap = new Map(current.map((e) => [e.memberId, e]));
+    const newMap = new Map(members.map((m) => [m.memberId, m]));
+
+    const toDelete = current.filter((e) => !newMap.has(e.memberId));
+    if (toDelete.length > 0) {
+      await tx.courseEnrollment.deleteMany({
+        where: { id: { in: toDelete.map((e) => e.id) } },
+      });
+    }
+
+    const toAdd = members.filter((m) => !currentMap.has(m.memberId));
+    if (toAdd.length > 0) {
+      await tx.courseEnrollment.createMany({
+        data: toAdd.map((m) => ({
+          courseId,
+          memberId: m.memberId,
+          status: m.status,
+        })),
+      });
+    }
+
+    for (const m of members) {
+      const existing = currentMap.get(m.memberId);
+      if (existing && existing.status !== m.status) {
+        await tx.courseEnrollment.update({
+          where: { id: existing.id },
+          data: { status: m.status },
+        });
+      }
+    }
+  });
+}
+
 export async function updateEnrollmentStatus(
   enrollment: EnrollmentRecord,
   status: EnrollmentStatus
