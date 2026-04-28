@@ -518,6 +518,16 @@ export async function importCourse(input: {
   });
 }
 
+export async function syncCourseParticipants(
+  courseId: string,
+  members: Array<{ member_id: string; status: "attended" | "missed" }>
+) {
+  return request(`/cursos/${courseId}/participantes`, {
+    method: "PATCH",
+    body: JSON.stringify({ members }),
+  });
+}
+
 export async function getFeedbacks(params: {
   type?: "positive" | "negative";
   member_id?: string;
