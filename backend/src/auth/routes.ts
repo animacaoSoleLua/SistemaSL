@@ -13,6 +13,7 @@ import {
 } from "./password-reset.js";
 import { sendPasswordResetEmail } from "./password-reset-email.js";
 import { verifyPassword } from "./password.js";
+import { getPresignedViewUrl } from "../lib/r2.js";
 import { createAccessToken } from "./token.js";
 import { auditLog } from "../lib/audit.js";
 import { isValidCPF } from "../lib/validators.js";
@@ -197,7 +198,7 @@ export async function authRoutes(app: FastifyInstance) {
           id: user.id,
           name: user.name,
           role: user.role,
-          photo_url: user.photoUrl ?? null,
+          photo_url: user.photoUrl ? await getPresignedViewUrl(user.photoUrl) : null,
         },
       },
     });

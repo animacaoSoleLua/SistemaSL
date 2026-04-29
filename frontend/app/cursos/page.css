@@ -304,20 +304,6 @@ body.theme-purple .status-pill.inactive {
   overflow: hidden;
 }
 
-.import-modal::before {
-  content: '';
-  display: block;
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-gold) 0%, rgba(212, 165, 116, 0.6) 50%, var(--color-gold) 100%);
-  background-size: 200% 100%;
-  animation: import-shimmer 3s ease infinite;
-}
-
-@keyframes import-shimmer {
-  0%   { background-position: 0% 0%; }
-  50%  { background-position: 100% 0%; }
-  100% { background-position: 0% 0%; }
-}
 
 .import-modal .modal-header {
   padding: 24px 28px 20px;

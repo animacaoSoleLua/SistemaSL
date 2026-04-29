@@ -202,8 +202,16 @@ function MediaUploadField(props: {
               accept={props.accept}
               multiple
               onChange={(event) => {
+                if (!event.target.files?.length) return;
                 props.onAddFiles(event.target.files);
                 event.target.value = "";
+              }}
+              onInput={(event) => {
+                // Fallback para Android/MIUI que dispara 'input' mas não 'change'
+                const input = event.target as HTMLInputElement;
+                if (!input.files?.length) return;
+                props.onAddFiles(input.files);
+                input.value = "";
               }}
             />
           </label>

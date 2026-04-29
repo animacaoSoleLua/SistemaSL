@@ -360,11 +360,11 @@ export default function CursosPage() {
   const openEditModal = async (courseId: string) => {
     setFormError(null);
     setEditingLoading(true);
+    setEditingCourseId(courseId);
     setModalOpen(true);
     try {
       const response = await getCourse(courseId);
       const data = response.data as CourseDetails;
-      setEditingCourseId(courseId);
       setTitle(data.title ?? "");
       setDescription(data.description ?? "");
       const rawDate = data.course_date ?? "";

@@ -34,9 +34,28 @@ describe('isValidMediaType', () => {
     expect(isValidMediaType(exeFile)).toBe(false);
   });
 
-  it('handles empty MIME type', () => {
+  it('rejects file with empty MIME type and no recognized extension', () => {
     const noTypeFile = new File([''], 'test', { type: '' });
     expect(isValidMediaType(noTypeFile)).toBe(false);
+  });
+
+  it('accepts image with empty MIME type via extension fallback (Android/MIUI)', () => {
+    const androidJpg = new File([''], 'photo.jpg', { type: '' });
+    expect(isValidMediaType(androidJpg)).toBe(true);
+
+    const androidHeic = new File([''], 'photo.heic', { type: '' });
+    expect(isValidMediaType(androidHeic)).toBe(true);
+
+    const androidPng = new File([''], 'photo.png', { type: '' });
+    expect(isValidMediaType(androidPng)).toBe(true);
+  });
+
+  it('accepts video with empty MIME type via extension fallback (Android/MIUI)', () => {
+    const androidMp4 = new File([''], 'video.mp4', { type: '' });
+    expect(isValidMediaType(androidMp4)).toBe(true);
+
+    const android3gp = new File([''], 'video.3gp', { type: '' });
+    expect(isValidMediaType(android3gp)).toBe(true);
   });
 
   it('is case-insensitive', () => {
@@ -64,18 +83,18 @@ describe('isValidMediaSize', () => {
     expect(isValidMediaSize(bigImage)).toBe(false);
   });
 
-  it('accepts video under 30MB', () => {
+  it('accepts video under 200MB', () => {
     const smallVideo = new File(['x'.repeat(20 * 1024 * 1024)], 'small.mp4', { type: 'video/mp4' });
     expect(isValidMediaSize(smallVideo)).toBe(true);
   });
 
-  it('accepts video exactly 30MB', () => {
-    const maxVideo = new File(['x'.repeat(30 * 1024 * 1024)], 'max.mp4', { type: 'video/mp4' });
+  it('accepts video exactly 200MB', () => {
+    const maxVideo = new File(['x'.repeat(200 * 1024 * 1024)], 'max.mp4', { type: 'video/mp4' });
     expect(isValidMediaSize(maxVideo)).toBe(true);
   });
 
-  it('rejects video over 30MB', () => {
-    const bigVideo = new File(['x'.repeat(30 * 1024 * 1024 + 1)], 'big.mp4', { type: 'video/mp4' });
+  it('rejects video over 200MB', () => {
+    const bigVideo = new File(['x'.repeat(200 * 1024 * 1024 + 1)], 'big.mp4', { type: 'video/mp4' });
     expect(isValidMediaSize(bigVideo)).toBe(false);
   });
 
@@ -91,7 +110,7 @@ describe('getMediaValidationError', () => {
     expect(getMediaValidationError(validImage)).toBe(null);
   });
 
-  it('returns null for valid video under 30MB', () => {
+  it('returns null for valid video under 200MB', () => {
     const validVideo = new File(['x'.repeat(20 * 1024 * 1024)], 'video.mp4', { type: 'video/mp4' });
     expect(getMediaValidationError(validVideo)).toBe(null);
   });
@@ -107,8 +126,8 @@ describe('getMediaValidationError', () => {
   });
 
   it('returns size error with correct limit for oversized video', () => {
-    const bigVideo = new File(['x'.repeat(31 * 1024 * 1024)], 'big.mp4', { type: 'video/mp4' });
-    expect(getMediaValidationError(bigVideo)).toBe('Arquivo muito grande (máx 30MB).');
+    const bigVideo = new File(['x'.repeat(201 * 1024 * 1024)], 'big.mp4', { type: 'video/mp4' });
+    expect(getMediaValidationError(bigVideo)).toBe('Arquivo muito grande (máx 200MB).');
   });
 
   it('prioritizes type error over size error', () => {
