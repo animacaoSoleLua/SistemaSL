@@ -56,25 +56,20 @@ const testScenarioUsers = [
 ];
 
 export async function resetDatabase(): Promise<void> {
-  await prisma.$executeRawUnsafe("SELECT pg_advisory_lock(2147483647)");
-  try {
-    await prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE "report_feedbacks", "report_media", "reports", "course_enrollments", "courses", "warnings", "suspensions", "password_reset_tokens", "users" RESTART IDENTITY CASCADE'
-    );
-    await prisma.user.createMany({ data: baseUsers });
-    await prisma.user.createMany({ data: testScenarioUsers });
-    await prisma.user.createMany({
-      data: [testMember1, testMember2, testMember3].map((m) => ({
-        name: m.name,
-        lastName: m.lastName,
-        email: m.email,
-        passwordHash: hashPassword(m.password),
-        role: m.role,
-      })),
-    });
-  } finally {
-    await prisma.$executeRawUnsafe("SELECT pg_advisory_unlock(2147483647)");
-  }
+  await prisma.$executeRawUnsafe(
+    'TRUNCATE TABLE "report_feedbacks", "report_media", "reports", "course_enrollments", "courses", "warnings", "suspensions", "password_reset_tokens", "users" RESTART IDENTITY CASCADE'
+  );
+  await prisma.user.createMany({ data: baseUsers });
+  await prisma.user.createMany({ data: testScenarioUsers });
+  await prisma.user.createMany({
+    data: [testMember1, testMember2, testMember3].map((m) => ({
+      name: m.name,
+      lastName: m.lastName,
+      email: m.email,
+      passwordHash: hashPassword(m.password),
+      role: m.role,
+    })),
+  });
 }
 
 export async function disconnectDatabase(): Promise<void> {

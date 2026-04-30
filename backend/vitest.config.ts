@@ -9,6 +9,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text-summary", "html"]
     },
+    fileParallelism: false,
     pool: "threads",
     poolOptions: {
       threads: {
