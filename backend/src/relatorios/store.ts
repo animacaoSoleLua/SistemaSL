@@ -41,8 +41,8 @@ export interface ReportRecord {
   titleSchedule: string;
   birthdayAge?: number;
   transportType?: string;
-  uberGoValue?: number;
-  uberReturnValue?: number;
+  uberGoValue?: number | null;
+  uberReturnValue?: number | null;
   otherCarResponsible?: string;
   hasExtraHours?: boolean;
   extraHoursDetails?: number;
@@ -203,8 +203,8 @@ function toReportRecord(report: {
     titleSchedule: report.titleSchedule ?? "Nao informado",
     birthdayAge: report.birthdayAge ?? undefined,
     transportType: report.transportType ?? undefined,
-    uberGoValue: report.uberGoValue ?? undefined,
-    uberReturnValue: report.uberReturnValue ?? undefined,
+    uberGoValue: report.uberGoValue,
+    uberReturnValue: report.uberReturnValue,
     otherCarResponsible: report.otherCarResponsible ?? undefined,
     hasExtraHours: report.hasExtraHours ?? undefined,
     extraHoursDetails: report.extraHoursDetails != null ? Number(report.extraHoursDetails) : undefined,

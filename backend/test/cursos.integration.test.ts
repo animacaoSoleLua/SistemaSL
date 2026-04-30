@@ -595,14 +595,15 @@ describe("Cursos (integration)", () => {
       url: "/api/v1/auth/register",
       headers: { authorization: `Bearer ${adminToken}` },
       payload: {
-        name: "Recreador Teste",
+        name: "Recreador",
+        last_name: "Teste",
         email: "recreador@teste.com",
         password: "Senha123",
         role: "recreador",
         cpf: "111.444.777-35",
         region: "DF",
         phone: "(61) 00000-0001",
-        birthDate: "2000-01-01",
+        birth_date: "2000-01-01",
       },
     });
     expect(createRecreador.statusCode).toBe(201);
