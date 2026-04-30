@@ -84,10 +84,10 @@ jobs:
     steps:
       - name: Deploy backend
         run: |
-          curl -f -X POST "${{ secrets.DOKPLOY_BACKEND_WEBHOOK }}" \
+          curl -f -X POST "${{ secrets.BACKWEBHOOK }}" \
             -H "Content-Type: application/json"
 
       - name: Deploy frontend
         run: |
-          curl -f -X POST "${{ secrets.DOKPLOY_FRONTEND_WEBHOOK }}" \
+          curl -f -X POST "${{ secrets.FRONTWEBHOOK }}" \
             -H "Content-Type: application/json"
