@@ -83,11 +83,7 @@ jobs:
 
     steps:
       - name: Deploy backend
-        run: |
-          curl -f -X POST "${{ secrets.BACKWEBHOOK }}" \
-            -H "Content-Type: application/json"
+        run: curl -f -X POST "${{ secrets.BACKWEBHOOK }}"
 
       - name: Deploy frontend
-        run: |
-          curl -f -X POST "${{ secrets.FRONTWEBHOOK }}" \
-            -H "Content-Type: application/json"
+        run: curl -f -X POST "${{ secrets.FRONTWEBHOOK }}"
