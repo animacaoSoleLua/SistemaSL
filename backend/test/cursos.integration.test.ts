@@ -599,7 +599,7 @@ describe("Cursos (integration)", () => {
         email: "recreador@teste.com",
         password: "Senha123",
         role: "recreador",
-        cpf: "000.000.000-00",
+        cpf: "111.444.777-35",
         region: "DF",
         phone: "(61) 00000-0001",
         birthDate: "2000-01-01",

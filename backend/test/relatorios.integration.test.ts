@@ -116,6 +116,8 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-16",
         contractor_name: "Buffet Lua",
+        title_schedule: "Festa tarde",
+        transport_type: "particular",
         team_summary: "Equipe C",
         extra_hours_details: 90,
       },
@@ -201,6 +203,8 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-10",
         contractor_name: "Hotel Sol",
+        title_schedule: "Festa infantil",
+        transport_type: "particular",
         team_summary: "Equipe A",
       },
     });
@@ -238,6 +242,8 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-15",
         contractor_name: "Clube Sol",
+        title_schedule: "Manhã recreativa",
+        transport_type: "particular",
         team_summary: "Equipe B",
         team_general_score: 0,
         event_difficulty_score: 0,
@@ -322,6 +328,8 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-20",
         contractor_name: "Buffet Sol",
+        title_schedule: "Festa junina",
+        transport_type: "particular",
         team_summary: "Equipe C",
       },
     });
@@ -361,6 +369,7 @@ describe("Relatorios (integration)", () => {
       payload: {
         event_date: "2026-01-20",
         contractor_name: "Buffet Sol",
+        title_schedule: "Festa de aniversário",
         transport_type: "uber99",
         uber_go_value: 25,
         uber_return_value: 30,
