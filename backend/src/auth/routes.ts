@@ -120,7 +120,7 @@ function parseDate(value: string | undefined): Date | undefined {
 const rateLimitByEmail = {
   config: {
     rateLimit: {
-      max: 10,
+      max: process.env.NODE_ENV === "test" ? 100000 : 10,
       timeWindow: "15 minutes",
       keyGenerator: (request: import("fastify").FastifyRequest) => {
         const body = request.body as Record<string, unknown> | undefined;

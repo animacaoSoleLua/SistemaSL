@@ -51,6 +51,7 @@ describe("Membros (integration)", () => {
         region: "Ceilândia",
         phone: "(61) 99999-1111",
         role: "recreador",
+        password: "Admin123",
       },
     });
 
@@ -121,6 +122,7 @@ describe("Membros (integration)", () => {
         region: "Gama",
         phone: "(61) 99999-2222",
         role: "animador",
+        password: "Admin123",
       },
     });
 
@@ -249,8 +251,13 @@ describe("Membros (integration)", () => {
       payload: {
         name: "Recreador",
         last_name: "Teste",
+        cpf: "969.170.239-81",
         email: "recreador-feedback@sol-e-lua.com",
+        birth_date: "1995-07-20",
+        region: "Taguatinga",
+        phone: "(61) 99999-3333",
         role: "recreador",
+        password: "Admin123",
       },
     });
     expect(createResponse.statusCode).toBe(201);

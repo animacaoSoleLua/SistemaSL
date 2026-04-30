@@ -257,9 +257,9 @@ async function updateReportExtraFields(
   await prisma.$executeRaw`
     UPDATE "reports"
     SET
-      "title_schedule" = ${fields.titleSchedule ?? null},
+      "title_schedule" = COALESCE(${fields.titleSchedule ?? null}, "title_schedule"),
       "birthday_age" = ${fields.birthdayAge ?? null},
-      "transport_type" = ${fields.transportType ?? null},
+      "transport_type" = COALESCE(${fields.transportType ?? null}, "transport_type"),
       "uber_go_value" = ${fields.uberGoValue ?? null},
       "uber_return_value" = ${fields.uberReturnValue ?? null},
       "other_car_responsible" = ${fields.otherCarResponsible ?? null},

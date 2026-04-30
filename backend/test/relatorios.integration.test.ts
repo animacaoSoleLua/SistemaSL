@@ -52,7 +52,7 @@ describe("Relatorios (integration)", () => {
         uber_go_value: 35.5,
         uber_return_value: 31.2,
         has_extra_hours: true,
-        extra_hours_details: "1 hora",
+        extra_hours_details: 1,
         outside_brasilia: false,
         exclusive_event: true,
         team_summary: "Equipe A",
@@ -87,7 +87,7 @@ describe("Relatorios (integration)", () => {
     expect(body.data.author_name).toBe("Animador Lua");
     expect(body.data.title_schedule).toBe("Festa infantil - tarde");
     expect(body.data.has_extra_hours).toBe(true);
-    expect(body.data.extra_hours_details).toBe("1 hora");
+    expect(body.data.extra_hours_details).toBe(1);
     expect(body.data.team_general_score).toBe(4);
     expect(body.data.event_difficulty_score).toBe(2);
     expect(body.data.event_quality_score).toBe(5);
@@ -117,7 +117,7 @@ describe("Relatorios (integration)", () => {
         event_date: "2026-01-16",
         contractor_name: "Buffet Lua",
         team_summary: "Equipe C",
-        extra_hours_details: "1 hora e 30 minutos",
+        extra_hours_details: 90,
       },
     });
 
@@ -133,7 +133,7 @@ describe("Relatorios (integration)", () => {
     expect(detailResponse.statusCode).toBe(200);
     const body = detailResponse.json();
     expect(body.data.has_extra_hours).toBe(true);
-    expect(body.data.extra_hours_details).toBe("1 hora e 30 minutos");
+    expect(body.data.extra_hours_details).toBe(90);
   });
 
   it("lists only own reports for animador", async () => {

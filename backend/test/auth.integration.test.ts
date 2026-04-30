@@ -60,7 +60,7 @@ describe("Auth (integration)", () => {
         region: "Ceilândia",
         phone: "(61) 98888-7777",
         role: "recreador",
-        password: "segredo123",
+        password: "Segredo123",
       },
     });
 
@@ -71,7 +71,7 @@ describe("Auth (integration)", () => {
       url: "/api/v1/auth/login",
       payload: {
         email: "joana@sol-e-lua.com",
-        password: "segredo123",
+        password: "Segredo123",
       },
     });
 
