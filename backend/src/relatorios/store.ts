@@ -149,7 +149,7 @@ function toReportRecord(report: {
   eventDate: Date;
   contractorName: string;
   titleSchedule?: string | null;
-  birthdayAge?: number | null;
+  birthdayAge?: string | number | null;
   transportType?: string | null;
   uberGoValue?: number | null;
   uberReturnValue?: number | null;
@@ -201,7 +201,7 @@ function toReportRecord(report: {
     eventDate: report.eventDate,
     contractorName: report.contractorName,
     titleSchedule: report.titleSchedule ?? "Nao informado",
-    birthdayAge: report.birthdayAge ?? undefined,
+    birthdayAge: report.birthdayAge != null ? Number(report.birthdayAge) : undefined,
     transportType: report.transportType ?? undefined,
     uberGoValue: report.uberGoValue,
     uberReturnValue: report.uberReturnValue,
