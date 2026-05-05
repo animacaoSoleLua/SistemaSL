@@ -154,7 +154,7 @@ type ReportPayload = {
   uber_return_value?: number;
   other_car_responsible?: string;
   has_extra_hours?: boolean;
-  extra_hours_details?: number;
+  extra_hours_details?: string;
   outside_brasilia?: boolean;
   exclusive_event?: boolean;
   team_summary: string;

@@ -72,13 +72,13 @@ model Report {
   eventDate              DateTime         @map("event_date") @db.Date
   contractorName         String           @map("contractor_name") @db.VarChar(250)
   titleSchedule          String           @map("title_schedule") @db.VarChar(300)
-  birthdayAge            Int?             @map("birthday_age")
+  birthdayAge            String?          @map("birthday_age") @db.VarChar(100)
   transportType          String           @map("transport_type") @db.VarChar(30)
   uberGoValue            Float?           @map("uber_go_value")
   uberReturnValue        Float?           @map("uber_return_value")
   otherCarResponsible    String?          @map("other_car_responsible") @db.VarChar(150)
   hasExtraHours          Boolean?         @map("has_extra_hours")
-  extraHoursDetails      Int?             @map("extra_hours_details")
+  extraHoursDetails      String?          @map("extra_hours_details") @db.VarChar(100)
   outsideBrasilia        Boolean          @default(false) @map("outside_brasilia")
   exclusiveEvent         Boolean          @default(false) @map("exclusive_event")
   teamSummary            String           @map("team_summary") @db.Text

@@ -47,7 +47,7 @@ type ReportDetail = {
   event_date: string;
   contractor_name: string;
   title_schedule: string;
-  birthday_age?: number | null;
+  birthday_age?: string | null;
   transport_type?: TransportType | null;
   uber_go_value?: number | null;
   uber_return_value?: number | null;
@@ -356,7 +356,7 @@ function NovoRelatorioContent() {
         setEventDate(report.event_date ? isoToDisplay(report.event_date) : "");
         setTitleSchedule(report.title_schedule ?? "");
         setBirthdayContractor(report.contractor_name ?? "");
-        setBirthdayAge(report.birthday_age != null ? String(report.birthday_age) : "");
+        setBirthdayAge(report.birthday_age ?? "");
         setTransportType((report.transport_type as TransportType) ?? "uber99");
         setUberGoValue(report.uber_go_value != null ? String(report.uber_go_value) : "");
         setUberReturnValue(
@@ -542,7 +542,7 @@ function NovoRelatorioContent() {
       event_date: displayToIsoWithShortYear(eventDate),
       contractor_name: birthdayContractor.trim(),
       title_schedule: titleSchedule.trim(),
-      birthday_age: birthdayAge.trim() ? Number(birthdayAge) : undefined,
+      birthday_age: birthdayAge.trim() || undefined,
       transport_type: transportType,
       uber_go_value:
         transportType === "uber99" && uberGoValue.trim()
@@ -560,7 +560,7 @@ function NovoRelatorioContent() {
         hasExtraHours === "" ? undefined : hasExtraHours === "sim",
       extra_hours_details:
         hasExtraHours === "sim" && extraHoursDetails.trim()
-          ? Number(extraHoursDetails)
+          ? extraHoursDetails.trim()
           : undefined,
       outside_brasilia: outsideBrasilia,
       exclusive_event: exclusiveEvent,

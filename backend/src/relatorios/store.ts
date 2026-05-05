@@ -302,13 +302,13 @@ async function getReportExtraFields(
   const rows = await prisma.$queryRaw<
     Array<{
       title_schedule: string | null;
-      birthday_age: number | null;
+      birthday_age: string | null;
       transport_type: string | null;
       uber_go_value: number | null;
       uber_return_value: number | null;
       other_car_responsible: string | null;
       has_extra_hours: boolean | null;
-      extra_hours_details: number | null;
+      extra_hours_details: string | null;
       outside_brasilia: boolean;
       exclusive_event: boolean;
       team_general_description: string | null;
