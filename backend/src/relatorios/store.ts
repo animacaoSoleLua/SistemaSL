@@ -39,13 +39,13 @@ export interface ReportRecord {
   eventDate: Date;
   contractorName: string;
   titleSchedule: string;
-  birthdayAge?: number;
+  birthdayAge?: string;
   transportType?: string;
   uberGoValue?: number | null;
   uberReturnValue?: number | null;
   otherCarResponsible?: string;
   hasExtraHours?: boolean;
-  extraHoursDetails?: number;
+  extraHoursDetails?: string;
   outsideBrasilia: boolean;
   exclusiveEvent: boolean;
   teamSummary: string;
@@ -68,13 +68,13 @@ export interface CreateReportInput {
   eventDate: Date;
   contractorName: string;
   titleSchedule: string;
-  birthdayAge?: number;
+  birthdayAge?: string;
   transportType: string;
   uberGoValue?: number;
   uberReturnValue?: number;
   otherCarResponsible?: string;
   hasExtraHours?: boolean;
-  extraHoursDetails?: number;
+  extraHoursDetails?: string;
   outsideBrasilia?: boolean;
   exclusiveEvent?: boolean;
   teamSummary: string;
@@ -149,13 +149,13 @@ function toReportRecord(report: {
   eventDate: Date;
   contractorName: string;
   titleSchedule?: string | null;
-  birthdayAge?: string | number | null;
+  birthdayAge?: string | null;
   transportType?: string | null;
   uberGoValue?: number | null;
   uberReturnValue?: number | null;
   otherCarResponsible?: string | null;
   hasExtraHours?: boolean | null;
-  extraHoursDetails?: string | number | null;
+  extraHoursDetails?: string | null;
   outsideBrasilia?: boolean;
   exclusiveEvent?: boolean;
   teamSummary: string | null;
@@ -201,13 +201,13 @@ function toReportRecord(report: {
     eventDate: report.eventDate,
     contractorName: report.contractorName,
     titleSchedule: report.titleSchedule ?? "Nao informado",
-    birthdayAge: report.birthdayAge != null ? Number(report.birthdayAge) : undefined,
+    birthdayAge: report.birthdayAge ?? undefined,
     transportType: report.transportType ?? undefined,
     uberGoValue: report.uberGoValue,
     uberReturnValue: report.uberReturnValue,
     otherCarResponsible: report.otherCarResponsible ?? undefined,
     hasExtraHours: report.hasExtraHours ?? undefined,
-    extraHoursDetails: report.extraHoursDetails != null ? Number(report.extraHoursDetails) : undefined,
+    extraHoursDetails: report.extraHoursDetails ?? undefined,
     outsideBrasilia: report.outsideBrasilia ?? false,
     exclusiveEvent: report.exclusiveEvent ?? false,
     teamSummary: report.teamSummary ?? "",
@@ -282,13 +282,13 @@ async function getReportExtraFields(
   reportId: string
 ): Promise<{
   titleSchedule?: string | null;
-  birthdayAge?: number | null;
+  birthdayAge?: string | null;
   transportType?: string | null;
   uberGoValue?: number | null;
   uberReturnValue?: number | null;
   otherCarResponsible?: string | null;
   hasExtraHours?: boolean | null;
-  extraHoursDetails?: number | null;
+  extraHoursDetails?: string | null;
   outsideBrasilia?: boolean;
   exclusiveEvent?: boolean;
   teamGeneralDescription?: string | null;
@@ -350,13 +350,13 @@ async function getReportExtraFields(
 
   return {
     titleSchedule: row.title_schedule,
-    birthdayAge: row.birthday_age != null ? Number(row.birthday_age) : null,
+    birthdayAge: row.birthday_age,
     transportType: row.transport_type,
     uberGoValue: row.uber_go_value,
     uberReturnValue: row.uber_return_value,
     otherCarResponsible: row.other_car_responsible,
     hasExtraHours: row.has_extra_hours,
-    extraHoursDetails: row.extra_hours_details != null ? Number(row.extra_hours_details) : null,
+    extraHoursDetails: row.extra_hours_details,
     outsideBrasilia: row.outside_brasilia,
     exclusiveEvent: row.exclusive_event,
     teamGeneralDescription: row.team_general_description,

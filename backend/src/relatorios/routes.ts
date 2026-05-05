@@ -147,8 +147,8 @@ function formatDate(date: Date): string {
 
 function normalizeExtraHours(input: {
   hasExtraHours?: boolean;
-  extraHoursDetails?: number;
-}): { hasExtraHours?: boolean; extraHoursDetails?: number } {
+  extraHoursDetails?: string;
+}): { hasExtraHours?: boolean; extraHoursDetails?: string } {
   const details = input.extraHoursDetails;
   if (input.hasExtraHours === false) {
     return { hasExtraHours: false, extraHoursDetails: undefined };
@@ -488,14 +488,14 @@ export async function relatoriosRoutes(app: FastifyInstance) {
 
     const normalizedExtraHours = normalizeExtraHours({
       hasExtraHours: has_extra_hours,
-      extraHoursDetails: extra_hours_details != null ? Number(extra_hours_details) : undefined,
+      extraHoursDetails: extra_hours_details,
     });
 
     const report = await createReport(request.user.id, {
       eventDate,
       contractorName: contractor_name,
       titleSchedule: title_schedule,
-      birthdayAge: birthday_age != null ? Number(birthday_age) : undefined,
+      birthdayAge: birthday_age,
       transportType: transport_type,
       uberGoValue: uber_go_value,
       uberReturnValue: uber_return_value,
@@ -766,14 +766,14 @@ export async function relatoriosRoutes(app: FastifyInstance) {
 
     const normalizedExtraHours = normalizeExtraHours({
       hasExtraHours: has_extra_hours,
-      extraHoursDetails: extra_hours_details != null ? Number(extra_hours_details) : undefined,
+      extraHoursDetails: extra_hours_details,
     });
 
     const updated = await updateReport(report.id, {
       eventDate,
       contractorName: contractor_name,
       titleSchedule: title_schedule,
-      birthdayAge: birthday_age != null ? Number(birthday_age) : undefined,
+      birthdayAge: birthday_age,
       transportType: transport_type,
       uberGoValue: uber_go_value,
       uberReturnValue: uber_return_value,

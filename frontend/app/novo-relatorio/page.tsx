@@ -738,9 +738,7 @@ function NovoRelatorioContent() {
                   id="birthdayAge"
                   name="birthdayAge"
                   className="input"
-                  type="number"
-                  min="0"
-                  step="1"
+                  type="text"
                   value={birthdayAge}
                   onChange={(event) => setBirthdayAge(event.target.value)}
                 />
@@ -839,7 +837,7 @@ function NovoRelatorioContent() {
                     id="extraHoursDetails"
                     name="extraHoursDetails"
                     className="input"
-                    type="number"
+                    type="text"
                     value={extraHoursDetails}
                     onChange={(event) => setExtraHoursDetails(event.target.value)}
                     required
