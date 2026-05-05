@@ -13,6 +13,7 @@ import {
   FiMenu,
   FiMessageSquare,
   FiMoon,
+  FiStar,
   FiSun,
   FiUser,
   FiUsers,
@@ -59,6 +60,12 @@ const navItems = [
     href: "/feedbacks",
     roles: ["admin"],
     icon: <FiMessageSquare aria-hidden="true" />
+  },
+  {
+    label: "Habilidades",
+    href: "/habilidades",
+    roles: ["admin"],
+    icon: <FiStar aria-hidden="true" />
   },
   {
     label: "Membros",
