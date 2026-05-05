@@ -350,13 +350,13 @@ async function getReportExtraFields(
 
   return {
     titleSchedule: row.title_schedule,
-    birthdayAge: row.birthday_age,
+    birthdayAge: row.birthday_age != null ? Number(row.birthday_age) : null,
     transportType: row.transport_type,
     uberGoValue: row.uber_go_value,
     uberReturnValue: row.uber_return_value,
     otherCarResponsible: row.other_car_responsible,
     hasExtraHours: row.has_extra_hours,
-    extraHoursDetails: row.extra_hours_details,
+    extraHoursDetails: row.extra_hours_details != null ? Number(row.extra_hours_details) : null,
     outsideBrasilia: row.outside_brasilia,
     exclusiveEvent: row.exclusive_event,
     teamGeneralDescription: row.team_general_description,

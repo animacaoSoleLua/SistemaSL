@@ -488,14 +488,14 @@ export async function relatoriosRoutes(app: FastifyInstance) {
 
     const normalizedExtraHours = normalizeExtraHours({
       hasExtraHours: has_extra_hours,
-      extraHoursDetails: extra_hours_details,
+      extraHoursDetails: extra_hours_details != null ? Number(extra_hours_details) : undefined,
     });
 
     const report = await createReport(request.user.id, {
       eventDate,
       contractorName: contractor_name,
       titleSchedule: title_schedule,
-      birthdayAge: birthday_age,
+      birthdayAge: birthday_age != null ? Number(birthday_age) : undefined,
       transportType: transport_type,
       uberGoValue: uber_go_value,
       uberReturnValue: uber_return_value,
@@ -766,14 +766,14 @@ export async function relatoriosRoutes(app: FastifyInstance) {
 
     const normalizedExtraHours = normalizeExtraHours({
       hasExtraHours: has_extra_hours,
-      extraHoursDetails: extra_hours_details,
+      extraHoursDetails: extra_hours_details != null ? Number(extra_hours_details) : undefined,
     });
 
     const updated = await updateReport(report.id, {
       eventDate,
       contractorName: contractor_name,
       titleSchedule: title_schedule,
-      birthdayAge: birthday_age,
+      birthdayAge: birthday_age != null ? Number(birthday_age) : undefined,
       transportType: transport_type,
       uberGoValue: uber_go_value,
       uberReturnValue: uber_return_value,
