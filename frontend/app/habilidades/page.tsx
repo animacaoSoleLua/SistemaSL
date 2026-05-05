@@ -99,7 +99,7 @@ export default function HabilidadesPage() {
   useEffect(() => {
     const user = getStoredUser();
     if (!user || !isRoleAllowed(user.role, allowedRoles)) {
-      router.replace(getDefaultRoute(user?.role));
+      router.replace(getDefaultRoute(user?.role ?? "recreador"));
     }
   }, [router]);
 
