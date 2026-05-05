@@ -100,7 +100,7 @@ export default function LoginPage() {
         </div>
         <h1 className="login-title">Bem-vindo!</h1>
         <p className="login-subtitle">
-          Entre com suas credenciais para acessar o sistemaAA
+          Entre com suas credenciais para acessar o sistema
         </p>
         <form className="login-form" onSubmit={handleSubmit}>
           <label className="login-field" htmlFor="login-email">

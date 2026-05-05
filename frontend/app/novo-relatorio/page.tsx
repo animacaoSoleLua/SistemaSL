@@ -189,7 +189,7 @@ function MediaUploadField(props: {
 
   return (
     <div className="field full">
-      {props.label ? <span>{props.label}</span> : null}
+      {props.label ? <span style={{ fontWeight: 700, fontSize: "1.05rem" }}>{props.label}</span> : null}
       <div className="media-upload-row">
         {!isAtLimit && (
           <label className="profile-photo-upload" htmlFor={props.id}>

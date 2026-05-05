@@ -135,7 +135,7 @@ export default function CadastroPage() {
         <div className="login-brand">
           <Image src={logo} alt="Sol e Lua Animação" className="login-logo" priority />
         </div>
-        <h1 className="login-title">Crie sua conta</h1>
+        <h1 className="login-title">Crie sua conta Freelance</h1>
         <p className="login-subtitle">
           Preencha os dados para se cadastrar.
         </p>

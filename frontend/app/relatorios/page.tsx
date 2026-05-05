@@ -36,7 +36,7 @@ interface ReportDetail {
   uber_return_value?: number | null;
   other_car_responsible?: string | null;
   has_extra_hours?: boolean | null;
-  extra_hours_details?: string | null;
+  extra_hours_details?: number | null;
   outside_brasilia: boolean;
   exclusive_event: boolean;
   team_summary: string;
@@ -478,8 +478,9 @@ export default function RelatoriosPage() {
                     const showOtherCarResponsible = transportType === "outro";
                     const hasExtraHours =
                       selectedReport.has_extra_hours === true ||
-                      hasText(selectedReport.extra_hours_details);
-                    const showExtraHoursDetails = hasText(selectedReport.extra_hours_details);
+                      (selectedReport.extra_hours_details != null && selectedReport.extra_hours_details > 0);
+                    const showExtraHoursDetails =
+                      selectedReport.extra_hours_details != null && selectedReport.extra_hours_details > 0;
 
                     const topicOrder = [null, "Pintura", "Balão", "Animação", "Personagens", "Oficinas"];
                     const topicLabels: Record<string, string> = {
@@ -593,7 +594,7 @@ export default function RelatoriosPage() {
                             {showExtraHoursDetails && (
                               <div className="field full">
                                 <span>Detalhes da hora extra</span>
-                                <p className="report-value">{getText(selectedReport.extra_hours_details)}</p>
+                                <p className="report-value">{selectedReport.extra_hours_details} minutos</p>
                               </div>
                             )}
                           </div>
