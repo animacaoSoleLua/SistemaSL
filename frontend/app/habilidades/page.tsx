@@ -90,6 +90,8 @@ export default function HabilidadesPage() {
   const [memberSkillForm, dispatchMemberSkillForm] = useReducer(memberSkillFormReducer, { skillId: "", memberId: "", rating: "5" });
   const [memberSkillSaving, setMemberSkillSaving] = useState(false);
   const [memberSkillError, setMemberSkillError] = useState<string | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberDropdownOpen, setMemberDropdownOpen] = useState(false);
 
   // Delete confirm
   const [deleteTarget, setDeleteTarget] = useState<{ type: "skill"; id: string; name: string } | { type: "memberSkill"; skillId: string; memberId: string; memberName: string } | null>(null);
@@ -175,6 +177,8 @@ export default function HabilidadesPage() {
   const openAddMemberSkill = () => {
     setEditingMemberSkill(null);
     dispatchMemberSkillForm({ type: "RESET" });
+    setMemberSearch("");
+    setMemberDropdownOpen(false);
     setMemberSkillError(null);
     setMemberSkillModalOpen(true);
   };
@@ -182,6 +186,9 @@ export default function HabilidadesPage() {
   const openEditMemberSkill = (skillId: string, memberId: string, currentRating: number) => {
     setEditingMemberSkill({ skillId, memberId });
     dispatchMemberSkillForm({ type: "LOAD", payload: { skillId, memberId, rating: String(currentRating) } });
+    const found = members.find((m) => m.id === memberId);
+    setMemberSearch(found ? [found.name, found.last_name].filter(Boolean).join(" ") : "");
+    setMemberDropdownOpen(false);
     setMemberSkillError(null);
     setMemberSkillModalOpen(true);
   };
@@ -449,19 +456,48 @@ export default function HabilidadesPage() {
             </div>
             <div className="modal-field">
               <label htmlFor="ms-member">Membro *</label>
-              <select
-                id="ms-member"
-                value={memberSkillForm.memberId}
-                onChange={(e) => dispatchMemberSkillForm({ type: "SET", field: "memberId", value: e.target.value })}
-                disabled={!!editingMemberSkill}
-              >
-                <option value="">Selecione...</option>
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {[m.name, m.last_name].filter(Boolean).join(" ")}
-                  </option>
-                ))}
-              </select>
+              {editingMemberSkill ? (
+                <input id="ms-member" type="text" value={memberSearch} disabled />
+              ) : (
+                <div className="member-search-wrapper">
+                  <input
+                    id="ms-member"
+                    type="text"
+                    placeholder="Buscar por nome..."
+                    value={memberSearch}
+                    autoComplete="off"
+                    onChange={(e) => {
+                      setMemberSearch(e.target.value);
+                      setMemberDropdownOpen(true);
+                      dispatchMemberSkillForm({ type: "SET", field: "memberId", value: "" });
+                    }}
+                    onFocus={() => setMemberDropdownOpen(true)}
+                    onBlur={() => setTimeout(() => setMemberDropdownOpen(false), 150)}
+                  />
+                  {memberDropdownOpen && (
+                    <ul className="member-search-dropdown">
+                      {members
+                        .filter((m) => {
+                          const full = [m.name, m.last_name].filter(Boolean).join(" ").toLowerCase();
+                          return full.includes(memberSearch.toLowerCase());
+                        })
+                        .map((m) => (
+                          <li
+                            key={m.id}
+                            className="member-search-option"
+                            onMouseDown={() => {
+                              dispatchMemberSkillForm({ type: "SET", field: "memberId", value: m.id });
+                              setMemberSearch([m.name, m.last_name].filter(Boolean).join(" "));
+                              setMemberDropdownOpen(false);
+                            }}
+                          >
+                            {[m.name, m.last_name].filter(Boolean).join(" ")}
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
             <div className="modal-field">
               <label htmlFor="ms-rating">Nota (1–10) *</label>
