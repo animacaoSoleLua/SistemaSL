@@ -57,7 +57,7 @@ const testScenarioUsers = [
 
 export async function resetDatabase(): Promise<void> {
   await prisma.$executeRawUnsafe(
-    'TRUNCATE TABLE "report_feedbacks", "report_media", "reports", "course_enrollments", "courses", "warnings", "suspensions", "password_reset_tokens", "users" RESTART IDENTITY CASCADE'
+    'TRUNCATE TABLE "skills", "report_feedbacks", "report_media", "reports", "course_enrollments", "courses", "warnings", "suspensions", "password_reset_tokens", "users" RESTART IDENTITY CASCADE'
   );
   await prisma.user.createMany({ data: baseUsers });
   await prisma.user.createMany({ data: testScenarioUsers });
