@@ -478,8 +478,8 @@ export default function RelatoriosPage() {
                     const showOtherCarResponsible = transportType === "outro";
                     const hasExtraHours =
                       selectedReport.has_extra_hours === true ||
-                      Boolean(selectedReport.extra_hours_details?.trim());
-                    const showExtraHoursDetails = Boolean(selectedReport.extra_hours_details?.trim());
+                      selectedReport.extra_hours_details != null;
+                    const showExtraHoursDetails = selectedReport.extra_hours_details != null;
 
                     const topicOrder = [null, "Pintura", "Balão", "Animação", "Personagens", "Oficinas"];
                     const topicLabels: Record<string, string> = {
