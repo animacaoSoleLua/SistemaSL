@@ -138,6 +138,7 @@ interface MemberDetails {
   feedbacks?: MemberFeedback[];
   suspension?: MemberSuspension;
   warnings?: MemberWarning[];
+  skills?: { skill_id: string; name: string; description?: string | null; rating: number }[];
 }
 
 export default function UsuariosPage() {
@@ -175,7 +176,7 @@ export default function UsuariosPage() {
   const [cpfActionError, setCpfActionError] = useState<string | null>(null);
   const [photoLightbox, setPhotoLightbox] = useState<{ url: string; name: string } | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [detailsTab, setDetailsTab] = useState<"dados" | "cursos" | "advertencias" | "clientes" | "feedbacks">("dados");
+  const [detailsTab, setDetailsTab] = useState<"dados" | "cursos" | "advertencias" | "clientes" | "feedbacks" | "habilidades">("dados");
   const memberModalTrapRef = useFocusTrap(modalOpen);
   const deleteTrapRef = useFocusTrap(!!deleteTarget);
   const cpfTrapRef = useFocusTrap(cpfModalOpen);
@@ -987,8 +988,8 @@ export default function UsuariosPage() {
 
             {isAdmin && (
               <div className="details-tabs" role="tablist">
-                {(["dados", "feedbacks", "clientes", "cursos", "advertencias"] as const).map((tab) => {
-                  const labels = { dados: "Dados", feedbacks: "Feedbacks", clientes: "Clientes", cursos: "Cursos", advertencias: "Advertências" };
+                {(["dados", "feedbacks", "clientes", "cursos", "advertencias", "habilidades"] as const).map((tab) => {
+                  const labels = { dados: "Dados", feedbacks: "Feedbacks", clientes: "Clientes", cursos: "Cursos", advertencias: "Advertências", habilidades: "Habilidades" };
                   const counts: Record<string, number | null> = {
                     dados: null,
                     feedbacks: detailsLoading ? null : (selectedMemberDetails?.feedbacks?.length ?? 0),
@@ -1211,6 +1212,23 @@ export default function UsuariosPage() {
                             {creatorNameById.get(entry.created_by) ?? "Usuário"}
                           </strong>
                           <span className="member-section-text">{entry.reason}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {isAdmin && detailsTab === "habilidades" && (
+                <div className="details-tab-content">
+                  {!selectedMemberDetails?.skills || selectedMemberDetails.skills.length === 0 ? (
+                    <p className="details-empty">Nenhuma habilidade registrada para este membro.</p>
+                  ) : (
+                    <ul className="details-list">
+                      {selectedMemberDetails.skills.map((s) => (
+                        <li key={s.skill_id} className="details-list-item">
+                          <span className="details-list-label">{s.name}</span>
+                          <span className="details-list-value">Nota: {s.rating}/10</span>
                         </li>
                       ))}
                     </ul>
