@@ -7,6 +7,7 @@ import rateLimit from "@fastify/rate-limit";
 import Fastify, { FastifyInstance } from "fastify";
 import { advertenciasRoutes } from "./advertencias/routes.js";
 import { feedbacksRoutes } from "./feedbacks/routes.js";
+import { habilidadesRoutes } from "./habilidades/routes.js";
 // import { googleRoutes } from "./google/routes.js"; // GOOGLE_CALENDAR_DISABLED
 import { authGuard, requireRole } from "./auth/guard.js";
 import { authRoutes } from "./auth/routes.js";
@@ -174,6 +175,7 @@ export function buildServer(): FastifyInstance {
   app.register(relatoriosRoutes);
   app.register(advertenciasRoutes);
   app.register(feedbacksRoutes);
+  app.register(habilidadesRoutes);
   // app.register(googleRoutes); // GOOGLE_CALENDAR_DISABLED
   app.register(dashboardRoutes);
 
