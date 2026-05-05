@@ -583,3 +583,57 @@ export async function deleteFeedback(id: string) {
 //   return request("/auth/google", { method: "DELETE" });
 // }
 // GOOGLE_CALENDAR_DISABLED_END
+
+// --- Habilidades ---
+
+export async function getSkills() {
+  return request("/habilidades", { method: "GET" });
+}
+
+export async function createSkill(input: { name: string; description?: string }) {
+  return request("/habilidades", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateSkill(
+  id: string,
+  input: { name?: string; description?: string | null }
+) {
+  return request(`/habilidades/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteSkill(id: string) {
+  return request(`/habilidades/${id}`, { method: "DELETE" });
+}
+
+export async function addMemberSkill(
+  skillId: string,
+  input: { member_id: string; rating: number }
+) {
+  return request(`/habilidades/${skillId}/membros`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateMemberSkill(
+  skillId: string,
+  memberId: string,
+  input: { rating: number }
+) {
+  return request(`/habilidades/${skillId}/membros/${memberId}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function removeMemberSkill(skillId: string, memberId: string) {
+  return request(`/habilidades/${skillId}/membros/${memberId}`, {
+    method: "DELETE",
+  });
+}
