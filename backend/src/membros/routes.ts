@@ -24,6 +24,7 @@ import {
   type EnrollmentStatus,
 } from "../cursos/store.js";
 import { listFeedbacksForMember } from "../relatorios/store.js";
+import { listSkillsForMember } from "../habilidades/store.js";
 
 interface MemberQuery {
   search?: string;
@@ -499,6 +500,12 @@ export async function membrosRoutes(app: FastifyInstance) {
               start_date: null,
               end_date: null,
             },
+        skills: (await listSkillsForMember(member.id)).map((s) => ({
+          skill_id: s.skillId,
+          name: s.name,
+          description: s.description,
+          rating: s.rating,
+        })),
       },
     });
   });
