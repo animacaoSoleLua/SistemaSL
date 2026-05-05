@@ -996,6 +996,7 @@ export default function UsuariosPage() {
                     clientes: feedbackCounts ? feedbackCounts.positive + feedbackCounts.negative : null,
                     cursos: detailsLoading ? null : courses.length,
                     advertencias: detailsLoading ? null : warnings.length,
+                    habilidades: detailsLoading ? null : (selectedMemberDetails?.skills?.length ?? 0),
                   };
                   return (
                     <button
@@ -1224,14 +1225,21 @@ export default function UsuariosPage() {
                   {!selectedMemberDetails?.skills || selectedMemberDetails.skills.length === 0 ? (
                     <p className="details-empty">Nenhuma habilidade registrada para este membro.</p>
                   ) : (
-                    <ul className="details-list">
-                      {selectedMemberDetails.skills.map((s) => (
-                        <li key={s.skill_id} className="details-list-item">
-                          <span className="details-list-label">{s.name}</span>
-                          <span className="details-list-value">Nota: {s.rating}/10</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="skills-section">
+                      <ul className="skills-list">
+                        {selectedMemberDetails.skills.map((s) => (
+                          <li key={s.skill_id} className="skill-card">
+                            <div className="skill-card-header">
+                              <span className="skill-name">{s.name}</span>
+                              <span className="skill-rating">{s.rating}<span className="skill-rating-max">/10</span></span>
+                            </div>
+                            <div className="skill-bar-track">
+                              <div className="skill-bar-fill" style={{ width: `${s.rating * 10}%` }} />
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               )}

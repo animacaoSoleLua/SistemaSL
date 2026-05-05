@@ -118,6 +118,11 @@
   justify-items: start;
 }
 
+.media-upload-row .helper {
+  font-size: 12px;
+  font-weight: normal;
+}
+
 .media-upload-file-name {
   word-break: break-word;
 }

@@ -67,7 +67,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
       if (!parsed.success) {
         return reply.status(400).send({
           error: "invalid_request",
-          message: parsed.error.errors[0].message,
+          message: parsed.error.issues[0]?.message ?? "Dados inválidos",
         });
       }
       try {
@@ -98,7 +98,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
       if (!parsed.success) {
         return reply.status(400).send({
           error: "invalid_request",
-          message: parsed.error.errors[0].message,
+          message: parsed.error.issues[0]?.message ?? "Dados inválidos",
         });
       }
       try {
@@ -142,7 +142,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
       if (!parsed.success) {
         return reply.status(400).send({
           error: "invalid_request",
-          message: parsed.error.errors[0].message,
+          message: parsed.error.issues[0]?.message ?? "Dados inválidos",
         });
       }
 
@@ -171,6 +171,12 @@ export async function habilidadesRoutes(app: FastifyInstance) {
             message: "Esse membro já possui essa habilidade",
           });
         }
+        if (prismaErr.code === "P2003") {
+          return reply.status(422).send({
+            error: "invalid_reference",
+            message: "Membro ou habilidade não encontrados no banco de dados",
+          });
+        }
         throw err;
       }
     }
@@ -185,7 +191,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
       if (!parsed.success) {
         return reply.status(400).send({
           error: "invalid_request",
-          message: parsed.error.errors[0].message,
+          message: parsed.error.issues[0]?.message ?? "Dados inválidos",
         });
       }
       const ms = await updateMemberSkill(skillId, memberId, parsed.data.rating);
