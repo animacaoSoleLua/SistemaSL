@@ -83,7 +83,15 @@ jobs:
 
     steps:
       - name: Deploy backend
-        run: curl -f -X POST "${{ secrets.BACKWEBHOOK }}"
+        run: |
+          curl -f -X POST "https://admin.solelua.cloud/api/application.deploy" \
+            -H "Authorization: Bearer ${{ secrets.DOKPLOY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"applicationId":"${{ secrets.BACK_APP_ID }}"}'
 
       - name: Deploy frontend
-        run: curl -f -X POST "${{ secrets.FRONTWEBHOOK }}"
+        run: |
+          curl -f -X POST "https://admin.solelua.cloud/api/application.deploy" \
+            -H "Authorization: Bearer ${{ secrets.DOKPLOY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"applicationId":"${{ secrets.FRONT_APP_ID }}"}'
