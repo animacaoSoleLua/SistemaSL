@@ -28,9 +28,9 @@ export default function LoginPage() {
         try {
           credentialRequestInFlight.current = true;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const credential = await navigator.credentials.get({ password: true } as any);
+          const credential = await navigator.credentials.get({ password: true } as any) as any;
 
-          if (credential && credential instanceof PasswordCredential) {
+          if (credential && credential.password !== undefined) {
             setEmail(credential.id);
             setPassword(credential.password);
           }
