@@ -13,6 +13,9 @@ COPY assets ./assets
 COPY components ./components
 COPY lib ./lib
 
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
 RUN --mount=type=cache,target=/app/.next/cache \
     npm run build
 
