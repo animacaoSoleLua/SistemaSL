@@ -25,6 +25,7 @@ type MemberOption = {
   id: string;
   name: string;
   last_name?: string | null;
+  email?: string | null;
 };
 
 type TeamMemberFeedback = {
@@ -455,7 +456,10 @@ function NovoRelatorioContent() {
       .filter((member) => !selectedMemberIds.has(member.id))
       .filter((member) => {
         if (!search) return true;
-        return normalizeString(formatMemberName(member)).includes(search);
+        return (
+          normalizeString(formatMemberName(member)).includes(search) ||
+          normalizeString(member.email ?? "").includes(search)
+        );
       });
   }, [memberSearch, members, selectedMemberIds]);
 
@@ -911,7 +915,7 @@ function NovoRelatorioContent() {
                 name="memberSearch"
                 className="input"
                 type="text"
-                placeholder="Digite o nome do membro"
+                placeholder="Nome ou email do membro"
                 value={memberSearch}
                 onChange={(event) => setMemberSearch(event.target.value)}
               />
@@ -931,7 +935,10 @@ function NovoRelatorioContent() {
                       className="member-autocomplete-item"
                       onClick={() => handleSelectMember(member)}
                     >
-                      {formatMemberName(member)}
+                      <span>{formatMemberName(member)}</span>
+                      {member.email && (
+                        <small className="helper">{member.email}</small>
+                      )}
                     </button>
                   ))
                 )}
