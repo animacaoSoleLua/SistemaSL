@@ -63,7 +63,8 @@ export default function LoginPage() {
       // Salvar credencial usando Credential Management API
       if ("PasswordCredential" in window && navigator.credentials) {
         try {
-          const credential = new PasswordCredential({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const credential = new (window as any).PasswordCredential({
             id: email,
             password: password,
             name: response.data.user.name,
