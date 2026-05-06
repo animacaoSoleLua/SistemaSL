@@ -724,8 +724,8 @@ export default function CursosPage() {
 
   const filteredCourses = useMemo(() => {
     const term = normalizeString(searchTerm.trim());
-    if (!term) return courses;
-    return courses.filter((course) => normalizeString(course.title).includes(term));
+    const filtered = !term ? courses : courses.filter((course) => normalizeString(course.title).includes(term));
+    return [...filtered].sort((a, b) => new Date(b.course_date).getTime() - new Date(a.course_date).getTime());
   }, [courses, searchTerm]);
 
   const stats = useMemo(() => {

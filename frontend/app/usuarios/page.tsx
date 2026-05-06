@@ -1176,7 +1176,7 @@ export default function UsuariosPage() {
                     <p className="member-section-empty">Nenhum curso registrado.</p>
                   ) : (
                     <ul className="member-section-list">
-                      {courses.map((course) => (
+                      {[...courses].sort((a, b) => new Date(b.course_date).getTime() - new Date(a.course_date).getTime()).map((course) => (
                         <li className="member-section-item" key={course.id}>
                           <div className="member-section-meta">
                             <strong className="member-section-title">{course.title}</strong>

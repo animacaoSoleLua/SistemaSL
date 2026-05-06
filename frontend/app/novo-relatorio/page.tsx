@@ -542,8 +542,20 @@ function NovoRelatorioContent() {
     setSubmitError("");
     setIsSubmitting(true);
 
+    const isoDate = displayToIsoWithShortYear(eventDate);
+    if (isoDate) {
+      const parsedDate = new Date(isoDate + "T00:00:00");
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (parsedDate > today) {
+        setSubmitError("A data do evento não pode ser no futuro.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const reportPayload = {
-      event_date: displayToIsoWithShortYear(eventDate),
+      event_date: isoDate,
       contractor_name: birthdayContractor.trim(),
       title_schedule: titleSchedule.trim(),
       birthday_age: birthdayAge.trim() || undefined,
