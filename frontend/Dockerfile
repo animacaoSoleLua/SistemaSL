@@ -1,9 +1,11 @@
+# syntax=docker/dockerfile:1
 FROM node:20-bullseye-slim
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 COPY next.config.mjs tsconfig.json next-env.d.ts ./
 COPY app ./app
@@ -11,7 +13,8 @@ COPY assets ./assets
 COPY components ./components
 COPY lib ./lib
 
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 ENV NODE_ENV=production
 ENV PORT=3000

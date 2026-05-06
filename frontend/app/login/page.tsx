@@ -27,9 +27,8 @@ export default function LoginPage() {
       if ("PasswordCredential" in window && navigator.credentials) {
         try {
           credentialRequestInFlight.current = true;
-          const credential = await navigator.credentials.get({
-            password: true,
-          });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const credential = await navigator.credentials.get({ password: true } as any);
 
           if (credential && credential instanceof PasswordCredential) {
             setEmail(credential.id);
