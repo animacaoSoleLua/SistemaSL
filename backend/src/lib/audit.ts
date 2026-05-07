@@ -11,7 +11,8 @@ export type AuditAction =
   | "WARNING_UPDATED"
   | "WARNING_DELETED"
   | "PASSWORD_RESET_REQUESTED"
-  | "PASSWORD_RESET_COMPLETED";
+  | "PASSWORD_RESET_COMPLETED"
+  | "MEMBER_SELF_DELETED";
 
 export function auditLog(
   logger: FastifyBaseLogger,
