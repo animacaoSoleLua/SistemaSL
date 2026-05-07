@@ -637,3 +637,14 @@ export async function removeMemberSkill(skillId: string, memberId: string) {
     method: "DELETE",
   });
 }
+
+export async function changePassword(
+  id: string,
+  current_password: string,
+  new_password: string
+) {
+  return request(`/membros/${id}/senha`, {
+    method: "PATCH",
+    body: JSON.stringify({ current_password, new_password }),
+  });
+}
