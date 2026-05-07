@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { changePassword, deleteSelfAccount, getErrorMessage, getMember, updateMember } from "../../../lib/api";
 import { getStoredUser } from "../../../lib/auth";
@@ -31,14 +31,6 @@ export default function ConfiguracoesSeguranca() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (showDeleteModal) {
-      modalRef.current?.focus();
-    }
-  }, [showDeleteModal]);
-
   useEffect(() => {
     const user = getStoredUser();
     if (!user) {
@@ -264,11 +256,9 @@ export default function ConfiguracoesSeguranca() {
       {/* Modal de confirmação */}
       {showDeleteModal && (
         <div
-          ref={modalRef}
-          tabIndex={-1}
           role="dialog"
           aria-modal="true"
-          aria-label="Confirmar exclusão de conta"
+          aria-labelledby="delete-modal-title"
           style={{
             position: "fixed",
             inset: 0,
@@ -297,6 +287,7 @@ export default function ConfiguracoesSeguranca() {
           >
             <div style={{ textAlign: "center", fontSize: "40px", lineHeight: 1 }}>⚠️</div>
             <h2
+              id="delete-modal-title"
               style={{
                 margin: 0,
                 fontSize: "18px",
@@ -340,7 +331,7 @@ export default function ConfiguracoesSeguranca() {
                   borderRadius: "8px",
                   padding: "9px 20px",
                   fontWeight: 600,
-                  cursor: "pointer",
+                  cursor: deleting ? "not-allowed" : "pointer",
                   color: "var(--muted)",
                 }}
               >
@@ -357,7 +348,7 @@ export default function ConfiguracoesSeguranca() {
                   borderRadius: "8px",
                   padding: "9px 20px",
                   fontWeight: 600,
-                  cursor: "pointer",
+                  cursor: deleting || !deletePassword ? "not-allowed" : "pointer",
                   opacity: deleting || !deletePassword ? 0.6 : 1,
                 }}
               >
