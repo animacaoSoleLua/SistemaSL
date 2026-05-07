@@ -74,8 +74,8 @@ const navItems = [
     icon: <FiUsers aria-hidden="true" />
   },
   {
-    label: "Perfil",
-    href: "/perfil",
+    label: "Configurações",
+    href: "/configuracoes",
     roles: ["admin", "animador", "recreador"],
     icon: <FiUser aria-hidden="true" />
   },
@@ -101,8 +101,8 @@ function isActive(pathname: string, href: string) {
   if (href === "/cursos") {
     return pathname.startsWith("/cursos") || pathname.startsWith("/novo-curso");
   }
-  if (href === "/perfil") {
-    return pathname.startsWith("/perfil");
+  if (href === "/configuracoes") {
+    return pathname.startsWith("/configuracoes");
   }
   return pathname.startsWith(href);
 }
