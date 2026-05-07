@@ -13,7 +13,9 @@ import {
   listUsers,
   Role,
   updateUser,
+  updateUserPassword,
 } from "../auth/store.js";
+import { verifyPassword } from "../auth/password.js";
 import {
   getActiveSuspension,
   listWarningsForMember,
@@ -58,6 +60,11 @@ const CreateMemberSchema = z.object({
   phone: z.string().min(1, "Telefone invalido"),
   role: z.enum(["admin", "animador", "recreador"] as const, { message: "Papel invalido" }),
   password: z.string().min(1, "Senha obrigatoria"),
+});
+
+const ChangePasswordSchema = z.object({
+  current_password: z.string().min(1, "Senha atual obrigatoria"),
+  new_password: z.string().min(1, "Nova senha obrigatoria"),
 });
 
 const UpdateMemberSchema = z.object({
@@ -802,6 +809,68 @@ export async function membrosRoutes(app: FastifyInstance) {
         photo_url: null,
       },
     });
+  });
+
+  app.patch("/api/v1/membros/:id/senha", async (request, reply) => {
+    const params = request.params as { id?: string };
+    if (!params.id) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Membro invalido",
+      });
+    }
+
+    if (!request.user) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Token ausente",
+      });
+    }
+
+    if (request.user.id !== params.id) {
+      return reply.status(403).send({
+        error: "forbidden",
+        message: "Acesso negado",
+      });
+    }
+
+    const member = await getUserById(params.id);
+    if (!member) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Membro nao encontrado",
+      });
+    }
+
+    const parsedBody = ChangePasswordSchema.safeParse(request.body);
+    if (!parsedBody.success) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: parsedBody.error.issues[0].message,
+      });
+    }
+
+    const { current_password, new_password } = parsedBody.data;
+
+    const { valid } = verifyPassword(current_password, member.passwordHash);
+    if (!valid) {
+      return reply.status(400).send({
+        error: "invalid_password",
+        message: "Senha atual incorreta",
+      });
+    }
+
+    const passwordError = validatePasswordStrength(new_password);
+    if (passwordError) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: passwordError,
+      });
+    }
+
+    await updateUserPassword(params.id, new_password);
+
+    return reply.status(200).send({ data: { message: "Senha alterada com sucesso" } });
   });
 
   app.delete(

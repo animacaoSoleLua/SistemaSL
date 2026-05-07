@@ -292,4 +292,95 @@ describe("Membros (integration)", () => {
     );
     expect(feedbacks[0].event_date).toBe("2026-03-15");
   });
+
+  async function loginAs(email: string, password: string): Promise<string> {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email, password },
+    });
+    return res.json().data.access_token;
+  }
+
+  describe("PATCH /membros/:id/senha", () => {
+    const member1 = { email: "animador@sol-e-lua.com", password: "animador123" };
+    const member2 = { email: "recreador@sol-e-lua.com", password: "recreador123" };
+
+    it("altera a senha com sucesso quando a senha atual está correta", async () => {
+      const member = await getUserByEmail(member1.email);
+      const token = await loginAs(member1.email, member1.password);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: `/api/v1/membros/${member!.id}/senha`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          current_password: member1.password,
+          new_password: "NovaSenha1",
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+
+      const loginRes = await app.inject({
+        method: "POST",
+        url: "/api/v1/auth/login",
+        payload: { email: member1.email, password: "NovaSenha1" },
+      });
+      expect(loginRes.statusCode).toBe(200);
+    });
+
+    it("retorna 400 quando a senha atual está errada", async () => {
+      const member = await getUserByEmail(member1.email);
+      const token = await loginAs(member1.email, member1.password);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: `/api/v1/membros/${member!.id}/senha`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          current_password: "SenhaErrada1",
+          new_password: "NovaSenha1",
+        },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.json().error).toBe("invalid_password");
+    });
+
+    it("retorna 400 quando a nova senha é fraca", async () => {
+      const member = await getUserByEmail(member1.email);
+      const token = await loginAs(member1.email, member1.password);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: `/api/v1/membros/${member!.id}/senha`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          current_password: member1.password,
+          new_password: "fraca",
+        },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.json().error).toBe("invalid_request");
+    });
+
+    it("retorna 403 quando membro tenta alterar senha de outro membro", async () => {
+      const member2User = await getUserByEmail(member2.email);
+      const token = await loginAs(member1.email, member1.password);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: `/api/v1/membros/${member2User!.id}/senha`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          current_password: member1.password,
+          new_password: "NovaSenha1",
+        },
+      });
+
+      expect(res.statusCode).toBe(403);
+    });
+  });
 });
