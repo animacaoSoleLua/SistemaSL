@@ -873,6 +873,63 @@ export async function membrosRoutes(app: FastifyInstance) {
     return reply.status(200).send({ data: { message: "Senha alterada com sucesso" } });
   });
 
+  app.delete("/api/v1/membros/:id/conta", async (request, reply) => {
+    const params = request.params as { id?: string };
+    if (!params.id) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Membro invalido",
+      });
+    }
+
+    if (!request.user) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Token ausente",
+      });
+    }
+
+    if (request.user.id !== params.id) {
+      return reply.status(403).send({
+        error: "forbidden",
+        message: "Acesso negado",
+      });
+    }
+
+    const member = await getUserById(params.id);
+    if (!member) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Membro nao encontrado",
+      });
+    }
+
+    const body = request.body as { password?: unknown };
+    if (typeof body?.password !== "string" || !body.password) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Senha obrigatoria",
+      });
+    }
+
+    const { valid } = verifyPassword(body.password, member.passwordHash);
+    if (!valid) {
+      return reply.status(400).send({
+        error: "invalid_password",
+        message: "Senha incorreta",
+      });
+    }
+
+    await deleteUser(params.id);
+
+    auditLog(request.log, "MEMBER_SELF_DELETED", request.user.id, {
+      targetId: params.id,
+      ip: request.ip ?? "unknown",
+    });
+
+    return reply.status(204).send();
+  });
+
   app.delete(
     "/api/v1/membros/:id",
     { preHandler: requireRole(["admin"]) },

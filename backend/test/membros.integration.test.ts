@@ -293,6 +293,85 @@ describe("Membros (integration)", () => {
     expect(feedbacks[0].event_date).toBe("2026-03-15");
   });
 
+  it("allows member to delete their own account with correct password", async () => {
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "animador@sol-e-lua.com", password: "animador123" },
+    });
+    const token = login.json().data.access_token;
+    const memberId = login.json().data.user.id;
+
+    const deleteResponse = await app.inject({
+      method: "DELETE",
+      url: `/api/v1/membros/${memberId}/conta`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { password: "animador123" },
+    });
+
+    expect(deleteResponse.statusCode).toBe(204);
+
+    // Conta não existe mais
+    const adminLogin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminToken = adminLogin.json().data.access_token;
+
+    const getResponse = await app.inject({
+      method: "GET",
+      url: `/api/v1/membros/${memberId}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(getResponse.statusCode).toBe(404);
+  });
+
+  it("rejects self-deletion with wrong password", async () => {
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "animador@sol-e-lua.com", password: "animador123" },
+    });
+    const token = login.json().data.access_token;
+    const memberId = login.json().data.user.id;
+
+    const deleteResponse = await app.inject({
+      method: "DELETE",
+      url: `/api/v1/membros/${memberId}/conta`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { password: "senha-errada" },
+    });
+
+    expect(deleteResponse.statusCode).toBe(400);
+    expect(deleteResponse.json().error).toBe("invalid_password");
+  });
+
+  it("forbids member from deleting another account via self-delete route", async () => {
+    const adminLogin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "arthurssousa2004@gmail.com", password: "admin123" },
+    });
+    const adminToken = adminLogin.json().data.access_token;
+
+    const animadorLogin = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "animador@sol-e-lua.com", password: "animador123" },
+    });
+    const animadorId = animadorLogin.json().data.user.id;
+
+    const deleteResponse = await app.inject({
+      method: "DELETE",
+      url: `/api/v1/membros/${animadorId}/conta`,
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { password: "admin123" },
+    });
+
+    expect(deleteResponse.statusCode).toBe(403);
+  });
+
   async function loginAs(email: string, password: string): Promise<string> {
     const res = await app.inject({
       method: "POST",
