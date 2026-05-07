@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { changePassword, deleteSelfAccount, getErrorMessage, getMember, updateMember } from "../../../lib/api";
 import { getStoredUser } from "../../../lib/auth";
@@ -31,6 +31,13 @@ export default function ConfiguracoesSeguranca() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showDeleteModal) {
+      modalRef.current?.focus();
+    }
+  }, [showDeleteModal]);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -176,7 +183,7 @@ export default function ConfiguracoesSeguranca() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 autoComplete="current-password"
-                placeholder="********"
+                placeholder="••••••••"
               />
             </label>
             <label className="field full" htmlFor="newPassword">
@@ -188,7 +195,7 @@ export default function ConfiguracoesSeguranca() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
-                placeholder="********"
+                placeholder="••••••••"
               />
             </label>
             <label className="field full" htmlFor="confirmPassword">
@@ -200,7 +207,7 @@ export default function ConfiguracoesSeguranca() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
-                placeholder="********"
+                placeholder="••••••••"
               />
             </label>
           </div>
@@ -257,6 +264,8 @@ export default function ConfiguracoesSeguranca() {
       {/* Modal de confirmação */}
       {showDeleteModal && (
         <div
+          ref={modalRef}
+          tabIndex={-1}
           role="dialog"
           aria-modal="true"
           aria-label="Confirmar exclusão de conta"
