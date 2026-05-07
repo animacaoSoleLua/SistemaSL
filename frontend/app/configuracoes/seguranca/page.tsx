@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { changePassword, deleteSelfAccount, getErrorMessage, getMember, updateMember } from "../../../lib/api";
 import { getStoredUser } from "../../../lib/auth";
@@ -175,7 +176,7 @@ export default function ConfiguracoesSeguranca() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 autoComplete="current-password"
-                placeholder="••••••••"
+                placeholder="********"
               />
             </label>
             <label className="field full" htmlFor="newPassword">
@@ -187,7 +188,7 @@ export default function ConfiguracoesSeguranca() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
-                placeholder="••••••••"
+                placeholder="********"
               />
             </label>
             <label className="field full" htmlFor="confirmPassword">
@@ -199,7 +200,7 @@ export default function ConfiguracoesSeguranca() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
-                placeholder="••••••••"
+                placeholder="********"
               />
             </label>
           </div>
@@ -254,7 +255,7 @@ export default function ConfiguracoesSeguranca() {
       </div>
 
       {/* Modal de confirmação */}
-      {showDeleteModal && (
+      {showDeleteModal && createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -285,7 +286,6 @@ export default function ConfiguracoesSeguranca() {
               gap: "16px",
             }}
           >
-            <div style={{ textAlign: "center", fontSize: "40px", lineHeight: 1 }}>⚠️</div>
             <h2
               id="delete-modal-title"
               style={{
@@ -356,7 +356,8 @@ export default function ConfiguracoesSeguranca() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

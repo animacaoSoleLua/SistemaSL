@@ -310,6 +310,15 @@
   gap: 14px;
 }
 
+/* ── Lista com scroll limitado ── */
+.report-panel .report-list {
+  max-height: 1350px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(111, 76, 255, 0.25) transparent;
+  padding-right: 4px;
+}
+
 /* ── Filtros de busca e data ── */
 .report-filters {
   display: flex;

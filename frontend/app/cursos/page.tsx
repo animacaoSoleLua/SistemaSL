@@ -217,7 +217,7 @@ export default function CursosPage() {
         if (!editingCourseId && !instructorId && list.length > 0) {
           setInstructorId(list[0].id);
         }
-        if (importModalOpen && !importInstructorId && list.length > 0) {
+        if (importModalOpen && !importEditingId && !importInstructorId && list.length > 0) {
           setImportInstructorId(list[0].id);
         }
       })

@@ -69,7 +69,7 @@ export default function ConfiguracoesCursos() {
                 <span className="warning-count">{courses.length} curso(s)</span>
               </div>
             </div>
-            <ul className="warning-items">
+            <ul className="warning-items" style={{ maxHeight: "500px", overflowY: "auto" }}>
               {courses.map((course) => (
                 <li key={course.id} className="warning-item">
                   <span className="warning-date">{formatDateBR(course.course_date)}</span>

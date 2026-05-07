@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     environment: "node",
     setupFiles: ["./test/setup.ts"],
+    env: {
+      NODE_ENV: "test",
+    },
     hookTimeout: 30000,
     coverage: {
       provider: "v8",

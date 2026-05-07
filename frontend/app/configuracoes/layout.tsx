@@ -7,7 +7,7 @@ import { getDefaultRoute, getStoredUser, isRoleAllowed } from "../../lib/auth";
 import "./layout.css";
 
 const tabs = [
-  { label: "Perfil", href: "/configuracoes/perfil" },
+  { label: "Dados", href: "/configuracoes/perfil" },
   { label: "Segurança", href: "/configuracoes/seguranca" },
   { label: "Cursos", href: "/configuracoes/cursos" },
   { label: "Advertências", href: "/configuracoes/advertencias" },
@@ -37,7 +37,7 @@ export default function ConfiguracoesLayout({
       <section className="shell reveal">
         <header className="page-header">
           <div>
-            <h1 className="hero-title">Configurações</h1>
+            <h1 className="hero-title">Perfil</h1>
           </div>
         </header>
         <nav className="settings-tabs" aria-label="Seções de configurações">

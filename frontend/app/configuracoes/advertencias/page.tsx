@@ -94,7 +94,7 @@ export default function ConfiguracoesAdvertencias() {
                   <span className="warning-count">{data.warnings.length} advertência(s)</span>
                 </div>
               </div>
-              <ul className="warning-items">
+              <ul className="warning-items" style={{ maxHeight: "500px", overflowY: "auto" }}>
                 {data.warnings.map((warning) => (
                   <li key={warning.id} className="warning-item">
                     <span className="warning-date">{formatDateBR(warning.warning_date)}</span>

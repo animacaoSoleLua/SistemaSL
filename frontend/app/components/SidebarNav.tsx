@@ -74,7 +74,7 @@ const navItems = [
     icon: <FiUsers aria-hidden="true" />
   },
   {
-    label: "Configurações",
+    label: "Perfil",
     href: "/configuracoes",
     roles: ["admin", "animador", "recreador"],
     icon: <FiUser aria-hidden="true" />

@@ -1,5 +1,19 @@
 import "dotenv/config";
 
+// Block all Resend API calls during tests. We set globalThis.fetch directly
+// (not vi.stubGlobal) so that vi.unstubAllGlobals() in email.unit.test.ts
+// restores back to this interceptor rather than the original Node fetch.
+const _realFetch = globalThis.fetch;
+globalThis.fetch = async function (url: RequestInfo | URL, init?: RequestInit) {
+  if (typeof url === "string" && url.startsWith("https://api.resend.com")) {
+    return new Response(JSON.stringify({ id: "blocked-by-test-setup" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return _realFetch.call(this, url, init);
+};
+
 if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL =
     "postgres://slr:admin@localhost:5453/slr";

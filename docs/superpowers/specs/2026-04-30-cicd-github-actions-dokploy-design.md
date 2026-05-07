@@ -26,7 +26,7 @@ push na main
 - **Frontend**: Next.js 14 / Jest
 - **VPS**: Hostinger com Dokploy
   - Backend: build via Dockerfile
-  - Frontend: build via Nixpacks
+  - Frontend: build via Dockerfile
 - **CI**: GitHub Actions
 - **Registry**: nenhum — Dokploy builda direto do git
 
