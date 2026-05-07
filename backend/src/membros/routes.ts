@@ -920,7 +920,13 @@ export async function membrosRoutes(app: FastifyInstance) {
       });
     }
 
-    await deleteUser(params.id);
+    const removed = await deleteUser(params.id);
+    if (!removed) {
+      return reply.status(500).send({
+        error: "internal_error",
+        message: "Erro ao excluir conta",
+      });
+    }
 
     auditLog(request.log, "MEMBER_SELF_DELETED", request.user.id, {
       targetId: params.id,
