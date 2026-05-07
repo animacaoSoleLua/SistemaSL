@@ -338,6 +338,13 @@ export async function deleteMember(id: string) {
   return request(`/membros/${id}`, { method: 'DELETE' });
 }
 
+export async function deleteSelfAccount(id: string, password: string) {
+  return request(`/membros/${id}/conta`, {
+    method: "DELETE",
+    body: JSON.stringify({ password }),
+  });
+}
+
 export async function login(email: string, password: string) {
   return request("/auth/login", {
     method: "POST",
