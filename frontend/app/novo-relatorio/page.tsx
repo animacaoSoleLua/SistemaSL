@@ -6,6 +6,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDefaultRoute, getStoredUser, isRoleAllowed } from "../../lib/auth";
+import { useToast } from "../context/ToastContext";
 import {
   createReport,
   getMembers,
@@ -328,7 +329,7 @@ function NovoRelatorioContent() {
   const [workshopsFiles, setWorkshopsFiles] = useState<File[]>([]);
   const [existingWorkshopsMedia, setExistingWorkshopsMedia] = useState<ReportMedia[]>([]);
 
-  const [submitError, setSubmitError] = useState("");
+  const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
 
@@ -348,7 +349,6 @@ function NovoRelatorioContent() {
 
     let mounted = true;
     setLoadingReport(true);
-    setSubmitError("");
 
     getReportById(reportIdToEdit)
       .then((response) => {
@@ -405,10 +405,11 @@ function NovoRelatorioContent() {
       })
       .catch((error) => {
         if (!mounted) return;
-        setSubmitError(
+        showToast(
           error instanceof Error
             ? error.message
-            : "Não foi possível carregar o relatório para edição."
+            : "Não foi possível carregar o relatório para edição.",
+          "error"
         );
       })
       .finally(() => {
@@ -505,19 +506,19 @@ function NovoRelatorioContent() {
     for (const file of fileArray) {
       const error = getMediaValidationError(file);
       if (error) {
-        setSubmitError(error);
+        showToast(error, "error");
         return;
       }
     }
 
     const nextFiles = addFilesWithoutDuplicates(currentFiles, fileArray);
     if (nextFiles.length > MAX_EVENT_PHOTOS_PER_TOPIC) {
-      setSubmitError(
-        `${topicName}: o máximo permitido é ${MAX_EVENT_PHOTOS_PER_TOPIC} imagens por tópico.`
+      showToast(
+        `${topicName}: o máximo permitido é ${MAX_EVENT_PHOTOS_PER_TOPIC} imagens por tópico.`,
+        "error"
       );
       return;
     }
-    setSubmitError("");
     setFiles(nextFiles);
   };
 
@@ -528,18 +529,16 @@ function NovoRelatorioContent() {
     for (const file of fileArray) {
       const error = getMediaValidationError(file);
       if (error) {
-        setSubmitError(error);
+        showToast(error, "error");
         return;
       }
     }
 
-    setSubmitError("");
     setDamageImages((prev) => addFilesWithoutDuplicates(prev, fileArray));
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitError("");
     setIsSubmitting(true);
 
     const isoDate = displayToIsoWithShortYear(eventDate);
@@ -548,7 +547,7 @@ function NovoRelatorioContent() {
       const today = new Date();
       today.setHours(23, 59, 59, 999);
       if (parsedDate > today) {
-        setSubmitError("A data do evento não pode ser no futuro.");
+        showToast("A data do evento não pode ser no futuro.", "error");
         setIsSubmitting(false);
         return;
       }
@@ -611,8 +610,9 @@ function NovoRelatorioContent() {
     );
 
     if (topicOverLimit) {
-      setSubmitError(
-        `${topicOverLimit.topic}: o máximo permitido é ${MAX_EVENT_PHOTOS_PER_TOPIC} imagens por tópico.`
+      showToast(
+        `${topicOverLimit.topic}: o máximo permitido é ${MAX_EVENT_PHOTOS_PER_TOPIC} imagens por tópico.`,
+        "error"
       );
       setIsSubmitting(false);
       return;
@@ -635,8 +635,9 @@ function NovoRelatorioContent() {
 
     if (invalidFiles.length > 0) {
       const invalidNames = invalidFiles.map(({ file }) => file.name).join(", ");
-      setSubmitError(
-        `Alguns arquivos nao sao imagem/video: ${invalidNames}. Remova esses arquivos e tente novamente.`
+      showToast(
+        `Alguns arquivos nao sao imagem/video: ${invalidNames}. Remova esses arquivos e tente novamente.`,
+        "error"
       );
       setIsSubmitting(false);
       return;
@@ -665,8 +666,9 @@ function NovoRelatorioContent() {
 
       router.push("/relatorios");
     } catch (error) {
-      setSubmitError(
-        error instanceof Error ? error.message : "Não foi possível salvar o relatório."
+      showToast(
+        error instanceof Error ? error.message : "Não foi possível salvar o relatório.",
+        "error"
       );
     } finally {
       setIsSubmitting(false);
@@ -1189,7 +1191,6 @@ function NovoRelatorioContent() {
           <div className="form-actions">
             <div>
               <p className="helper">Revise as informações antes de salvar.</p>
-              {submitError ? <p className="text-red-500">{submitError}</p> : null}
             </div>
             <div className="form-buttons">
               <Link className="button secondary" href="/relatorios">
