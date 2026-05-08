@@ -15,6 +15,7 @@ import {
   resolveApiAssetUrl,
 } from "../../lib/api";
 import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { useToast } from "../context/ToastContext";
 import { displayToIso, formatDateInput } from "../../lib/dateValidators";
 
 interface FeedbackMember {
@@ -132,9 +133,9 @@ export default function FeedbacksPage() {
   const [filterType, setFilterType] = useState<"" | "positive" | "negative">("");
   const [filterSearch, setFilterSearch] = useState("");
 
+  const { showToast } = useToast();
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
   const [createForm, dispatchCreate] = useReducer(createFormReducer, createFormInitial);
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -202,22 +203,21 @@ export default function FeedbacksPage() {
     if (saving) return;
 
     if (!createForm.type) {
-      setCreateError("Selecione o tipo do feedback (positivo ou negativo).");
+      showToast("Selecione o tipo do feedback (positivo ou negativo).", "error");
       return;
     }
     if (createForm.selectedMembers.length === 0) {
-      setCreateError("Selecione pelo menos um membro.");
+      showToast("Selecione pelo menos um membro.", "error");
       return;
     }
     if (createForm.inputMode === "audio") {
-      if (!createForm.audioFile) { setCreateError("Selecione um arquivo de áudio."); return; }
+      if (!createForm.audioFile) { showToast("Selecione um arquivo de áudio.", "error"); return; }
     } else {
-      if (!createForm.text.trim()) { setCreateError("Informe o texto do feedback."); return; }
-      if (createForm.text.trim().length < 3) { setCreateError("Texto muito curto (mínimo 3 caracteres)."); return; }
+      if (!createForm.text.trim()) { showToast("Informe o texto do feedback.", "error"); return; }
+      if (createForm.text.trim().length < 3) { showToast("Texto muito curto (mínimo 3 caracteres).", "error"); return; }
     }
 
     setSaving(true);
-    setCreateError(null);
 
     try {
       const memberIds = createForm.selectedMembers.map((m) => m.id);
@@ -243,7 +243,7 @@ export default function FeedbacksPage() {
       setCreating(false);
       await loadFeedbacks();
     } catch (err) {
-      setCreateError(getErrorMessage(err, "Erro ao salvar feedback."));
+      showToast(getErrorMessage(err, "Erro ao salvar feedback."), "error");
     } finally {
       setSaving(false);
     }
@@ -266,7 +266,6 @@ export default function FeedbacksPage() {
 
   function openCreate() {
     dispatchCreate({ type: "RESET" });
-    setCreateError(null);
     setCreating(true);
   }
 
@@ -274,7 +273,6 @@ export default function FeedbacksPage() {
     if (saving) return;
     setCreating(false);
     dispatchCreate({ type: "RESET" });
-    setCreateError(null);
   }
 
 
@@ -419,11 +417,6 @@ export default function FeedbacksPage() {
       {/* Modal: Novo Feedback */}
       <Modal isOpen={creating} onClose={closeCreate} title="Novo Feedback">
         <form onSubmit={handleCreate} noValidate className="modal-body">
-          {createError && (
-            <div className="feedback-modal-error alert-card error" role="alert">
-              <p>{createError}</p>
-            </div>
-          )}
 
           {/* Tipo */}
           <fieldset className="feedback-type-fieldset">
