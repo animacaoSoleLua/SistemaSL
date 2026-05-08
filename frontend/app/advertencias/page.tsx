@@ -14,6 +14,7 @@ import {
   updateWarning,
 } from "../../lib/api";
 import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { useToast } from "../context/ToastContext";
 import { normalizeString } from "../../lib/validators";
 import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
 
@@ -106,8 +107,7 @@ export default function WarningsPage() {
   const { memberId: newMemberId, reason: newReason, date: newDate, memberSearch } = createForm;
   const [editForm, dispatchEdit] = useReducer(editFormReducer, editFormInitial);
   const { reason: editReason, date: editDate } = editForm;
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const { showToast } = useToast();
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [warningToDelete, setWarningToDelete] = useState<Warning | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -196,7 +196,6 @@ export default function WarningsPage() {
     setEditingWarning(warning);
     dispatchEdit({ type: "SET_FIELD", field: "reason", value: warning.reason });
     dispatchEdit({ type: "SET_FIELD", field: "date", value: isoToDisplay(warning.warning_date) });
-    setActionError(null);
   };
 
   const closeEditModal = () => {
@@ -206,7 +205,6 @@ export default function WarningsPage() {
 
   const openCreateModal = () => {
     dispatchCreate({ type: "RESET" });
-    setCreateError(null);
     setNotice(null);
     setCreatingWarning(true);
   };
@@ -214,7 +212,6 @@ export default function WarningsPage() {
   const closeCreateModal = () => {
     setCreatingWarning(false);
     dispatchCreate({ type: "RESET" });
-    setCreateError(null);
   };
 
   const hideNotice = () => {
@@ -227,19 +224,18 @@ export default function WarningsPage() {
     if (!editingWarning) return;
     const trimmedReason = editReason.trim();
     if (!trimmedReason || !editDate) {
-      setActionError("Preencha a descrição e a data.");
+      showToast("Preencha a descrição e a data.", "error");
       return;
     }
     if (trimmedReason.length < 5) {
-      setActionError("A descrição deve ter ao menos 5 caracteres.");
+      showToast("A descrição deve ter ao menos 5 caracteres.", "error");
       return;
     }
     if (displayToIso(editDate) > todayDate) {
-      setActionError("A data da advertência não pode ser no futuro.");
+      showToast("A data da advertência não pode ser no futuro.", "error");
       return;
     }
     setActionLoadingId(editingWarning.id);
-    setActionError(null);
     try {
       const response = await updateWarning(editingWarning.id, {
         reason: trimmedReason,
@@ -255,7 +251,7 @@ export default function WarningsPage() {
       );
       closeEditModal();
     } catch (err: unknown) {
-      setActionError(getErrorMessage(err, "Erro ao atualizar advertência."));
+      showToast(getErrorMessage(err, "Erro ao atualizar advertência."), "error");
     } finally {
       setActionLoadingId(null);
     }
@@ -270,12 +266,11 @@ export default function WarningsPage() {
     const warning = warningToDelete;
     setWarningToDelete(null);
     setActionLoadingId(warning.id);
-    setActionError(null);
     try {
       await deleteWarning(warning.id);
       setWarnings((prev) => prev.filter((item) => item.id !== warning.id));
     } catch (err: unknown) {
-      setActionError(getErrorMessage(err, "Erro ao excluir advertência."));
+      showToast(getErrorMessage(err, "Erro ao excluir advertência."), "error");
     } finally {
       setActionLoadingId(null);
     }
@@ -284,18 +279,17 @@ export default function WarningsPage() {
   const handleCreateWarning = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!newMemberId || !newReason.trim() || !newDate) {
-      setCreateError("Preencha membro, descrição e data.");
+      showToast("Preencha membro, descrição e data.", "error");
       return;
     }
     if (newReason.trim().length < 5) {
-      setCreateError("A descrição deve ter ao menos 5 caracteres.");
+      showToast("A descrição deve ter ao menos 5 caracteres.", "error");
       return;
     }
     if (displayToIso(newDate) > todayDate) {
-      setCreateError("A data da advertência não pode ser no futuro.");
+      showToast("A data da advertência não pode ser no futuro.", "error");
       return;
     }
-    setCreateError(null);
     setActionLoadingId("new");
     try {
       const createResponse = await createWarning({
@@ -321,7 +315,7 @@ export default function WarningsPage() {
         setNoticeVisible(false);
       }
     } catch (err: unknown) {
-      setCreateError(getErrorMessage(err, "Erro ao salvar advertência."));
+      showToast(getErrorMessage(err, "Erro ao salvar advertência."), "error");
     } finally {
       setActionLoadingId(null);
     }
@@ -340,13 +334,11 @@ export default function WarningsPage() {
     dispatchCreate({ type: "SET_FIELD", field: "memberSearch", value });
     dispatchCreate({ type: "SET_FIELD", field: "memberId", value: "" });
     setActiveMemberIndex(-1);
-    setCreateError(null);
   };
 
   const handleSelectMember = (member: MemberSummary) => {
     dispatchCreate({ type: "SET_FIELD", field: "memberId", value: member.id });
     dispatchCreate({ type: "SET_FIELD", field: "memberSearch", value: member.name });
-    setCreateError(null);
   };
 
   useEffect(() => {
@@ -406,11 +398,6 @@ export default function WarningsPage() {
               />
             </label>
           </div>
-          {actionError && !editingWarning && (
-            <div className="empty-state">
-              <p className="text-red-500">{actionError}</p>
-            </div>
-          )}
           {notice && (
             <div
               ref={noticeRef}
@@ -573,11 +560,6 @@ export default function WarningsPage() {
                 {actionLoadingId === editingWarning?.id ? "Salvando..." : "Salvar"}
               </button>
             </div>
-            {actionError && (
-              <p className="text-red-500" role="alert" aria-live="polite">
-                {actionError}
-              </p>
-            )}
           </div>
         </form>
       </Modal>
@@ -717,11 +699,6 @@ export default function WarningsPage() {
               />
             </label>
           </div>
-          {createError && (
-            <p className="text-red-500" role="alert" aria-live="polite">
-              {createError}
-            </p>
-          )}
           <div className="modal-footer">
             <button
               className="button secondary"
