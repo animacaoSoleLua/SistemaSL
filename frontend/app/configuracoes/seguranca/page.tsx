@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { changePassword, deleteSelfAccount, getErrorMessage, getMember, updateMember } from "../../../lib/api";
 import { getStoredUser } from "../../../lib/auth";
+import { useToast } from "../../context/ToastContext";
 
 interface MemberBasic {
   id: string;
@@ -13,20 +14,17 @@ interface MemberBasic {
 
 export default function ConfiguracoesSeguranca() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [member, setMember] = useState<MemberBasic | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [newEmail, setNewEmail] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
@@ -56,23 +54,21 @@ export default function ConfiguracoesSeguranca() {
     if (!member) return;
     const trimmed = newEmail.trim();
     if (!trimmed) {
-      setEmailError("Informe o novo e-mail.");
+      showToast("Informe o novo e-mail.", "error");
       return;
     }
     if (trimmed === member.email) {
-      setEmailError("O novo e-mail é igual ao atual.");
+      showToast("O novo e-mail é igual ao atual.", "error");
       return;
     }
     setSavingEmail(true);
-    setEmailError(null);
-    setEmailSuccess(null);
     try {
       await updateMember(member.id, { email: trimmed });
       setMember((cur) => (cur ? { ...cur, email: trimmed } : cur));
       setNewEmail("");
-      setEmailSuccess("E-mail atualizado com sucesso.");
+      showToast("E-mail atualizado com sucesso.", "success");
     } catch (err: unknown) {
-      setEmailError(getErrorMessage(err, "Erro ao atualizar e-mail."));
+      showToast(getErrorMessage(err, "Erro ao atualizar e-mail."), "error");
     } finally {
       setSavingEmail(false);
     }
@@ -82,24 +78,22 @@ export default function ConfiguracoesSeguranca() {
     e.preventDefault();
     if (!member) return;
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError("Preencha todos os campos.");
+      showToast("Preencha todos os campos.", "error");
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError("A nova senha e a confirmação não coincidem.");
+      showToast("A nova senha e a confirmação não coincidem.", "error");
       return;
     }
     setSavingPassword(true);
-    setPasswordError(null);
-    setPasswordSuccess(null);
     try {
       await changePassword(member.id, currentPassword, newPassword);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordSuccess("Senha alterada com sucesso.");
+      showToast("Senha alterada com sucesso.", "success");
     } catch (err: unknown) {
-      setPasswordError(getErrorMessage(err, "Erro ao alterar senha."));
+      showToast(getErrorMessage(err, "Erro ao alterar senha."), "error");
     } finally {
       setSavingPassword(false);
     }
@@ -155,8 +149,6 @@ export default function ConfiguracoesSeguranca() {
               </button>
             </div>
           </div>
-          {emailError && <p className="text-red-500" role="alert" aria-live="polite">{emailError}</p>}
-          {emailSuccess && <p className="text-green-600" role="status" aria-live="polite">{emailSuccess}</p>}
         </article>
       </form>
 
@@ -215,8 +207,6 @@ export default function ConfiguracoesSeguranca() {
               </button>
             </div>
           </div>
-          {passwordError && <p className="text-red-500" role="alert" aria-live="polite">{passwordError}</p>}
-          {passwordSuccess && <p className="text-green-600" role="status" aria-live="polite">{passwordSuccess}</p>}
         </article>
       </form>
 
