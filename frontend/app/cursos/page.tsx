@@ -28,6 +28,7 @@ import {
   type StoredUser,
 } from "../../lib/auth";
 import { useFocusTrap } from "../../lib/useFocusTrap";
+import { useToast } from "../context/ToastContext";
 import { normalizeString } from "../../lib/validators";
 import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
 
@@ -66,6 +67,7 @@ export default function CursosPage() {
   const deleteModalDescriptionId = useId();
   const unenrollModalTitleId = useId();
   const unenrollModalDescriptionId = useId();
+  const { showToast } = useToast();
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -112,7 +114,6 @@ export default function CursosPage() {
   const [members, setMembers] = useState<Array<{ id: string; name: string; last_name?: string | null }>>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
   const [notice, setNotice] = useState<{
     type: "success" | "error" | "info";
     message: string;
@@ -143,7 +144,6 @@ export default function CursosPage() {
   const importModalTitleId = useId();
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importSaving, setImportSaving] = useState(false);
-  const [importFormError, setImportFormError] = useState<string | null>(null);
   const [importTitle, setImportTitle] = useState("");
   const [importDescription, setImportDescription] = useState("");
   const [importDate, setImportDate] = useState("");
@@ -349,7 +349,6 @@ export default function CursosPage() {
     setCapacity("");
     setUnlimitedVagas(false);
     setInstructorId(currentUser?.id ?? "");
-    setFormError(null);
   };
 
   const openModal = () => {
@@ -358,7 +357,6 @@ export default function CursosPage() {
   };
 
   const openEditModal = async (courseId: string) => {
-    setFormError(null);
     setEditingLoading(true);
     setEditingCourseId(courseId);
     setModalOpen(true);
@@ -481,7 +479,6 @@ export default function CursosPage() {
   const closeModal = () => {
     setModalOpen(false);
     setSaving(false);
-    setFormError(null);
     setEditingCourseId(null);
   };
 
@@ -537,7 +534,6 @@ export default function CursosPage() {
     setImportInstructorId(members[0]?.id ?? "");
     setImportSearch("");
     setImportParticipants([]);
-    setImportFormError(null);
     setImportEditingId(null);
     setImportEditingLoading(false);
   }
@@ -546,7 +542,6 @@ export default function CursosPage() {
     setImportEditingId(courseId);
     setImportEditingLoading(true);
     setImportModalOpen(true);
-    setImportFormError(null);
     try {
       const response = await getCourse(courseId);
       const data = response.data as CourseDetails;
@@ -580,18 +575,17 @@ export default function CursosPage() {
 
   async function handleImportSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setImportFormError(null);
 
     if (!importTitle.trim()) {
-      setImportFormError("Título é obrigatório");
+      showToast("Título é obrigatório", "error");
       return;
     }
     if (!importDate || !importTime) {
-      setImportFormError("Data e hora são obrigatórias");
+      showToast("Data e hora são obrigatórias", "error");
       return;
     }
     if (!importInstructorId) {
-      setImportFormError("Instrutor é obrigatório");
+      showToast("Instrutor é obrigatório", "error");
       return;
     }
 
@@ -630,7 +624,7 @@ export default function CursosPage() {
       }
       getCourses({ status: statusFilter }).then((data) => setCourses(data.data));
     } catch (err) {
-      setImportFormError(getErrorMessage(err));
+      showToast(getErrorMessage(err), "error");
     } finally {
       setImportSaving(false);
     }
@@ -640,13 +634,12 @@ export default function CursosPage() {
     event.preventDefault();
     if (saving) return;
     setSaving(true);
-    setFormError(null);
 
     let parsedCapacity: number | undefined;
     if (!unlimitedVagas) {
       const n = Number(capacity);
       if (!Number.isInteger(n) || n <= 0) {
-        setFormError("Informe um número válido de vagas.");
+        showToast("Informe um número válido de vagas.", "error");
         setSaving(false);
         return;
       }
@@ -654,13 +647,13 @@ export default function CursosPage() {
     }
 
     if (!courseDate || !courseTime) {
-      setFormError("Informe a data e a hora do curso.");
+      showToast("Informe a data e a hora do curso.", "error");
       setSaving(false);
       return;
     }
 
     if (!instructorId) {
-      setFormError("Selecione o instrutor do curso.");
+      showToast("Selecione o instrutor do curso.", "error");
       setSaving(false);
       return;
     }
@@ -691,7 +684,7 @@ export default function CursosPage() {
       const data = await getCourses({ status: statusFilter });
       setCourses(data.data);
     } catch (err: unknown) {
-      setFormError(getErrorMessage(err, "Erro ao salvar curso."));
+      showToast(getErrorMessage(err, "Erro ao salvar curso."), "error");
     } finally {
       setSaving(false);
     }
@@ -1605,11 +1598,6 @@ export default function CursosPage() {
                   />
                 </label>
               </div>
-              {formError && (
-                <p className="text-red-500" role="alert" aria-live="polite">
-                  {formError}
-                </p>
-              )}
               <div className="modal-footer">
                 <button className="button secondary" type="button" onClick={closeModal}>
                   Cancelar
@@ -1850,11 +1838,6 @@ export default function CursosPage() {
                   </div>
                 )}
 
-                {importFormError && (
-                  <p className="form-error" role="alert">
-                    {importFormError}
-                  </p>
-                )}
               </form>
               )}
             </div>
