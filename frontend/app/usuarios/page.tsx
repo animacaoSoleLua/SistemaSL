@@ -29,6 +29,7 @@ import { getStoredUser, roleLabels, type Role, type StoredUser } from "../../lib
 import { useFocusTrap } from "../../lib/useFocusTrap";
 import { isStrongPassword, isValidCPF, normalizeString } from "../../lib/validators";
 import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
+import { useToast } from "../context/ToastContext";
 
 interface MemberFormState {
   name: string;
@@ -154,8 +155,8 @@ export default function UsuariosPage() {
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Member | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -173,7 +174,6 @@ export default function UsuariosPage() {
   const [cpfSearchTerm, setCpfSearchTerm] = useState("");
   const [cpfSelectedMembers, setCpfSelectedMembers] = useState<Member[]>([]);
   const [cpfGenerating, setCpfGenerating] = useState(false);
-  const [cpfActionError, setCpfActionError] = useState<string | null>(null);
   const [photoLightbox, setPhotoLightbox] = useState<{ url: string; name: string } | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [detailsTab, setDetailsTab] = useState<"dados" | "cursos" | "advertencias" | "clientes" | "feedbacks" | "habilidades">("dados");
@@ -275,7 +275,6 @@ export default function UsuariosPage() {
     setModalMode("create");
     dispatchForm({ type: "RESET" });
     setEditingId(null);
-    setActionError(null);
     setModalOpen(true);
   };
 
@@ -296,7 +295,6 @@ export default function UsuariosPage() {
       },
     });
     setEditingId(member.id);
-    setActionError(null);
     setModalOpen(true);
   };
 
@@ -315,17 +313,16 @@ export default function UsuariosPage() {
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
-    setActionError(null);
 
     if (!isValidCPF(formData.cpf)) {
-      setActionError("CPF inválido.");
+      showToast("CPF inválido.", "error");
       return;
     }
 
     if (modalMode === "create") {
       const pwdError = isStrongPassword(formData.password);
       if (pwdError) {
-        setActionError(pwdError);
+        showToast(pwdError, "error");
         return;
       }
     }
@@ -360,7 +357,7 @@ export default function UsuariosPage() {
       await loadMembers();
       setModalOpen(false);
     } catch (err: unknown) {
-      setActionError(getErrorMessage(err, "Não foi possível salvar o membro."));
+      showToast(getErrorMessage(err, "Não foi possível salvar o membro."), "error");
     } finally {
       setSaving(false);
     }
@@ -368,10 +365,9 @@ export default function UsuariosPage() {
 
   const handleDelete = (member: Member) => {
     if (currentUser?.id === member.id) {
-      setActionError("Você não pode se excluir.");
+      showToast("Você não pode se excluir.", "error");
       return;
     }
-    setActionError(null);
     setDeleteTarget(member);
   };
 
@@ -383,7 +379,6 @@ export default function UsuariosPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    setActionError(null);
     try {
       await deleteMember(deleteTarget.id);
       await loadMembers();
@@ -393,7 +388,7 @@ export default function UsuariosPage() {
       }
       setDeleteTarget(null);
     } catch (err: unknown) {
-      setActionError(getErrorMessage(err, "Não foi possível excluir o membro."));
+      showToast(getErrorMessage(err, "Não foi possível excluir o membro."), "error");
     } finally {
       setDeleting(false);
     }
@@ -588,7 +583,6 @@ export default function UsuariosPage() {
 
   const openCpfModal = () => {
     setCpfSearchTerm("");
-    setCpfActionError(null);
     setCpfModalOpen(true);
   };
 
@@ -596,7 +590,6 @@ export default function UsuariosPage() {
     if (cpfGenerating) return;
     setCpfModalOpen(false);
     setCpfSearchTerm("");
-    setCpfActionError(null);
     setCpfSelectedMembers([]);
   };
 
@@ -665,11 +658,10 @@ export default function UsuariosPage() {
 
   const handleGenerateCpfPdf = async () => {
     if (cpfSelectedMembers.length === 0) {
-      setCpfActionError("Selecione pelo menos um membro.");
+      showToast("Selecione pelo menos um membro.", "error");
       return;
     }
     setCpfGenerating(true);
-    setCpfActionError(null);
 
     try {
       const enriched = await Promise.all(
@@ -707,7 +699,7 @@ export default function UsuariosPage() {
       link.remove();
       URL.revokeObjectURL(url);
     } catch (err: unknown) {
-      setCpfActionError(getErrorMessage(err, "Não foi possível gerar o PDF."));
+      showToast(getErrorMessage(err, "Não foi possível gerar o PDF."), "error");
     } finally {
       setCpfGenerating(false);
     }
@@ -920,11 +912,6 @@ export default function UsuariosPage() {
               </ul>
             )}
 
-            {actionError && (
-              <div className="empty-state">
-                <p className="text-red-500" role="alert" aria-live="polite">{actionError}</p>
-              </div>
-            )}
           </div>
 
         </section>
@@ -1433,11 +1420,6 @@ export default function UsuariosPage() {
                 </label>
               </div>
 
-              {actionError && (
-                <p className="text-red-500" role="alert" aria-live="polite" style={{ marginTop: 8 }}>
-                  {actionError}
-                </p>
-              )}
 
               <div className="modal-footer">
                 <button
@@ -1634,9 +1616,6 @@ export default function UsuariosPage() {
                 )}
               </div>
 
-              {cpfActionError && (
-                <p className="text-red-500" role="alert" aria-live="polite">{cpfActionError}</p>
-              )}
             </div>
 
             <div className="modal-footer">
