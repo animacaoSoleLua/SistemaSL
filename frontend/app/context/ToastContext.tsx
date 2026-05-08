@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from "react";
+import { ToastContainer } from "../../components/Toast";
 
 export type ToastType = "error" | "success";
 
@@ -54,6 +55,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toasts, showToast, dismissToast }}>
       {children}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </ToastContext.Provider>
   );
 }

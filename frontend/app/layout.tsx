@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import AppShell from "./components/AppShell";
 import { ResetPasswordProvider } from "./context/ResetPasswordContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { ToastProvider } from "./context/ToastContext";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -12,7 +13,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <ThemeProvider>
           <ResetPasswordProvider>
             <ErrorBoundary>
-              <AppShell>{children}</AppShell>
+              <ToastProvider>
+                <AppShell>{children}</AppShell>
+              </ToastProvider>
             </ErrorBoundary>
           </ResetPasswordProvider>
         </ThemeProvider>
