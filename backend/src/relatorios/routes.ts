@@ -410,6 +410,14 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
+    const VALID_TRANSPORT_TYPES = ["uber99", "carro_empresa", "outro"] as const;
+    if (!Array.isArray(transport_types) || !transport_types.every((t) => (VALID_TRANSPORT_TYPES as readonly string[]).includes(t))) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Tipo de locomoção invalido",
+      });
+    }
+
     const eventDate = parseDate(event_date);
     if (!eventDate) {
       return reply.status(400).send({
@@ -434,9 +442,10 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
+    const hasUber = transport_types.includes("uber99");
     if (
-      !isValidOptionalMoney(uber_go_value) ||
-      !isValidOptionalMoney(uber_return_value)
+      (hasUber && !isValidOptionalMoney(uber_go_value)) ||
+      (hasUber && !isValidOptionalMoney(uber_return_value))
     ) {
       return reply.status(400).send({
         error: "invalid_request",
@@ -497,9 +506,9 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       titleSchedule: title_schedule,
       birthdayAge: birthday_age,
       transportTypes: transport_types,
-      uberGoValue: uber_go_value,
-      uberReturnValue: uber_return_value,
-      otherCarResponsible: other_car_responsible,
+      uberGoValue: transport_types.includes("uber99") ? uber_go_value : undefined,
+      uberReturnValue: transport_types.includes("uber99") ? uber_return_value : undefined,
+      otherCarResponsible: transport_types.includes("outro") ? other_car_responsible : undefined,
       hasExtraHours: normalizedExtraHours.hasExtraHours,
       extraHoursDetails: normalizedExtraHours.extraHoursDetails,
       outsideBrasilia: outside_brasilia ?? false,
@@ -692,6 +701,14 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
+    const VALID_TRANSPORT_TYPES = ["uber99", "carro_empresa", "outro"] as const;
+    if (!Array.isArray(transport_types) || !transport_types.every((t) => (VALID_TRANSPORT_TYPES as readonly string[]).includes(t))) {
+      return reply.status(400).send({
+        error: "invalid_request",
+        message: "Tipo de locomoção invalido",
+      });
+    }
+
     const eventDate = parseDate(event_date);
     if (!eventDate) {
       return reply.status(400).send({
@@ -716,9 +733,10 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
+    const hasUber = transport_types.includes("uber99");
     if (
-      !isValidOptionalMoney(uber_go_value) ||
-      !isValidOptionalMoney(uber_return_value)
+      (hasUber && !isValidOptionalMoney(uber_go_value)) ||
+      (hasUber && !isValidOptionalMoney(uber_return_value))
     ) {
       return reply.status(400).send({
         error: "invalid_request",
@@ -775,9 +793,9 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       titleSchedule: title_schedule,
       birthdayAge: birthday_age,
       transportTypes: transport_types,
-      uberGoValue: uber_go_value,
-      uberReturnValue: uber_return_value,
-      otherCarResponsible: other_car_responsible,
+      uberGoValue: transport_types.includes("uber99") ? uber_go_value : undefined,
+      uberReturnValue: transport_types.includes("uber99") ? uber_return_value : undefined,
+      otherCarResponsible: transport_types.includes("outro") ? other_car_responsible : undefined,
       hasExtraHours: normalizedExtraHours.hasExtraHours,
       extraHoursDetails: normalizedExtraHours.extraHoursDetails,
       outsideBrasilia: outside_brasilia ?? false,
