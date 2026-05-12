@@ -411,7 +411,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
-    if (!Array.isArray(transport_types) || !transport_types.every((t) => (VALID_TRANSPORT_TYPES as readonly string[]).includes(t))) {
+    if (!Array.isArray(transport_types) || !transport_types.every((t) => (VALID_TRANSPORT_TYPES as readonly string[]).includes(t)) || transport_types.length !== new Set(transport_types).size) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Tipo de locomoção invalido",
@@ -702,7 +702,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       });
     }
 
-    if (!Array.isArray(transport_types) || !transport_types.every((t) => (VALID_TRANSPORT_TYPES as readonly string[]).includes(t))) {
+    if (!Array.isArray(transport_types) || !transport_types.every((t) => (VALID_TRANSPORT_TYPES as readonly string[]).includes(t)) || transport_types.length !== new Set(transport_types).size) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Tipo de locomoção invalido",
