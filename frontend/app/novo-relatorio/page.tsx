@@ -50,7 +50,6 @@ type ReportDetail = {
   contractor_name: string;
   title_schedule: string;
   birthday_age?: string | null;
-  transport_type?: TransportType | null;
   transport_types?: TransportType[] | null;
   uber_go_value?: number | null;
   uber_return_value?: number | null;
@@ -792,6 +791,7 @@ function NovoRelatorioContent() {
                     <label key={value} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
                       <input
                         type="checkbox"
+                        name="transport_types"
                         checked={transportTypes.has(value)}
                         onChange={(e) => {
                           setTransportTypes((prev) => {
