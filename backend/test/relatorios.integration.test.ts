@@ -48,7 +48,7 @@ describe("Relatorios (integration)", () => {
         event_date: "2026-01-10",
         contractor_name: "Hotel Sol",
         title_schedule: "Festa infantil - tarde",
-        transport_type: "uber99",
+        transport_types: ["uber99"],
         uber_go_value: 35.5,
         uber_return_value: 31.2,
         has_extra_hours: true,
@@ -117,7 +117,7 @@ describe("Relatorios (integration)", () => {
         event_date: "2026-01-16",
         contractor_name: "Buffet Lua",
         title_schedule: "Festa tarde",
-        transport_type: "particular",
+        transport_types: ["outro"],
         team_summary: "Equipe C",
         extra_hours_details: 90,
       },
@@ -204,7 +204,7 @@ describe("Relatorios (integration)", () => {
         event_date: "2026-01-10",
         contractor_name: "Hotel Sol",
         title_schedule: "Festa infantil",
-        transport_type: "particular",
+        transport_types: ["outro"],
         team_summary: "Equipe A",
       },
     });
@@ -243,7 +243,7 @@ describe("Relatorios (integration)", () => {
         event_date: "2026-01-15",
         contractor_name: "Clube Sol",
         title_schedule: "Manhã recreativa",
-        transport_type: "particular",
+        transport_types: ["outro"],
         team_summary: "Equipe B",
         team_general_score: 0,
         event_difficulty_score: 0,
@@ -329,7 +329,7 @@ describe("Relatorios (integration)", () => {
         event_date: "2026-01-20",
         contractor_name: "Buffet Sol",
         title_schedule: "Festa junina",
-        transport_type: "particular",
+        transport_types: ["outro"],
         team_summary: "Equipe C",
       },
     });
@@ -370,7 +370,7 @@ describe("Relatorios (integration)", () => {
         event_date: "2026-01-20",
         contractor_name: "Buffet Sol",
         title_schedule: "Festa de aniversário",
-        transport_type: "uber99",
+        transport_types: ["uber99"],
         uber_go_value: 25,
         uber_return_value: 30,
         team_summary: "Equipe C",
@@ -386,7 +386,7 @@ describe("Relatorios (integration)", () => {
         event_date: "2026-01-20",
         contractor_name: "Buffet Sol Atualizado",
         title_schedule: "Cronograma atualizado",
-        transport_type: "outro",
+        transport_types: ["outro"],
         other_car_responsible: "Motorista parceiro",
         has_extra_hours: false,
         outside_brasilia: true,
@@ -411,12 +411,76 @@ describe("Relatorios (integration)", () => {
     expect(detailResponse.statusCode).toBe(200);
     const body = detailResponse.json();
     expect(body.data.contractor_name).toBe("Buffet Sol Atualizado");
-    expect(body.data.transport_type).toBe("outro");
+    expect(body.data.transport_types).toEqual(["outro"]);
     expect(body.data.other_car_responsible).toBe("Motorista parceiro");
     expect(body.data.uber_go_value).toBeNull();
     expect(body.data.uber_return_value).toBeNull();
     expect(body.data.feedbacks).toHaveLength(1);
     expect(body.data.feedbacks[0].member_id).toBe(recreador!.id);
     expect(body.data.feedbacks[0].feedback).toBe("Evoluiu bem");
+  });
+
+  it("creates report with multiple transport types", async () => {
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "animador@sol-e-lua.com", password: "animador123" },
+    });
+    const token = login.json().data.access_token;
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/relatorios",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        event_date: "2026-02-01",
+        contractor_name: "Empresa Teste",
+        title_schedule: "Evento corporativo",
+        transport_types: ["uber99", "carro_empresa"],
+        uber_go_value: 40,
+        uber_return_value: 35,
+        team_summary: "Equipe mista",
+      },
+    });
+
+    expect(createResponse.statusCode).toBe(201);
+    const reportId = createResponse.json().data.id;
+
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: `/api/v1/relatorios/${reportId}`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(detailResponse.statusCode).toBe(200);
+    const body = detailResponse.json();
+    expect(body.data.transport_types).toEqual(["uber99", "carro_empresa"]);
+    expect(body.data.uber_go_value).toBe(40);
+    expect(body.data.uber_return_value).toBe(35);
+  });
+
+  it("rejects report with empty transport_types", async () => {
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/login",
+      payload: { email: "animador@sol-e-lua.com", password: "animador123" },
+    });
+    const token = login.json().data.access_token;
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/relatorios",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        event_date: "2026-02-02",
+        contractor_name: "Empresa X",
+        title_schedule: "Evento",
+        transport_types: [],
+        team_summary: "Equipe",
+      },
+    });
+
+    expect(createResponse.statusCode).toBe(400);
+    expect(createResponse.json().error).toBe("invalid_request");
   });
 });
