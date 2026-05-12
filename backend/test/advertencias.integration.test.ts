@@ -35,11 +35,17 @@ describe("Advertencias (integration)", () => {
     return res.json().data.access_token;
   }
 
+  function daysAgo(n: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0, 10);
+  }
+
   it("3 advertências no mesmo mês geram suspensão", async () => {
     const adminToken = await loginAs(testAdmin.email, testAdmin.password);
     const member = await getUserByEmail(testMember1.email);
 
-    for (const date of ["2026-04-01", "2026-04-05", "2026-04-09"]) {
+    for (const date of [daysAgo(20), daysAgo(15), daysAgo(10)]) {
       const res = await app.inject({
         method: "POST",
         url: "/api/v1/advertencias",
@@ -66,7 +72,7 @@ describe("Advertencias (integration)", () => {
     const adminToken = await loginAs(testAdmin.email, testAdmin.password);
     const member = await getUserByEmail(testMember2.email);
 
-    for (const date of ["2026-03-10", "2026-03-30", "2026-04-09"]) {
+    for (const date of [daysAgo(25), daysAgo(12), daysAgo(8)]) {
       const res = await app.inject({
         method: "POST",
         url: "/api/v1/advertencias",

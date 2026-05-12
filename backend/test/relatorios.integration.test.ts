@@ -87,7 +87,7 @@ describe("Relatorios (integration)", () => {
     expect(body.data.author_name).toBe("Animador Lua");
     expect(body.data.title_schedule).toBe("Festa infantil - tarde");
     expect(body.data.has_extra_hours).toBe(true);
-    expect(body.data.extra_hours_details).toBe(1);
+    expect(body.data.extra_hours_details).toBe("1");
     expect(body.data.team_general_score).toBe(4);
     expect(body.data.event_difficulty_score).toBe(2);
     expect(body.data.event_quality_score).toBe(5);
@@ -135,7 +135,7 @@ describe("Relatorios (integration)", () => {
     expect(detailResponse.statusCode).toBe(200);
     const body = detailResponse.json();
     expect(body.data.has_extra_hours).toBe(true);
-    expect(body.data.extra_hours_details).toBe(90);
+    expect(body.data.extra_hours_details).toBe("90");
   });
 
   it("lists only own reports for animador", async () => {
