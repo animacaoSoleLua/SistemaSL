@@ -149,7 +149,7 @@ type ReportPayload = {
   event_date: string;
   contractor_name: string;
   title_schedule: string;
-  transport_type: string;
+  transport_types: string[];
   uber_go_value?: number;
   uber_return_value?: number;
   other_car_responsible?: string;

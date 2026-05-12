@@ -18,7 +18,7 @@ import { getMediaValidationError } from "../../lib/mediaValidators";
 import { normalizeString } from "../../lib/validators";
 import { displayToIsoWithShortYear, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
 
-type TransportType = "" | "uber99" | "carro_empresa" | "outro";
+type TransportType = "uber99" | "carro_empresa" | "outro";
 type YesNo = "" | "sim" | "nao";
 type Score = "" | "0" | "1" | "2" | "3" | "4" | "5";
 
@@ -51,6 +51,7 @@ type ReportDetail = {
   title_schedule: string;
   birthday_age?: string | null;
   transport_type?: TransportType | null;
+  transport_types?: TransportType[] | null;
   uber_go_value?: number | null;
   uber_return_value?: number | null;
   other_car_responsible?: string | null;
@@ -284,7 +285,9 @@ function NovoRelatorioContent() {
   const [birthdayContractor, setBirthdayContractor] = useState("");
   const [birthdayAge, setBirthdayAge] = useState("");
 
-  const [transportType, setTransportType] = useState<TransportType>("uber99");
+  const [transportTypes, setTransportTypes] = useState<Set<TransportType>>(
+    new Set(["uber99"])
+  );
   const [uberGoValue, setUberGoValue] = useState("");
   const [uberReturnValue, setUberReturnValue] = useState("");
   const [otherCarResponsible, setOtherCarResponsible] = useState("");
@@ -358,7 +361,8 @@ function NovoRelatorioContent() {
         setTitleSchedule(report.title_schedule ?? "");
         setBirthdayContractor(report.contractor_name ?? "");
         setBirthdayAge(report.birthday_age ?? "");
-        setTransportType((report.transport_type as TransportType) ?? "uber99");
+        const types = (report.transport_types as TransportType[] | undefined) ?? ["uber99"];
+        setTransportTypes(new Set(types));
         setUberGoValue(report.uber_go_value != null ? String(report.uber_go_value) : "");
         setUberReturnValue(
           report.uber_return_value != null ? String(report.uber_return_value) : ""
@@ -553,22 +557,28 @@ function NovoRelatorioContent() {
       }
     }
 
+    if (transportTypes.size === 0) {
+      showToast("Selecione ao menos um tipo de locomoção.", "error");
+      setIsSubmitting(false);
+      return;
+    }
+
     const reportPayload = {
       event_date: isoDate,
       contractor_name: birthdayContractor.trim(),
       title_schedule: titleSchedule.trim(),
       birthday_age: birthdayAge.trim() || undefined,
-      transport_type: transportType,
+      transport_types: Array.from(transportTypes),
       uber_go_value:
-        transportType === "uber99" && uberGoValue.trim()
+        transportTypes.has("uber99") && uberGoValue.trim()
           ? Number(uberGoValue)
           : undefined,
       uber_return_value:
-        transportType === "uber99" && uberReturnValue.trim()
+        transportTypes.has("uber99") && uberReturnValue.trim()
           ? Number(uberReturnValue)
           : undefined,
       other_car_responsible:
-        transportType === "outro" && otherCarResponsible.trim()
+        transportTypes.has("outro") && otherCarResponsible.trim()
           ? otherCarResponsible.trim()
           : undefined,
       has_extra_hours:
@@ -769,21 +779,37 @@ function NovoRelatorioContent() {
               <h2 className="section-title">Locomoção</h2>
             </div>
             <div className="form-grid">
-              <label className="field" htmlFor="transportType">
-                <span>Tipo de locomoção</span>
-                <select
-                  id="transportType"
-                  name="transportType"
-                  className="input"
-                  value={transportType}
-                  onChange={(event) => setTransportType(event.target.value as TransportType)}
-                  required
-                >
-                  <option value="uber99">Uber/99</option>
-                  <option value="carro_empresa">Carro da Empresa</option>
-                  <option value="outro">Carro Pessoal</option>
-                </select>
-              </label>
+              <fieldset className="field">
+                <legend>Tipo de locomoção</legend>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.25rem" }}>
+                  {(
+                    [
+                      { value: "uber99", label: "Uber/99" },
+                      { value: "carro_empresa", label: "Carro da Empresa" },
+                      { value: "outro", label: "Carro Pessoal" },
+                    ] as const
+                  ).map(({ value, label }) => (
+                    <label key={value} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={transportTypes.has(value)}
+                        onChange={(e) => {
+                          setTransportTypes((prev) => {
+                            const next = new Set(prev);
+                            if (e.target.checked) {
+                              next.add(value);
+                            } else {
+                              next.delete(value);
+                            }
+                            return next;
+                          });
+                        }}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
 
               <label className="field" htmlFor="hasExtraHours">
                 <span>Teve hora extra?</span>
@@ -799,7 +825,7 @@ function NovoRelatorioContent() {
                 </select>
               </label>
 
-              {transportType === "uber99" && (
+              {transportTypes.has("uber99") && (
                 <>
                   <label className="field" htmlFor="uberGoValue">
                     <span>Valor do Uber na ida</span>
@@ -832,7 +858,7 @@ function NovoRelatorioContent() {
                 </>
               )}
 
-              {transportType === "outro" && (
+              {transportTypes.has("outro") && (
                 <label className="field full" htmlFor="otherCarResponsible">
                   <span>Responsável pelo carro</span>
                   <input
