@@ -42,7 +42,7 @@ interface ReportBody {
   contractor_name?: string;
   title_schedule?: string;
   birthday_age?: string;
-  transport_type: string;
+  transport_types: string[];
   uber_go_value?: number;
   uber_return_value?: number;
   other_car_responsible?: string;
@@ -381,7 +381,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       contractor_name,
       title_schedule,
       birthday_age,
-      transport_type,
+      transport_types,
       uber_go_value,
       uber_return_value,
       other_car_responsible,
@@ -403,7 +403,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       feedbacks,
     } = request.body as ReportBody;
 
-    if (!event_date || !contractor_name || !team_summary || !title_schedule || !transport_type) {
+    if (!event_date || !contractor_name || !team_summary || !title_schedule || !transport_types?.length) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Campos obrigatorios ausentes",
@@ -496,7 +496,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       contractorName: contractor_name,
       titleSchedule: title_schedule,
       birthdayAge: birthday_age,
-      transportType: transport_type,
+      transportTypes: transport_types,
       uberGoValue: uber_go_value,
       uberReturnValue: uber_return_value,
       otherCarResponsible: other_car_responsible,
@@ -589,7 +589,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
         contractor_name: report.contractorName,
         title_schedule: report.titleSchedule,
         birthday_age: report.birthdayAge,
-        transport_type: report.transportType,
+        transport_types: report.transportTypes,
         uber_go_value: report.uberGoValue,
         uber_return_value: report.uberReturnValue,
         other_car_responsible: report.otherCarResponsible,
@@ -663,7 +663,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       contractor_name,
       title_schedule,
       birthday_age,
-      transport_type,
+      transport_types,
       uber_go_value,
       uber_return_value,
       other_car_responsible,
@@ -685,7 +685,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       feedbacks,
     } = request.body as ReportBody;
 
-    if (!event_date || !contractor_name || !team_summary || !title_schedule || !transport_type) {
+    if (!event_date || !contractor_name || !team_summary || !title_schedule || !transport_types?.length) {
       return reply.status(400).send({
         error: "invalid_request",
         message: "Campos obrigatorios ausentes",
@@ -774,7 +774,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       contractorName: contractor_name,
       titleSchedule: title_schedule,
       birthdayAge: birthday_age,
-      transportType: transport_type,
+      transportTypes: transport_types,
       uberGoValue: uber_go_value,
       uberReturnValue: uber_return_value,
       otherCarResponsible: other_car_responsible,
@@ -890,7 +890,7 @@ export async function relatoriosRoutes(app: FastifyInstance) {
       `Data: ${formatDate(report.eventDate)}`,
       `Contratante: ${report.contractorName}`,
       `Titulo/Cronograma: ${report.titleSchedule}`,
-      `Locomocao: ${report.transportType ?? "-"}`,
+      `Locomocao: ${report.transportTypes.join(", ") || "-"}`,
       `Resumo: ${report.teamSummary}`,
       `Descricao da equipe: ${report.teamGeneralDescription ?? "-"}`,
       `Nota geral da equipe: ${report.teamGeneralScore ?? "N/A"}`,

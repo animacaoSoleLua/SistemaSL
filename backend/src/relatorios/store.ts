@@ -40,7 +40,7 @@ export interface ReportRecord {
   contractorName: string;
   titleSchedule: string;
   birthdayAge?: string;
-  transportType?: string;
+  transportTypes: string[];
   uberGoValue?: number | null;
   uberReturnValue?: number | null;
   otherCarResponsible?: string;
@@ -69,7 +69,7 @@ export interface CreateReportInput {
   contractorName: string;
   titleSchedule: string;
   birthdayAge?: string;
-  transportType: string;
+  transportTypes: string[];
   uberGoValue?: number;
   uberReturnValue?: number;
   otherCarResponsible?: string;
@@ -150,7 +150,7 @@ function toReportRecord(report: {
   contractorName: string;
   titleSchedule?: string | null;
   birthdayAge?: string | null;
-  transportType?: string | null;
+  transportTypes?: string[] | null;
   uberGoValue?: number | null;
   uberReturnValue?: number | null;
   otherCarResponsible?: string | null;
@@ -202,7 +202,7 @@ function toReportRecord(report: {
     contractorName: report.contractorName,
     titleSchedule: report.titleSchedule ?? "Nao informado",
     birthdayAge: report.birthdayAge ?? undefined,
-    transportType: report.transportType ?? undefined,
+    transportTypes: report.transportTypes ?? [],
     uberGoValue: report.uberGoValue,
     uberReturnValue: report.uberReturnValue,
     otherCarResponsible: report.otherCarResponsible ?? undefined,
@@ -232,7 +232,6 @@ type ReportExtraFields = Partial<
     CreateReportInput,
     | "titleSchedule"
     | "birthdayAge"
-    | "transportType"
     | "uberGoValue"
     | "uberReturnValue"
     | "otherCarResponsible"
@@ -259,7 +258,6 @@ async function updateReportExtraFields(
     SET
       "title_schedule" = COALESCE(${fields.titleSchedule ?? null}, "title_schedule"),
       "birthday_age" = ${fields.birthdayAge ?? null},
-      "transport_type" = COALESCE(${fields.transportType ?? null}, "transport_type"),
       "uber_go_value" = ${fields.uberGoValue ?? null},
       "uber_return_value" = ${fields.uberReturnValue ?? null},
       "other_car_responsible" = ${fields.otherCarResponsible ?? null},
@@ -283,7 +281,6 @@ async function getReportExtraFields(
 ): Promise<{
   titleSchedule?: string | null;
   birthdayAge?: string | null;
-  transportType?: string | null;
   uberGoValue?: number | null;
   uberReturnValue?: number | null;
   otherCarResponsible?: string | null;
@@ -303,7 +300,6 @@ async function getReportExtraFields(
     Array<{
       title_schedule: string | null;
       birthday_age: string | null;
-      transport_type: string | null;
       uber_go_value: number | null;
       uber_return_value: number | null;
       other_car_responsible: string | null;
@@ -323,7 +319,6 @@ async function getReportExtraFields(
     SELECT
       "title_schedule",
       "birthday_age",
-      "transport_type",
       "uber_go_value",
       "uber_return_value",
       "other_car_responsible",
@@ -351,7 +346,6 @@ async function getReportExtraFields(
   return {
     titleSchedule: row.title_schedule,
     birthdayAge: row.birthday_age,
-    transportType: row.transport_type,
     uberGoValue: row.uber_go_value,
     uberReturnValue: row.uber_return_value,
     otherCarResponsible: row.other_car_responsible,
@@ -379,7 +373,7 @@ export async function createReport(
       eventDate: input?.eventDate ?? new Date(),
       contractorName: input?.contractorName ?? "Nao informado",
       titleSchedule: input?.titleSchedule ?? "Nao informado",
-      transportType: input?.transportType ?? "",
+      transportTypes: input?.transportTypes ?? [],
       teamSummary: input?.teamSummary ?? "Nao informado",
       qualitySound: input?.qualitySound,
       qualityMicrophone: input?.qualityMicrophone,
@@ -407,7 +401,6 @@ export async function createReport(
   await updateReportExtraFields(report.id, {
     titleSchedule: input?.titleSchedule,
     birthdayAge: input?.birthdayAge,
-    transportType: input?.transportType,
     uberGoValue: input?.uberGoValue,
     uberReturnValue: input?.uberReturnValue,
     otherCarResponsible: input?.otherCarResponsible,
@@ -447,6 +440,7 @@ export async function updateReport(
       eventDate: input.eventDate ?? new Date(),
       contractorName: input.contractorName ?? "Nao informado",
       teamSummary: input.teamSummary ?? "Nao informado",
+      transportTypes: input.transportTypes ?? [],
       qualitySound: input.qualitySound,
       qualityMicrophone: input.qualityMicrophone,
       notes: input.notes,
@@ -456,7 +450,6 @@ export async function updateReport(
   await updateReportExtraFields(id, {
     titleSchedule: input.titleSchedule,
     birthdayAge: input.birthdayAge,
-    transportType: input.transportType,
     uberGoValue: input.uberGoValue,
     uberReturnValue: input.uberReturnValue,
     otherCarResponsible: input.otherCarResponsible,
