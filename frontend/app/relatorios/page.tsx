@@ -117,7 +117,7 @@ function formatTransportType(values?: string[] | null) {
     outro: "Carro Pessoal",
   };
   const labels = (values ?? []).map((v) => map[v] ?? v);
-  return labels.length > 0 ? labels.join(" + ") : "—";
+  return labels.length > 0 ? labels.join(" + ") : "-";
 }
 
 export default function RelatoriosPage() {
