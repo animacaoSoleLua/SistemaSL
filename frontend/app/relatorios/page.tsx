@@ -31,7 +31,7 @@ interface ReportDetail {
   contractor_name: string;
   birthday_age?: string | null;
   title_schedule: string;
-  transport_type?: string | null;
+  transport_types?: string[] | null;
   uber_go_value?: number | null;
   uber_return_value?: number | null;
   other_car_responsible?: string | null;
@@ -110,12 +110,14 @@ function hasText(value?: string | null) {
   return Boolean(value && value.trim());
 }
 
-function formatTransportType(value?: string | null) {
-  if (!value) return "-";
-  if (value === "uber99") return "Uber/99";
-  if (value === "outro") return "Carro Pessoal";
-  if (value === "carro_empresa") return "Carro da Empresa";
-  return value;
+function formatTransportType(values?: string[] | null) {
+  const map: Record<string, string> = {
+    uber99: "Uber/99",
+    carro_empresa: "Carro da Empresa",
+    outro: "Carro Pessoal",
+  };
+  const labels = (values ?? []).map((v) => map[v] ?? v);
+  return labels.length > 0 ? labels.join(" + ") : "—";
 }
 
 export default function RelatoriosPage() {
@@ -473,9 +475,9 @@ export default function RelatoriosPage() {
               ) : selectedReport ? (
                 <>
                   {(() => {
-                    const transportType = selectedReport.transport_type ?? "";
-                    const showUberValues = transportType === "uber99";
-                    const showOtherCarResponsible = transportType === "outro";
+                    const transportTypes = selectedReport.transport_types ?? [];
+                    const showUberValues = transportTypes.includes("uber99");
+                    const showOtherCarResponsible = transportTypes.includes("outro");
                     const hasExtraHours =
                       selectedReport.has_extra_hours === true ||
                       Boolean(selectedReport.extra_hours_details?.trim());
@@ -607,7 +609,7 @@ export default function RelatoriosPage() {
                           <div className="form-grid">
                             <div className="field">
                               <span>Tipo de locomoção</span>
-                              <p className="report-value">{formatTransportType(selectedReport.transport_type)}</p>
+                              <p className="report-value">{formatTransportType(selectedReport.transport_types)}</p>
                             </div>
                             {showUberValues && (
                               <>
