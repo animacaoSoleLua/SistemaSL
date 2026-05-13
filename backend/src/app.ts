@@ -15,6 +15,7 @@ import { cursosRoutes } from "./cursos/routes.js";
 import { dashboardRoutes } from "./dashboard/routes.js";
 import { ensureBaseUsers } from "./db/seed.js";
 import { membrosRoutes } from "./membros/routes.js";
+import { permissoesRoutes } from "./permissoes/routes.js";
 import { scheduleCleanup } from "./relatorios/cleanup.js";
 import { relatoriosRoutes } from "./relatorios/routes.js";
 import { healthRoutes } from "./routes/health.js";
@@ -178,6 +179,7 @@ export function buildServer(): FastifyInstance {
   app.register(habilidadesRoutes);
   // app.register(googleRoutes); // GOOGLE_CALENDAR_DISABLED
   app.register(dashboardRoutes);
+  app.register(permissoesRoutes);
 
   app.get("/api/v1/secure/ping", async () => ({ status: "ok" }));
   app.get(
