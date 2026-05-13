@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { requireRole } from "../auth/guard.js";
+import { requireAccess } from "../auth/guard.js";
 import { listUsers } from "../auth/store.js";
 import { listReports } from "../relatorios/store.js";
 
@@ -58,7 +58,7 @@ function average(values: number[]): number {
 export async function dashboardRoutes(app: FastifyInstance) {
   app.get(
     "/api/v1/dashboard/resumo",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["dashboard", "gerencia"]) },
     async (request, reply) => {
       const query = request.query as DashboardQuery;
       const result = await filterReportsByPeriod(query);
@@ -92,7 +92,7 @@ export async function dashboardRoutes(app: FastifyInstance) {
 
   app.get(
     "/api/v1/dashboard/animadores",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["dashboard", "gerencia"]) },
     async (request, reply) => {
       const query = request.query as DashboardQuery;
       const result = await filterReportsByPeriod(query);
@@ -127,7 +127,7 @@ export async function dashboardRoutes(app: FastifyInstance) {
 
   app.get(
     "/api/v1/dashboard/qualidade",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["dashboard", "gerencia"]) },
     async (request, reply) => {
       const query = request.query as DashboardQuery;
       const result = await filterReportsByPeriod(query);

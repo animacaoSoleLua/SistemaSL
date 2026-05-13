@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
-import { requireRole } from "../auth/guard.js";
+import { requireAccess } from "../auth/guard.js";
 import { deleteFromR2, getPresignedViewUrl, uploadToR2 } from "../lib/r2.js";
 import {
   createFeedback,
@@ -32,7 +32,7 @@ function parsePositiveInt(val: string | undefined): number | undefined {
 
 export async function feedbacksRoutes(app: FastifyInstance) {
   // GET /api/v1/feedbacks — listar feedbacks com filtros
-  app.get("/api/v1/feedbacks", { preHandler: requireRole(["admin"]) }, async (request, reply) => {
+  app.get("/api/v1/feedbacks", { preHandler: requireAccess(["admin"], ["feedbacks"]) }, async (request, reply) => {
     if (!request.user) {
       return reply.status(401).send({ error: "unauthorized", message: "Token ausente" });
     }
@@ -96,7 +96,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
   });
 
   // POST /api/v1/feedbacks — criar feedback (JSON ou multipart com áudio)
-  app.post("/api/v1/feedbacks", { preHandler: requireRole(["admin"]) }, async (request, reply) => {
+  app.post("/api/v1/feedbacks", { preHandler: requireAccess(["admin"], ["feedbacks"]) }, async (request, reply) => {
     if (!request.user) {
       return reply.status(401).send({ error: "unauthorized", message: "Token ausente" });
     }
@@ -279,7 +279,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
   });
 
   // GET /api/v1/feedbacks/:id — detalhes
-  app.get("/api/v1/feedbacks/:id", { preHandler: requireRole(["admin"]) }, async (request, reply) => {
+  app.get("/api/v1/feedbacks/:id", { preHandler: requireAccess(["admin"], ["feedbacks"]) }, async (request, reply) => {
     if (!request.user) {
       return reply.status(401).send({ error: "unauthorized", message: "Token ausente" });
     }
@@ -317,7 +317,7 @@ export async function feedbacksRoutes(app: FastifyInstance) {
   // DELETE /api/v1/feedbacks/:id — apenas admin
   app.delete(
     "/api/v1/feedbacks/:id",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["feedbacks"]) },
     async (request, reply) => {
       const { id } = request.params as { id: string };
       const feedback = await getFeedbackById(id);

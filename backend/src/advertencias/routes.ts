@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { subMonths } from "date-fns";
-import { requireRole } from "../auth/guard.js";
+import { requireAccess, requireRole } from "../auth/guard.js";
 import { auditLog } from "../lib/audit.js";
 import { getUserById } from "../auth/store.js";
 import {
@@ -154,7 +154,7 @@ export async function advertenciasRoutes(app: FastifyInstance) {
 
   app.post(
     "/api/v1/advertencias",
-    { preHandler: requireRole(["admin", "animador"]) },
+    { preHandler: requireAccess(["admin", "animador"], ["advertencias"]) },
     async (request, reply) => {
       const parsedBody = CreateWarningSchema.safeParse(request.body);
       if (!parsedBody.success) {
@@ -257,7 +257,7 @@ export async function advertenciasRoutes(app: FastifyInstance) {
 
   app.patch(
     "/api/v1/advertencias/:id",
-    { preHandler: requireRole(["admin", "animador"]) },
+    { preHandler: requireAccess(["admin", "animador"], ["advertencias"]) },
     async (request, reply) => {
       const params = request.params as { id?: string };
       if (!params.id) {

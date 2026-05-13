@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { requireRole } from "../auth/guard.js";
+import { requireAccess } from "../auth/guard.js";
 import { getUserById } from "../auth/store.js";
 import {
   addMemberSkill,
@@ -36,7 +36,7 @@ const UpdateMemberSkillSchema = z.object({
 export async function habilidadesRoutes(app: FastifyInstance) {
   app.get(
     "/api/v1/habilidades",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["habilidades"]) },
     async (_request, reply) => {
       const skills = await listSkills();
       const result = await Promise.all(
@@ -61,7 +61,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
 
   app.post(
     "/api/v1/habilidades",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["habilidades"]) },
     async (request, reply) => {
       const parsed = CreateSkillSchema.safeParse(request.body);
       if (!parsed.success) {
@@ -91,7 +91,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
 
   app.put(
     "/api/v1/habilidades/:id",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["habilidades"]) },
     async (request, reply) => {
       const { id } = request.params as { id: string };
       const parsed = UpdateSkillSchema.safeParse(request.body);
@@ -122,7 +122,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
 
   app.delete(
     "/api/v1/habilidades/:id",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["habilidades"]) },
     async (request, reply) => {
       const { id } = request.params as { id: string };
       const deleted = await deleteSkill(id);
@@ -135,7 +135,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
 
   app.post(
     "/api/v1/habilidades/:id/membros",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["habilidades"]) },
     async (request, reply) => {
       const { id: skillId } = request.params as { id: string };
       const parsed = AddMemberSkillSchema.safeParse(request.body);
@@ -184,7 +184,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
 
   app.put(
     "/api/v1/habilidades/:id/membros/:memberId",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["habilidades"]) },
     async (request, reply) => {
       const { id: skillId, memberId } = request.params as { id: string; memberId: string };
       const parsed = UpdateMemberSkillSchema.safeParse(request.body);
@@ -204,7 +204,7 @@ export async function habilidadesRoutes(app: FastifyInstance) {
 
   app.delete(
     "/api/v1/habilidades/:id/membros/:memberId",
-    { preHandler: requireRole(["admin"]) },
+    { preHandler: requireAccess(["admin"], ["habilidades"]) },
     async (request, reply) => {
       const { id: skillId, memberId } = request.params as { id: string; memberId: string };
       const removed = await removeMemberSkill(skillId, memberId);
