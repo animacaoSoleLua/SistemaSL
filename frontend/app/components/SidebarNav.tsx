@@ -29,55 +29,61 @@ const navItems = [
     label: "Dashboard",
     href: "/dashboard",
     roles: ["admin"],
-    icon: <FiGrid aria-hidden="true" />
+    permission: "dashboard",
+    icon: <FiGrid aria-hidden="true" />,
   },
   {
     label: "Gerência",
     href: "/gerencia",
     roles: ["admin"],
-    icon: <FiBarChart2 aria-hidden="true" />
+    permission: "gerencia",
+    icon: <FiBarChart2 aria-hidden="true" />,
   },
   {
     label: "Relatorios",
     href: "/relatorios",
     roles: ["admin", "animador"],
-    icon: <FiFileText aria-hidden="true" />
+    permission: "relatorios",
+    icon: <FiFileText aria-hidden="true" />,
   },
   {
     label: "Cursos",
     href: "/cursos",
     roles: ["admin", "animador", "recreador"],
-    icon: <FiBookOpen aria-hidden="true" />
+    icon: <FiBookOpen aria-hidden="true" />,
   },
   {
     label: "Advertências",
     href: "/advertencias",
     roles: ["admin", "animador"],
-    icon: <FiAlertTriangle aria-hidden="true" />
+    permission: "advertencias",
+    icon: <FiAlertTriangle aria-hidden="true" />,
   },
   {
     label: "Feedbacks",
     href: "/feedbacks",
     roles: ["admin"],
-    icon: <FiMessageSquare aria-hidden="true" />
+    permission: "feedbacks",
+    icon: <FiMessageSquare aria-hidden="true" />,
   },
   {
     label: "Habilidades",
     href: "/habilidades",
     roles: ["admin"],
-    icon: <FiStar aria-hidden="true" />
+    permission: "habilidades",
+    icon: <FiStar aria-hidden="true" />,
   },
   {
     label: "Membros",
     href: "/usuarios",
     roles: ["admin", "animador", "recreador"],
-    icon: <FiUsers aria-hidden="true" />
+    icon: <FiUsers aria-hidden="true" />,
   },
   {
     label: "Perfil",
     href: "/configuracoes",
     roles: ["admin", "animador", "recreador"],
-    icon: <FiUser aria-hidden="true" />
+    icon: <FiUser aria-hidden="true" />,
   },
 ];
 
@@ -86,6 +92,7 @@ interface User {
   name: string;
   role: Role;
   photo_url?: string | null;
+  permissions?: string[];
 }
 
 function isActive(pathname: string, href: string) {
@@ -246,7 +253,13 @@ export default function SidebarNav() {
         </div>
         <nav className="app-nav" aria-label="Navegação principal">
           {navItems
-            .filter((item) => (user ? item.roles.includes(user.role) : false))
+            .filter((item) =>
+              user
+                ? item.roles.includes(user.role) ||
+                  (item.permission != null &&
+                    (user.permissions ?? []).includes(item.permission))
+                : false
+            )
             .map((item) => {
               const active = isActive(pathname, item.href);
               return (
@@ -339,7 +352,13 @@ export default function SidebarNav() {
             </div>
             <nav className="mobile-nav" aria-label="Navegação principal">
               {navItems
-                .filter((item) => (user ? item.roles.includes(user.role) : false))
+                .filter((item) =>
+              user
+                ? item.roles.includes(user.role) ||
+                  (item.permission != null &&
+                    (user.permissions ?? []).includes(item.permission))
+                : false
+            )
                 .map((item) => {
                   const active = isActive(pathname, item.href);
                   return (
