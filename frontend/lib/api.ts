@@ -655,3 +655,17 @@ export async function changePassword(
     body: JSON.stringify({ current_password, new_password }),
   });
 }
+
+export async function getMemberPermissions(memberId: string): Promise<{ data: { permissions: string[] } }> {
+  return request(`/membros/${memberId}/permissoes`);
+}
+
+export async function setMemberPermissions(
+  memberId: string,
+  permissions: string[]
+): Promise<{ data: { permissions: string[] } }> {
+  return request(`/membros/${memberId}/permissoes`, {
+    method: "PUT",
+    body: JSON.stringify({ permissions }),
+  });
+}

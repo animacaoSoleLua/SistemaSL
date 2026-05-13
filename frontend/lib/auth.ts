@@ -5,6 +5,7 @@ export interface StoredUser {
   name: string;
   role: Role;
   photo_url?: string | null;
+  permissions?: string[];
 }
 
 export const roleLabels: Record<Role, string> = {
