@@ -29,6 +29,15 @@ enum FeedbackType {
   negative
 }
 
+enum Permission {
+  dashboard
+  gerencia
+  relatorios
+  advertencias
+  feedbacks
+  habilidades
+}
+
 model User {
   id                String             @id @default(uuid()) @db.Uuid
   name              String             @db.VarChar(100)
@@ -63,8 +72,24 @@ model User {
   createdFeedbacks     ClientFeedback[]       @relation("FeedbacksCreatedBy")
   clientFeedbacks      ClientFeedbackMember[] @relation("ClientFeedbacksForMember")
   skillEntries         MemberSkill[]
+  extraPermissions     UserPermission[] @relation("UserPermissions")
+  permissionsGranted   UserPermission[] @relation("GrantedPermissions")
 
   @@map("users")
+}
+
+model UserPermission {
+  id          String     @id @default(uuid()) @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  permission  Permission
+  grantedById String     @map("granted_by_id") @db.Uuid
+  grantedAt   DateTime   @default(now()) @map("granted_at")
+
+  user      User @relation("UserPermissions", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User @relation("GrantedPermissions", fields: [grantedById], references: [id])
+
+  @@unique([userId, permission])
+  @@map("user_permissions")
 }
 
 model Report {
