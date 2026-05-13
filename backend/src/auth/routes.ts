@@ -13,6 +13,7 @@ import {
 } from "./password-reset.js";
 import { sendPasswordResetEmail } from "./password-reset-email.js";
 import { verifyPassword } from "./password.js";
+import { prisma } from "../db/prisma.js";
 import { getPresignedViewUrl } from "../lib/r2.js";
 import { createAccessToken } from "./token.js";
 import { auditLog } from "../lib/audit.js";
@@ -188,6 +189,11 @@ export async function authRoutes(app: FastifyInstance) {
     const accessToken = createAccessToken(user);
     auditLog(request.log, "LOGIN_SUCCESS", user.id, { ip });
 
+    const permRows = await prisma.userPermission.findMany({
+      where: { userId: user.id },
+      select: { permission: true },
+    });
+
     // Definir cookie httpOnly (seguro em produção)
     setAuthCookie(reply, accessToken);
 
@@ -199,6 +205,7 @@ export async function authRoutes(app: FastifyInstance) {
           name: user.name,
           role: user.role,
           photo_url: user.photoUrl ? await getPresignedViewUrl(user.photoUrl) : null,
+          permissions: permRows.map((r) => r.permission as string),
         },
       },
     });
