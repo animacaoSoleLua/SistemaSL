@@ -26,6 +26,7 @@ import {
   updateMember,
 } from "../../lib/api";
 import { getStoredUser, roleLabels, type Role, type StoredUser } from "../../lib/auth";
+import PermissoesModal from "./PermissoesModal";
 import { useFocusTrap } from "../../lib/useFocusTrap";
 import { isStrongPassword, isValidCPF, normalizeString } from "../../lib/validators";
 import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
@@ -177,6 +178,11 @@ export default function UsuariosPage() {
   const [photoLightbox, setPhotoLightbox] = useState<{ url: string; name: string } | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [detailsTab, setDetailsTab] = useState<"dados" | "cursos" | "advertencias" | "clientes" | "feedbacks" | "habilidades">("dados");
+  const [permissoesModalMember, setPermissoesModalMember] = useState<{
+    id: string;
+    name: string;
+    role: Role;
+  } | null>(null);
   const memberModalTrapRef = useFocusTrap(modalOpen);
   const deleteTrapRef = useFocusTrap(!!deleteTarget);
   const cpfTrapRef = useFocusTrap(cpfModalOpen);
@@ -878,6 +884,21 @@ export default function UsuariosPage() {
                           </button>
                           {isAdmin && (
                             <>
+                              <button
+                                className="icon-button"
+                                type="button"
+                                aria-label="Gerenciar permissões do membro"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setPermissoesModalMember({
+                                    id: user.id,
+                                    name: getDisplayName(user),
+                                    role: user.role,
+                                  });
+                                }}
+                              >
+                                <FiShield aria-hidden="true" />
+                              </button>
                               <button
                                 className="icon-button"
                                 type="button"
@@ -1639,6 +1660,12 @@ export default function UsuariosPage() {
             </div>
           </div>
         </div>
+      )}
+      {permissoesModalMember && (
+        <PermissoesModal
+          member={permissoesModalMember}
+          onClose={() => setPermissoesModalMember(null)}
+        />
       )}
       {photoLightbox && (
         <div
