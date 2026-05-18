@@ -115,6 +115,9 @@
 .member-row-info {
   display: grid;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .member-row-name {
@@ -125,6 +128,9 @@
 .member-row-email {
   font-size: 12px;
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .member-row-right {
@@ -223,6 +229,35 @@
   stroke: currentColor;
   stroke-width: 1.7;
   fill: none;
+}
+
+.perm-extra-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(111, 76, 255, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(111, 76, 255, 0.28);
+  white-space: nowrap;
+  cursor: default;
+}
+
+.perm-extra-badge svg {
+  width: 11px;
+  height: 11px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+body.theme-purple .perm-extra-badge {
+  background: rgba(161, 97, 255, 0.15);
+  border-color: rgba(161, 97, 255, 0.38);
 }
 
 .role-pill {
@@ -661,6 +696,22 @@ body.theme-purple .details-tab-count {
 
 body.theme-purple .details-tab-btn.active .details-tab-count {
   background: rgba(161, 97, 255, 0.28);
+}
+
+.member-section-subtitle {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.details-tab-content {
+  display: grid;
+  gap: 12px;
+}
+
+.details-empty {
+  color: var(--muted);
+  font-size: 14px;
 }
 
 /* ── Skills panel ─────────────────────────────────────────────────────────── */

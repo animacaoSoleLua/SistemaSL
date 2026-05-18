@@ -38,3 +38,9 @@ export function getDefaultRoute(role: Role): string {
 export function isRoleAllowed(role: Role, allowed: Role[]): boolean {
   return allowed.includes(role);
 }
+
+export function isAllowed(user: StoredUser, roles: Role[], permission?: string): boolean {
+  if (roles.includes(user.role)) return true;
+  if (permission && user.permissions?.includes(permission)) return true;
+  return false;
+}

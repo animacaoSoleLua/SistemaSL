@@ -139,7 +139,14 @@ export default function LoginPage() {
             </p>
           )}
           <button className="login-button" type="submit" disabled={loading}>
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? (
+              <>
+                <span className="btn-spinner" aria-hidden="true" />
+                Entrando...
+              </>
+            ) : (
+              "Entrar"
+            )}
           </button>
         </form>
         <div className="login-links">

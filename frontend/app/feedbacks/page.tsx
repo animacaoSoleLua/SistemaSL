@@ -14,7 +14,7 @@ import {
   getMembers,
   resolveApiAssetUrl,
 } from "../../lib/api";
-import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { getDefaultRoute, getStoredUser, isAllowed, type Role } from "../../lib/auth";
 import { useToast } from "../context/ToastContext";
 import { displayToIso, formatDateInput } from "../../lib/dateValidators";
 
@@ -146,7 +146,7 @@ export default function FeedbacksPage() {
   useEffect(() => {
     const stored = getStoredUser();
     if (!stored) { router.push("/login"); return; }
-    if (!isRoleAllowed(stored.role, ["admin"])) {
+    if (!isAllowed(stored, ["admin"], "feedbacks")) {
       router.push(getDefaultRoute(stored.role)); return;
     }
     setCurrentRole(stored.role as Role);
@@ -607,7 +607,14 @@ export default function FeedbacksPage() {
               Cancelar
             </button>
             <button type="submit" className="button" disabled={saving}>
-              {saving ? "Salvando..." : "Salvar"}
+              {saving ? (
+                <>
+                  <span className="btn-spinner" aria-hidden="true" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar"
+              )}
             </button>
           </div>
         </form>

@@ -9,7 +9,6 @@ import {
   FiEdit2,
   FiInfo,
   FiShield,
-  FiStar,
   FiTrash2,
   FiUserPlus,
   FiUsers,
@@ -91,6 +90,7 @@ interface Member {
   emergency_contact_phone?: string | null;
   role: Role;
   photo_url?: string | null;
+  extra_permissions?: string[];
 }
 
 interface MemberFeedback {
@@ -773,7 +773,13 @@ export default function UsuariosPage() {
             <div className="members-header">
               <div>
                 <h2 className="section-title">Membros Sol e Lua</h2>
-                <p>Lista de todos os membros.</p>
+                <p>
+                  {loading
+                    ? "Carregando..."
+                    : filteredUsers.length === users.length
+                    ? `${users.length} membro${users.length !== 1 ? "s" : ""}`
+                    : `${filteredUsers.length} de ${users.length} membro${users.length !== 1 ? "s" : ""}`}
+                </p>
               </div>
               <div className="members-actions">
                 <div className="members-search">
@@ -868,6 +874,12 @@ export default function UsuariosPage() {
                         <span className={`role-pill ${user.role}`}>
                           {roleLabels[user.role]}
                         </span>
+                        {isAdmin && user.extra_permissions && user.extra_permissions.length > 0 && (
+                          <span className="perm-extra-badge" title={`${user.extra_permissions.length} permissão(ões) extra(s): ${user.extra_permissions.join(", ")}`}>
+                            <FiShield aria-hidden="true" />
+                            {user.extra_permissions.length}
+                          </span>
+                        )}
                         <div className="member-row-actions">
                           <button
                             className="icon-button"
@@ -1118,7 +1130,7 @@ export default function UsuariosPage() {
               {isAdmin && detailsTab === "clientes" && (
                 <div className="member-section">
                   <div className="member-section-header">
-                    <h3 className="section-title">Feedbacks</h3>
+                    <h3 className="section-title">Feedbacks de Clientes</h3>
                     <span className="member-section-count">
                       {feedbackCounts ? feedbackCounts.positive + feedbackCounts.negative : 0}
                     </span>
@@ -1665,6 +1677,13 @@ export default function UsuariosPage() {
         <PermissoesModal
           member={permissoesModalMember}
           onClose={() => setPermissoesModalMember(null)}
+          onSaved={(memberId, permissions) => {
+            setUsers((prev) =>
+              prev.map((u) =>
+                u.id === memberId ? { ...u, extra_permissions: permissions } : u
+              )
+            );
+          }}
         />
       )}
       {photoLightbox && (

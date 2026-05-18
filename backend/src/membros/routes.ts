@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
 import { z } from "zod";
 import { deleteFromR2, getPresignedViewUrl, uploadToR2 } from "../lib/r2.js";
+import { prisma } from "../db/prisma.js";
 import { requireRole } from "../auth/guard.js";
 import { auditLog } from "../lib/audit.js";
 import { isValidCPF, validateUpload } from "../lib/validators.js";
@@ -273,10 +274,23 @@ export async function membrosRoutes(app: FastifyInstance) {
     const start = (page - 1) * limit;
     const paged = members.slice(start, start + limit);
 
+    const memberIds = paged.map((m) => m.id);
+    const permRows = await prisma.userPermission.findMany({
+      where: { userId: { in: memberIds } },
+      select: { userId: true, permission: true },
+    });
+    const permsByUser = new Map<string, string[]>();
+    for (const row of permRows) {
+      const list = permsByUser.get(row.userId) ?? [];
+      list.push(row.permission);
+      permsByUser.set(row.userId, list);
+    }
+
     return reply.status(200).send({
       data: await Promise.all(paged.map(async (member) => ({
         ...toMemberSummary(member),
         photo_url: member.photoUrl ? await getPresignedViewUrl(member.photoUrl) : null,
+        extra_permissions: permsByUser.get(member.id) ?? [],
       }))),
     });
   });

@@ -13,7 +13,7 @@ import {
   getWarnings,
   updateWarning,
 } from "../../lib/api";
-import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { getDefaultRoute, getStoredUser, isAllowed, type Role } from "../../lib/auth";
 import { useToast } from "../context/ToastContext";
 import { normalizeString } from "../../lib/validators";
 import { displayToIso, formatDateInput, isoToDisplay } from "../../lib/dateValidators";
@@ -123,7 +123,7 @@ export default function WarningsPage() {
       router.push("/login");
       return;
     }
-    if (!isRoleAllowed(user.role, ["admin", "animador"])) {
+    if (!isAllowed(user, ["admin", "animador"], "advertencias")) {
       router.push(getDefaultRoute(user.role));
       return;
     }
@@ -709,7 +709,14 @@ export default function WarningsPage() {
               Cancelar
             </button>
             <button className="button" type="submit" disabled={actionLoadingId === "new"}>
-              {actionLoadingId === "new" ? "Salvando..." : "Salvar advertência"}
+              {actionLoadingId === "new" ? (
+                <>
+                  <span className="btn-spinner" aria-hidden="true" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar advertência"
+              )}
             </button>
           </div>
         </form>

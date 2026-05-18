@@ -109,10 +109,30 @@
 
 .feedback-list {
   list-style: none;
-  padding: 0;
+  padding: 0 8px 0 0;
   margin: 0;
   display: grid;
   gap: 14px;
+  max-height: 65vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.feedback-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.feedback-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.feedback-list::-webkit-scrollbar-thumb {
+  background: rgba(111, 76, 255, 0.25);
+  border-radius: 4px;
+}
+
+.feedback-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(111, 76, 255, 0.45);
 }
 
 .feedback-item {

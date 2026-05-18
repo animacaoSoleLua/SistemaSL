@@ -145,7 +145,14 @@ export default function ConfiguracoesSeguranca() {
           <div className="form-actions">
             <div className="form-buttons">
               <button type="submit" className="button" disabled={savingEmail || !newEmail.trim()}>
-                {savingEmail ? "Salvando..." : "Salvar e-mail"}
+                {savingEmail ? (
+                  <>
+                    <span className="btn-spinner" aria-hidden="true" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar e-mail"
+                )}
               </button>
             </div>
           </div>
@@ -203,7 +210,14 @@ export default function ConfiguracoesSeguranca() {
                 className="button"
                 disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
               >
-                {savingPassword ? "Salvando..." : "Salvar senha"}
+                {savingPassword ? (
+                  <>
+                    <span className="btn-spinner" aria-hidden="true" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar senha"
+                )}
               </button>
             </div>
           </div>
@@ -212,12 +226,9 @@ export default function ConfiguracoesSeguranca() {
 
       {/* Zona de perigo */}
       <div style={{ marginTop: "32px" }}>
-        <article
-          className="form-card"
-          style={{ borderColor: "var(--red, #dc2626)", borderWidth: "1px", borderStyle: "solid" }}
-        >
+        <article className="form-card" style={{ border: "1px solid rgba(208, 75, 75, 0.4)" }}>
           <div className="form-card-head">
-            <h2 className="section-title" style={{ color: "var(--red, #dc2626)" }}>
+            <h2 className="section-title" style={{ color: "#d04b4b" }}>
               Zona de perigo
             </h2>
             <p>Excluir sua conta é uma ação permanente e não pode ser desfeita.</p>
@@ -226,16 +237,8 @@ export default function ConfiguracoesSeguranca() {
             <div className="form-buttons">
               <button
                 type="button"
+                className="button danger"
                 onClick={() => { setShowDeleteModal(true); setDeletePassword(""); setDeleteError(null); }}
-                style={{
-                  background: "transparent",
-                  color: "var(--red, #dc2626)",
-                  border: "1.5px solid var(--red, #dc2626)",
-                  borderRadius: "8px",
-                  padding: "8px 20px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
               >
                 Excluir minha conta
               </button>
@@ -247,102 +250,66 @@ export default function ConfiguracoesSeguranca() {
       {/* Modal de confirmação */}
       {showDeleteModal && createPortal(
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-modal-title"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "16px",
-          }}
+          className="modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget && !deleting) { setShowDeleteModal(false); } }}
           onKeyDown={(e) => { if (e.key === "Escape" && !deleting) setShowDeleteModal(false); }}
         >
           <div
-            style={{
-              background: "var(--bg, #fff)",
-              borderRadius: "16px",
-              padding: "32px 28px",
-              maxWidth: "440px",
-              width: "100%",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-            }}
+            className="modal-card modal-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
           >
-            <h2
-              id="delete-modal-title"
-              style={{
-                margin: 0,
-                fontSize: "18px",
-                fontWeight: 700,
-                textAlign: "center",
-                color: "var(--red, #dc2626)",
-              }}
-            >
-              Excluir conta permanentemente
-            </h2>
-            <p style={{ margin: 0, textAlign: "center", color: "var(--muted)", fontSize: "14px" }}>
-              Esta ação <strong>não pode ser desfeita</strong>. Seu perfil, cursos, advertências e
-              todos os dados relacionados serão apagados para sempre.
-            </p>
-            <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px", fontWeight: 500 }}>
-              Digite sua senha para confirmar
-              <input
-                className="input"
-                type="password"
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                placeholder="Sua senha atual"
-                autoFocus
-                disabled={deleting}
-                autoComplete="current-password"
-              />
-            </label>
-            {deleteError && (
-              <p style={{ margin: 0, color: "var(--red, #dc2626)", fontSize: "14px" }} role="alert" aria-live="polite">
-                {deleteError}
+            <div className="modal-header">
+              <h2 id="delete-modal-title" className="section-title" style={{ color: "#d04b4b" }}>
+                Excluir conta permanentemente
+              </h2>
+            </div>
+            <div className="modal-body">
+              <p>
+                Esta ação <strong>não pode ser desfeita</strong>. Seu perfil, cursos, advertências e
+                todos os dados relacionados serão apagados para sempre.
               </p>
-            )}
-            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <label className="field">
+                Digite sua senha para confirmar
+                <input
+                  className="input"
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Sua senha atual"
+                  autoFocus
+                  disabled={deleting}
+                  autoComplete="current-password"
+                />
+              </label>
+              {deleteError && (
+                <p className="text-error" role="alert" aria-live="polite">{deleteError}</p>
+              )}
+            </div>
+            <div className="modal-footer">
               <button
                 type="button"
+                className="button secondary"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleting}
-                style={{
-                  background: "var(--accent-soft)",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "9px 20px",
-                  fontWeight: 600,
-                  cursor: deleting ? "not-allowed" : "pointer",
-                  color: "var(--muted)",
-                }}
               >
                 Cancelar
               </button>
               <button
                 type="button"
+                className="button danger"
                 onClick={handleDeleteAccount}
                 disabled={deleting || !deletePassword}
-                style={{
-                  background: "var(--red, #dc2626)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "9px 20px",
-                  fontWeight: 600,
-                  cursor: deleting || !deletePassword ? "not-allowed" : "pointer",
-                  opacity: deleting || !deletePassword ? 0.6 : 1,
-                }}
               >
-                {deleting ? "Excluindo..." : "Excluir minha conta"}
+                {deleting ? (
+                  <>
+                    <span className="btn-spinner" aria-hidden="true" />
+                    Excluindo...
+                  </>
+                ) : (
+                  "Excluir minha conta"
+                )}
               </button>
             </div>
           </div>

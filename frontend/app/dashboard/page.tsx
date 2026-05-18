@@ -3,13 +3,14 @@
 import './page.css';
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiCalendar, FiFileText, FiMapPin, FiStar } from "react-icons/fi";
+import Link from "next/link";
+import { FiCalendar, FiFileText, FiMapPin, FiMic, FiStar, FiTrendingUp, FiVolume2 } from "react-icons/fi";
 import {
   getDashboardQuality,
   getDashboardSummary,
   getReports,
 } from "../../lib/api";
-import { getDefaultRoute, getStoredUser, isRoleAllowed } from "../../lib/auth";
+import { getDefaultRoute, getStoredUser, isAllowed } from "../../lib/auth";
 
 const allowedRoles = ["admin"] as const;
 
@@ -75,7 +76,7 @@ export default function DashboardPage() {
       router.push("/login");
       return;
     }
-    if (!isRoleAllowed(user.role, [...allowedRoles])) {
+    if (!isAllowed(user, [...allowedRoles], "dashboard")) {
       router.push(getDefaultRoute(user.role));
       return;
     }
@@ -151,7 +152,7 @@ export default function DashboardPage() {
           </section>
         ) : (
         <section className="dashboard-grid">
-          <article className="summary-card">
+          <article className="summary-card reveal delay-1">
             <div className="summary-head">
               <span className="summary-label">Total de Relatórios</span>
               <span className="summary-icon">
@@ -159,9 +160,9 @@ export default function DashboardPage() {
               </span>
             </div>
             <strong className="summary-value">{summary.total_reports}</strong>
-            <p className="summary-note">{summary.total_reports} cadastrados</p>
+            <p className="summary-note">Últimos 90 dias</p>
           </article>
-          <article className="summary-card">
+          <article className="summary-card reveal delay-1">
             <div className="summary-head">
               <span className="summary-label">Relatórios do Mês</span>
               <span className="summary-icon">
@@ -172,7 +173,7 @@ export default function DashboardPage() {
             <p className="summary-note">Eventos realizados no mês atual</p>
           </article>
 
-          <article className="summary-card">
+          <article className="summary-card reveal delay-2">
             <div className="summary-head">
               <span className="summary-label">Eventos Fora de Brasília</span>
               <span className="summary-icon">
@@ -183,56 +184,57 @@ export default function DashboardPage() {
             <p className="summary-note">Quantidade de eventos marcados fora de Brasília</p>
           </article>
 
-          <article className="summary-card">
+          <article className="summary-card reveal delay-2">
             <div className="summary-head">
               <span className="summary-label">Avaliação Média da Equipe</span>
               <span className="summary-icon gold">
                 <FiStar aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">{formatScore(summary.avg_quality)}</strong>
+            <strong className="summary-value">{formatScore(summary.avg_quality)} <span className="score-denom">/ 5</span></strong>
+            <p className="summary-note">Média de todas as avaliações</p>
           </article>
 
-          <article className="summary-card">
+          <article className="summary-card reveal delay-3">
             <div className="summary-head">
               <span className="summary-label">Qualidade Média do Som</span>
               <span className="summary-icon gold">
-                <FiStar aria-hidden="true" />
+                <FiVolume2 aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">{formatScore(quality.sound)}</strong>
+            <strong className="summary-value">{formatScore(quality.sound)} <span className="score-denom">/ 5</span></strong>
             <p className="summary-note">Avaliação do som nos eventos</p>
           </article>
 
-          <article className="summary-card">
+          <article className="summary-card reveal delay-3">
             <div className="summary-head">
               <span className="summary-label">Qualidade Média do Microfone</span>
               <span className="summary-icon gold">
-                <FiStar aria-hidden="true" />
+                <FiMic aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">{formatScore(quality.microphone)}</strong>
+            <strong className="summary-value">{formatScore(quality.microphone)} <span className="score-denom">/ 5</span></strong>
             <p className="summary-note">Avaliação do microfone nos eventos</p>
           </article>
 
-          <article className="summary-card">
+          <article className="summary-card reveal delay-4">
             <div className="summary-head">
               <span className="summary-label">Qualidade Média do Evento</span>
               <span className="summary-icon gold">
                 <FiStar aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">{formatScore(quality.event_quality)}</strong>
+            <strong className="summary-value">{formatScore(quality.event_quality)} <span className="score-denom">/ 5</span></strong>
             <p className="summary-note">Nota média de qualidade geral do evento</p>
           </article>
-          <article className="summary-card">
+          <article className="summary-card reveal delay-4">
             <div className="summary-head">
               <span className="summary-label">Dificuldade Média do Evento</span>
               <span className="summary-icon gold">
-                <FiStar aria-hidden="true" />
+                <FiTrendingUp aria-hidden="true" />
               </span>
             </div>
-            <strong className="summary-value">{formatScore(quality.event_difficulty)}</strong>
+            <strong className="summary-value">{formatScore(quality.event_difficulty)} <span className="score-denom">/ 5</span></strong>
             <p className="summary-note">Nota média de dificuldade dos eventos</p>
           </article>
         </section>
@@ -244,6 +246,7 @@ export default function DashboardPage() {
               <h2 className="section-title">Relatórios Recentes</h2>
               <p>Lista simplificada dos últimos eventos</p>
             </div>
+            <Link href="/relatorios" className="button secondary small">Ver todos</Link>
           </div>
 
           {loading ? (

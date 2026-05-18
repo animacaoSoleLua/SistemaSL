@@ -1223,11 +1223,16 @@ function NovoRelatorioContent() {
                 Cancelar
               </Link>
               <button type="submit" className="button" disabled={isSubmitting}>
-                {isSubmitting
-                  ? "Salvando..."
-                  : isEditMode
-                    ? "Salvar alterações"
-                    : "Salvar"}
+                {isSubmitting ? (
+                  <>
+                    <span className="btn-spinner" aria-hidden="true" />
+                    Salvando...
+                  </>
+                ) : isEditMode ? (
+                  "Salvar alterações"
+                ) : (
+                  "Salvar"
+                )}
               </button>
             </div>
           </div>

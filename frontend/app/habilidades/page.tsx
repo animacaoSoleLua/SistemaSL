@@ -17,7 +17,7 @@ import {
   updateMemberSkill,
   updateSkill,
 } from "../../lib/api";
-import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { getDefaultRoute, getStoredUser, isAllowed, type Role } from "../../lib/auth";
 import { Modal } from "../../components/Modal";
 
 const allowedRoles: Role[] = ["admin"];
@@ -105,7 +105,7 @@ export default function HabilidadesPage() {
 
   useEffect(() => {
     const user = getStoredUser();
-    if (!user || !isRoleAllowed(user.role, allowedRoles)) {
+    if (!user || !isAllowed(user, allowedRoles, "habilidades")) {
       router.replace(getDefaultRoute(user?.role ?? "recreador"));
     }
   }, [router]);

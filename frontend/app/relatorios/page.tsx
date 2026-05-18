@@ -12,7 +12,7 @@ import {
   getReports,
   resolveApiAssetUrl,
 } from "../../lib/api";
-import { getDefaultRoute, getStoredUser, isRoleAllowed, type Role } from "../../lib/auth";
+import { getDefaultRoute, getStoredUser, isAllowed, type Role } from "../../lib/auth";
 import { displayToIsoWithShortYear, formatDateInput } from "../../lib/dateValidators";
 import { normalizeString } from "../../lib/validators";
 
@@ -151,7 +151,7 @@ export default function RelatoriosPage() {
       router.push("/login");
       return;
     }
-    if (!isRoleAllowed(user.role, ["admin", "animador"])) {
+    if (!isAllowed(user, ["admin", "animador"], "relatorios")) {
       router.push(getDefaultRoute(user.role));
       return;
     }

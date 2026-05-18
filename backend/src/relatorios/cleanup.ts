@@ -1,7 +1,7 @@
 import { prisma } from "../db/prisma.js";
 import { deleteFromR2 } from "../lib/r2.js";
 
-const MEDIA_EXPIRY_DAYS = 20;
+const MEDIA_EXPIRY_DAYS = 365;
 const REPORT_EXPIRY_DAYS = 365;
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
 

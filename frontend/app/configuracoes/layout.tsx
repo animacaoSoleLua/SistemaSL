@@ -37,7 +37,7 @@ export default function ConfiguracoesLayout({
       <section className="shell reveal">
         <header className="page-header">
           <div>
-            <h1 className="hero-title">Perfil</h1>
+            <h1 className="hero-title">Configurações</h1>
           </div>
         </header>
         <nav className="settings-tabs" aria-label="Seções de configurações">

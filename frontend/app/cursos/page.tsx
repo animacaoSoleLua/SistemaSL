@@ -1607,11 +1607,16 @@ export default function CursosPage() {
                   type="submit"
                   disabled={saving || editingLoading}
                 >
-                  {saving
-                    ? "Salvando..."
-                    : editingCourseId
-                    ? "Atualizar curso"
-                    : "Salvar curso"}
+                  {saving ? (
+                    <>
+                      <span className="btn-spinner" aria-hidden="true" />
+                      Salvando...
+                    </>
+                  ) : editingCourseId ? (
+                    "Atualizar curso"
+                  ) : (
+                    "Salvar curso"
+                  )}
                 </button>
               </div>
             </form>
@@ -1860,9 +1865,16 @@ export default function CursosPage() {
                 className="button"
                 disabled={importSaving || importEditingLoading}
               >
-                {importSaving
-                  ? importEditingId ? "Salvando..." : "Importando..."
-                  : importEditingId ? "Salvar alterações" : "Importar Curso"}
+                {importSaving ? (
+                  <>
+                    <span className="btn-spinner" aria-hidden="true" />
+                    {importEditingId ? "Salvando..." : "Importando..."}
+                  </>
+                ) : importEditingId ? (
+                  "Salvar alterações"
+                ) : (
+                  "Importar Curso"
+                )}
               </button>
             </div>
           </div>

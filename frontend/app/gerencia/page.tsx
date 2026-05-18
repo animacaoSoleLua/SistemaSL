@@ -19,7 +19,7 @@ import { getCourses, getEnrolledMembers, getFeedbacks, getMembers, getReports, g
 import {
   getDefaultRoute,
   getStoredUser,
-  isRoleAllowed,
+  isAllowed,
   type Role,
 } from "../../lib/auth";
 import TooltipIcon from "../../components/TooltipIcon";
@@ -161,7 +161,7 @@ export default function GerenciaPage() {
       router.replace("/login");
       return;
     }
-    if (!isRoleAllowed(user.role, allowedRoles)) {
+    if (!isAllowed(user, allowedRoles, "gerencia")) {
       router.replace(getDefaultRoute(user.role));
       return;
     }

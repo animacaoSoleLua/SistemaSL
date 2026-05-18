@@ -13,6 +13,7 @@ import {
 } from "../../../lib/api";
 import { getStoredUser } from "../../../lib/auth";
 import { displayToIso, formatDateInput, isoToDisplay } from "../../../lib/dateValidators";
+import { useToast } from "../../context/ToastContext";
 
 interface MemberDetail {
   id: string;
@@ -30,6 +31,7 @@ interface MemberDetail {
 
 export default function ConfiguracoesPerfil() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [member, setMember] = useState<MemberDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +50,6 @@ export default function ConfiguracoesPerfil() {
   const [removingPhoto, setRemovingPhoto] = useState(false);
   const [confirmRemovePhoto, setConfirmRemovePhoto] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -137,19 +137,15 @@ export default function ConfiguracoesPerfil() {
     const trimmedPhone = editPhone.trim();
 
     if (!trimmedName || !trimmedLastName || !trimmedCpf || !editBirthDate || !trimmedRegion || !trimmedPhone) {
-      setSaveError("Preencha todos os dados pessoais para salvar.");
-      setSaveSuccess(null);
+      showToast("Preencha todos os dados pessoais para salvar.", "error");
       return;
     }
     if (!hasChanges) {
-      setSaveError(null);
-      setSaveSuccess("Nenhuma alteração para salvar.");
+      showToast("Nenhuma alteração para salvar.", "success");
       return;
     }
 
     setSaving(true);
-    setSaveError(null);
-    setSaveSuccess(null);
     try {
       if (hasProfileChanges) {
         await updateMember(member.id, {
@@ -197,15 +193,16 @@ export default function ConfiguracoesPerfil() {
         setPhotoFile(null);
         setPhotoInputKey((prev) => prev + 1);
       }
-      setSaveSuccess(
+      showToast(
         hasProfileChanges && photoFile
           ? "Dados e foto atualizados com sucesso."
           : photoFile
           ? "Foto atualizada com sucesso."
-          : "Dados atualizados com sucesso."
+          : "Dados atualizados com sucesso.",
+        "success"
       );
     } catch (err: unknown) {
-      setSaveError(getErrorMessage(err, "Erro ao salvar perfil."));
+      showToast(getErrorMessage(err, "Erro ao salvar perfil."), "error");
     } finally {
       setSaving(false);
     }
@@ -311,27 +308,27 @@ export default function ConfiguracoesPerfil() {
             </div>
           </div>
 
-          <label className="field full" htmlFor="profileName">
+          <label className="field" htmlFor="profileName">
             <span>Nome</span>
             <input id="profileName" className="input" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Seu nome" />
           </label>
-          <label className="field full" htmlFor="profileLastName">
+          <label className="field" htmlFor="profileLastName">
             <span>Sobrenome</span>
             <input id="profileLastName" className="input" value={editLastName} onChange={(e) => setEditLastName(e.target.value)} placeholder="Seu sobrenome" />
           </label>
-          <label className="field full" htmlFor="profileCpf">
+          <label className="field" htmlFor="profileCpf">
             <span>CPF</span>
             <input id="profileCpf" name="cpf" className="input" inputMode="numeric" autoComplete="national-id" value={editCpf} onChange={(e) => setEditCpf(formatCpf(e.target.value))} placeholder="000.000.000-00" />
           </label>
-          <label className="field full" htmlFor="profileBirthDate">
+          <label className="field" htmlFor="profileBirthDate">
             <span>Data de nascimento</span>
             <input id="profileBirthDate" className="input" type="text" inputMode="numeric" maxLength={10} placeholder="DD/MM/AAAA" value={editBirthDate} onChange={(e) => setEditBirthDate(formatDateInput(e.target.value))} />
           </label>
-          <label className="field full" htmlFor="profileRegion">
+          <label className="field" htmlFor="profileRegion">
             <span>Região administrativa</span>
             <input id="profileRegion" className="input" value={editRegion} onChange={(e) => setEditRegion(e.target.value)} placeholder="Ex: Ceilândia" />
           </label>
-          <label className="field full" htmlFor="profilePhone">
+          <label className="field" htmlFor="profilePhone">
             <span>Telefone</span>
             <input id="profilePhone" name="tel" className="input" type="tel" inputMode="tel" autoComplete="tel-national" value={editPhone} onChange={(e) => setEditPhone(formatPhone(e.target.value))} onBlur={(e) => setEditPhone(formatPhone(e.target.value))} placeholder="(61) 99999-9999" />
           </label>
@@ -339,11 +336,11 @@ export default function ConfiguracoesPerfil() {
             <span>Chave Pix</span>
             <input id="profilePix" className="input" value={editPix} onChange={(e) => setEditPix(e.target.value)} placeholder="CPF, e-mail, celular ou chave aleatória" />
           </label>
-          <label className="field full" htmlFor="profileEmergencyContactName">
+          <label className="field" htmlFor="profileEmergencyContactName">
             <span>Contato de emergência — quem é</span>
             <input id="profileEmergencyContactName" className="input" value={editEmergencyContactName} onChange={(e) => setEditEmergencyContactName(e.target.value)} placeholder="Ex: Mãe, Pai, Cônjuge..." />
           </label>
-          <label className="field full" htmlFor="profileEmergencyContactPhone">
+          <label className="field" htmlFor="profileEmergencyContactPhone">
             <span>Contato de emergência — telefone</span>
             <input id="profileEmergencyContactPhone" className="input" type="tel" inputMode="tel" value={editEmergencyContactPhone} onChange={(e) => setEditEmergencyContactPhone(formatPhone(e.target.value))} onBlur={(e) => setEditEmergencyContactPhone(formatPhone(e.target.value))} placeholder="(61) 99999-9999" />
           </label>
@@ -352,12 +349,17 @@ export default function ConfiguracoesPerfil() {
           <p className="helper">Revise antes de salvar.</p>
           <div className="form-buttons">
             <button type="submit" className="button" disabled={saving || !hasChanges}>
-              {saving ? "Salvando..." : "Salvar perfil"}
+              {saving ? (
+                <>
+                  <span className="btn-spinner" aria-hidden="true" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar perfil"
+              )}
             </button>
           </div>
         </div>
-        {saveError && <p className="text-red-500" role="alert" aria-live="polite">{saveError}</p>}
-        {saveSuccess && <p className="text-green-600" role="status" aria-live="polite">{saveSuccess}</p>}
       </article>
     </form>
   );
