@@ -211,8 +211,6 @@ export default function ConfiguracoesPerfil() {
   const handleRemovePhoto = async () => {
     if (!member || removingPhoto) return;
     setRemovingPhoto(true);
-    setSaveError(null);
-    setSaveSuccess(null);
     try {
       await deleteMemberPhoto(member.id);
       setMember((cur) => (cur ? { ...cur, photo_url: null } : cur));
@@ -223,9 +221,9 @@ export default function ConfiguracoesPerfil() {
         sessionStorage.setItem("user", JSON.stringify({ ...storedUser, photo_url: null }));
         window.dispatchEvent(new Event("user-updated"));
       }
-      setSaveSuccess("Foto removida com sucesso.");
+      showToast("Foto removida com sucesso.", "success");
     } catch (err: unknown) {
-      setSaveError(getErrorMessage(err, "Erro ao remover foto."));
+      showToast(getErrorMessage(err, "Erro ao remover foto."), "error");
     } finally {
       setRemovingPhoto(false);
     }
