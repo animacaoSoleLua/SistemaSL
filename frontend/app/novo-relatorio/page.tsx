@@ -669,6 +669,7 @@ function NovoRelatorioContent() {
         throw new Error("Relatorio sem identificador.");
       }
 
+      const confirmedReportId: string = reportId;
       const UPLOAD_CONCURRENCY = 3;
       const queue = [...mediaFilesWithTopic];
       const results: Promise<void>[] = [];
@@ -676,7 +677,7 @@ function NovoRelatorioContent() {
       async function runSlot() {
         while (queue.length > 0) {
           const item = queue.shift();
-          if (item) await uploadReportMedia(reportId, item.file, item.topic);
+          if (item) await uploadReportMedia(confirmedReportId, item.file, item.topic);
         }
       }
 
