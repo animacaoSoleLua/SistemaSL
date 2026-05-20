@@ -944,6 +944,15 @@ body.theme-purple .skill-bar-track {
   gap: 6px;
 }
 
+.confirm-event-title {
+  font-size: 14px;
+  color: var(--muted);
+  background: var(--surface-raised, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
 .confirm-muted {
   color: var(--muted);
   font-size: 14px;

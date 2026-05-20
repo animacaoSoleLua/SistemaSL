@@ -853,9 +853,15 @@ export default function RelatoriosPage() {
               </div>
               <div className="confirm-text">
                 <p>
-                  Excluir relatório de <strong>{deleteTarget.contractor_name}</strong>?
+                  Tem certeza que deseja excluir o relatório de{" "}
+                  <strong>{deleteTarget.contractor_name}</strong>?
                 </p>
-                <p className="confirm-muted">Essa ação não poderá ser desfeita.</p>
+                {deleteTarget.title_schedule && (
+                  <p className="confirm-event-title">
+                    Evento: <strong>{deleteTarget.title_schedule}</strong>
+                  </p>
+                )}
+                <p className="confirm-muted">Esta ação é permanente e não poderá ser desfeita.</p>
               </div>
             </div>
 
