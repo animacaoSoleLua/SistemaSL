@@ -4,7 +4,7 @@ import './page.css';
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FiDownload, FiFileText, FiMaximize2, FiTrash2, FiX } from "react-icons/fi";
+import { FiDownload, FiFileText, FiMaximize2, FiX } from "react-icons/fi";
 import {
   API_ORIGIN,
   deleteReport,
@@ -848,14 +848,8 @@ export default function RelatoriosPage() {
             </header>
 
             <div className="modal-body confirm-body">
-              <div className="confirm-icon" aria-hidden="true">
-                <FiTrash2 />
-              </div>
               <div className="confirm-text">
-                <p>
-                  Tem certeza que deseja excluir o relatório de{" "}
-                  <strong>{deleteTarget.title_schedule ?? deleteTarget.contractor_name}</strong>?
-                </p>
+                <p>Tem certeza que deseja excluir este relatório?</p>
                 <p className="confirm-muted">Esta ação é permanente e não poderá ser desfeita.</p>
               </div>
             </div>
