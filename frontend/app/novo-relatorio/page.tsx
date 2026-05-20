@@ -669,9 +669,21 @@ function NovoRelatorioContent() {
         throw new Error("Relatorio sem identificador.");
       }
 
-      await Promise.all(
-        mediaFilesWithTopic.map(({ file, topic }) => uploadReportMedia(reportId, file, topic))
-      );
+      const UPLOAD_CONCURRENCY = 3;
+      const queue = [...mediaFilesWithTopic];
+      const results: Promise<void>[] = [];
+
+      async function runSlot() {
+        while (queue.length > 0) {
+          const item = queue.shift();
+          if (item) await uploadReportMedia(reportId, item.file, item.topic);
+        }
+      }
+
+      for (let i = 0; i < Math.min(UPLOAD_CONCURRENCY, queue.length); i++) {
+        results.push(runSlot());
+      }
+      await Promise.all(results);
 
       router.push("/relatorios");
     } catch (error) {
